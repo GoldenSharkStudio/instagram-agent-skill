@@ -267,7 +267,7 @@ def render_table(rows, out=sys.stdout):
         print(f"        weakest: {r['weakest']} ({r['checks'][r['weakest']]['score']:.0f})", file=out)
         for f in r["flags"]:
             print(f"        dealbreaker: {f}", file=out)
-    print("\nShoot the top one. If the top one is under 50, none of these are the hook.\n",
+    print(f"\nShoot the top one. If the top one is under {PASS_SCORE}, none of these are the hook.\n",
           file=out)
 
 

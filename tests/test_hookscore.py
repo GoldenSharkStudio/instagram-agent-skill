@@ -155,9 +155,29 @@ class ExitCodes(unittest.TestCase):
         self.assertEqual(json.loads(a), json.loads(b))
 
     def test_exit_threshold_is_a_named_constant(self):
-        # Pins today's behaviour (exit 1 below 70). The ranking text and
-        # ig-reel/SKILL.md still say 50; aligning the two is an open decision.
+        # Decided 02/11: 70 in the exit code AND in every text that tells the
+        # user when a hook is not good enough.
         self.assertEqual(getattr(hs, "PASS_SCORE", None), 70)
+
+    def test_ranking_text_quotes_the_exit_threshold(self):
+        out = run_tool("hookscore", fixture("hooks.txt")).stdout
+        self.assertIn(f"under {hs.PASS_SCORE}", out)
+        self.assertNotIn("under 50", out)
+
+    def test_exit_boundary(self):
+        # Exit reads the score alone: >= PASS_SCORE passes, below fails.
+        for hook in [g[0] for g in GOLDEN]:
+            _, overall, _, _ = hs.run(hook)
+            code = run_tool("hookscore", "--hook", hook).returncode
+            self.assertEqual(code, 0 if overall >= hs.PASS_SCORE else 1, hook)
+
+    def test_skill_md_quotes_the_exit_threshold(self):
+        import os, re
+        from _support import SKILLS
+        with open(os.path.join(SKILLS, "ig-reel", "SKILL.md"), encoding="utf-8") as f:
+            text = f.read()
+        quoted = re.findall(r"top one is under (\d+)", text)
+        self.assertEqual(quoted, [str(hs.PASS_SCORE)])
 
 
 if __name__ == "__main__":
