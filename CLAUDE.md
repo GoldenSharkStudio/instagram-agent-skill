@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A Claude Code plugin (`.claude-plugin/plugin.json` + `marketplace.json`) that ships 13 skills under `skills/ig-*/`. Each skill is a `SKILL.md` (frontmatter `name` + `description`, the description is the trigger text). Five of them also ship Python CLI tools plus JSON data. There is no build, no package manager, no dependencies, no test suite, no linter config. Tools are stdlib-only Python 3 and must stay that way (the README promises "no dependencies, no network").
+A Claude Code plugin (`.claude-plugin/plugin.json` + `marketplace.json`) that ships 13 skills under `skills/ig-*/`. Each skill is a `SKILL.md` (frontmatter `name` + `description`, the description is the trigger text). Four of them (`ig-reel`, `ig-caption`, `ig-human`, `ig-viral`) ship Python CLI tools, six scripts in all; `ig-profile` ships only JSON data. There is no build, no package manager, no dependencies, no linter config. Tools are stdlib-only Python 3 and must stay that way (the README promises "no dependencies, no network").
 
 Users install by copying `skills/ig-*` into `~/.claude/skills/`, or by pasting a single `SKILL.md` into a chat. So **every skill folder must work on its own**, and a SKILL.md must still make sense without its scripts.
 
@@ -21,9 +21,16 @@ python3 skills/ig-human/detect.py draft.txt [after.txt]  # second arg = before/a
 python3 skills/ig-viral/swipe.py captured.tsv [--out swipe.md] [--hooks path/to/hooks.json]
 ```
 
-Exit codes are meaningful (skills use them as verdicts): `hookscore` exits 1 if the best hook scores < 70; `caption` exits 1 unless verdict is `READY`; `detect` exits 1 unless the last result is `PASS`; `2` means bad input. `humanize --report` writes the report to stderr and the cleaned text to stdout.
+Exit codes are meaningful (skills use them as verdicts): `hookscore` exits 1 if the best hook scores < 70; `caption` exits 1 unless verdict is `READY`; `detect` exits 1 unless the last result is `PASS`; `2` means bad input. The exit code is the same with `--json`. `humanize --report` writes the report to stderr and the cleaned text to stdout.
 
-No tests exist. Verify changes by running the tool on a sample input and comparing against the example output blocks in `README.md` and the relevant `SKILL.md` — those blocks are effectively the spec and must be updated when output changes.
+## Tests
+
+```bash
+python3 -m unittest discover tests          # whole suite, stdlib unittest
+python3 -m unittest discover tests -p "test_caption.py"   # one file
+```
+
+Run from the repo root. Golden tests pin the numbers in the README example blocks, and `test_invariants.ReadmeBlocksAreRealOutput` checks those README lines verbatim against real tool output on the inputs in `tests/fixtures/`. So when a tool's output changes, update the README block and the pinned values together. Invariant tests also derive the prose counts from the JSONs, check that duplicated regexes have not drifted, that each tool folder runs from a lone copy, and that every import is stdlib. A test marked `expectedFailure` is a known bug logged for a later phase, not a broken test.
 
 ## Architecture and coupling
 

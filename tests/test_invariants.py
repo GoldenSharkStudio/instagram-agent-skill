@@ -1,0 +1,286 @@
+"""Invariants the repo promises in prose. Adding an entry to a JSON without
+updating the numbers quoted in README/SKILL.md/plugin.json fails here."""
+
+import ast
+import glob
+import json
+import os
+import re
+import sys
+import unittest
+
+from _support import ROOT, SKILLS, TOOLS, load
+
+WORD_NUMBERS = {"five": 5, "twelve": 12, "thirteen": 13, "sixteen": 16, "eighteen": 18,
+                "twenty-six": 26}
+
+
+def jload(*parts):
+    with open(os.path.join(ROOT, *parts), encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+SLOP = jload("skills", "ig-human", "slop.json")
+HOOKS = jload("skills", "ig-reel", "hooks.json")
+RUBRIC = jload("skills", "ig-profile", "rubric.json")
+SKILL_DIRS = sorted(d for d in glob.glob(os.path.join(SKILLS, "ig-*")) if os.path.isdir(d))
+
+PROSE_FILES = (["README.md", "CLAUDE.md", ".claude-plugin/plugin.json",
+                ".claude-plugin/marketplace.json"]
+               + [os.path.relpath(p, ROOT) for p in glob.glob(os.path.join(SKILLS, "*", "SKILL.md"))])
+
+
+def prose(path):
+    """File text without fenced code blocks: those are sample tool output,
+    where "9 structural tells" describes a draft, not the lexicon. The one
+    exception is the README "## Files" listing, which states counts."""
+    with open(os.path.join(ROOT, path), encoding="utf-8") as fh:
+        text = fh.read()
+    keep = re.search(r"## Files\n\n```.*?```", text, flags=re.S)
+    stripped = re.sub(r"```.*?```", "", text, flags=re.S)
+    return stripped + ("\n" + keep.group(0) if keep else "")
+
+
+def claims(pattern):
+    """Every (file, number) the prose states for `pattern` (one group)."""
+    found = []
+    for path in PROSE_FILES:
+        for m in re.finditer(pattern, prose(path), re.IGNORECASE):
+            raw = m.group(1).lower()
+            found.append((path, int(raw) if raw.isdigit() else WORD_NUMBERS[raw]))
+    return found
+
+
+NUM = r"(\d+|" + "|".join(WORD_NUMBERS) + r")"
+
+
+class CountsInProse(unittest.TestCase):
+    def assertClaims(self, pattern, expected, at_least=1):
+        found = claims(pattern)
+        self.assertGreaterEqual(len(found), at_least, f"no mention of {pattern!r}")
+        wrong = [(p, n) for p, n in found if n != expected]
+        self.assertEqual(wrong, [], f"prose says something other than {expected}")
+
+    def test_lexicon_terms(self):
+        self.assertClaims(NUM + r" (?:stock words|terms)\b", len(SLOP["words"]) + len(SLOP["phrases"]), 3)
+
+    def test_invisible_classes(self):
+        self.assertClaims(NUM + r" invisible\b", len(SLOP["invisible"]), 3)
+
+    def test_typographic_substitutions(self):
+        self.assertClaims(NUM + r" typographic substitutions", len(SLOP["typographic"]))
+
+    def test_structural_tells(self):
+        self.assertClaims(NUM + r" (?:structural )?tells\b", len(SLOP["structures"]), 2)
+
+    def test_hook_formulas(self):
+        self.assertClaims(NUM + r" (?:hook )?formulas", len(HOOKS["hooks"]), 4)
+
+    def test_skill_count(self):
+        self.assertClaims(NUM + r" (?:claude )?skills\b", len(SKILL_DIRS), 4)
+        self.assertIn("## The thirteen", prose("README.md"))
+        self.assertEqual(len(SKILL_DIRS), 13)
+
+    def test_rubric(self):
+        self.assertClaims(NUM + r"-part rubric", len(RUBRIC["items"]), 2)
+        self.assertEqual(sum(i["points"] for i in RUBRIC["items"]), RUBRIC["total"])
+        self.assertEqual(RUBRIC["total"], 100)
+
+    def test_hashtag_cap_in_prose_matches_code(self):
+        cap = load("caption").HASHTAG_LIMIT
+        word = {v: k for k, v in WORD_NUMBERS.items()}[cap]
+        self.assertIn(f"**{word} per post**", prose("README.md"))
+
+
+class HooksJson(unittest.TestCase):
+    FIELDS = ["id", "name", "template", "example", "on_screen", "best_for", "trap", "match"]
+
+    def test_ids_and_order(self):
+        ids = [h["id"] for h in HOOKS["hooks"]]
+        self.assertEqual(sorted(ids), list(range(1, len(ids) + 1)))
+        self.assertEqual(sorted(HOOKS["classify_order"]), sorted(ids))
+        names = [h["name"] for h in HOOKS["hooks"]]
+        self.assertEqual(len(set(names)), len(names))
+
+    def test_every_field_present(self):
+        for h in HOOKS["hooks"]:
+            for f in self.FIELDS:
+                with self.subTest(id=h["id"], field=f):
+                    self.assertTrue(str(h.get(f, "")).strip())
+
+    def test_every_match_compiles(self):
+        for h in HOOKS["hooks"]:
+            with self.subTest(id=h["id"]):
+                re.compile(h["match"], re.IGNORECASE)
+
+    def test_examples_never_misfire_into_another_formula(self):
+        sw = load("swipe")
+        formulas = sw.load_formulas(os.path.join(SKILLS, "ig-reel", "hooks.json"))
+        own = 0
+        for h in HOOKS["hooks"]:
+            fid, _ = sw.classify(h["example"], formulas)
+            with self.subTest(id=h["id"], got=fid):
+                self.assertIn(fid, (h["id"], None))
+            own += fid == h["id"]
+        # Regression floor measured on 02/11/2026: 20 of 26 examples name
+        # their own formula. Changing a match regex must not lower it.
+        self.assertGreaterEqual(own, 20)
+
+
+class SlopJson(unittest.TestCase):
+    def test_structure_regexes_compile(self):
+        # Both tools skip a structure whose regex fails to compile, silently.
+        # That guard fails open, so the data has to be right.
+        for s in SLOP["structures"]:
+            with self.subTest(id=s["id"]):
+                re.compile(s["regex"], re.MULTILINE)
+                self.assertTrue(s["name"] and s["fix"])
+
+    def test_lexicon_entries(self):
+        finds = []
+        for e in SLOP["words"] + SLOP["phrases"]:
+            with self.subTest(find=e.get("find")):
+                self.assertEqual(set(e), {"find", "replace", "family"})
+                self.assertTrue(e["find"].strip())
+            finds.append(e["find"].lower())
+        dupes = sorted({f for f in finds if finds.count(f) > 1})
+        self.assertEqual(dupes, [])
+
+    def test_invisible_codepoints(self):
+        for e in SLOP["invisible"]:
+            with self.subTest(cp=e["cp"]):
+                self.assertRegex(e["cp"], r"^U\+[0-9A-F]{4,5}(?:-U\+[0-9A-F]{4,5})?$")
+                self.assertIn(e["action"], {"delete", "space"})
+
+    def test_typographic_entries(self):
+        for e in SLOP["typographic"]:
+            with self.subTest(name=e.get("name")):
+                self.assertEqual(len(e["from"]), 1)
+                self.assertIn("to", e)
+
+
+class DuplicatedRegexes(unittest.TestCase):
+    """Copied on purpose so each folder stands alone. Copies must not drift."""
+
+    def test_word_re(self):
+        pats = {n: load(n).WORD_RE.pattern for n in ("hookscore", "beats", "swipe")}
+        self.assertEqual(len(set(pats.values())), 1, pats)
+
+    def test_concrete_re(self):
+        pats = {n: load(n).CONCRETE_RE.pattern for n in ("beats", "caption")}
+        self.assertEqual(len(set(pats.values())), 1, pats)
+
+    def test_hashtag_and_emoji_drift_is_known(self):
+        # hookscore and caption disagree on what an emoji is (caption also
+        # counts arrows and U+FE0F). Logged in A Fazer for phase 2; this test
+        # fails when someone aligns them, so the decision gets recorded.
+        self.assertNotEqual(load("hookscore").EMOJI_RE.pattern, load("caption").EMOJI_RE.pattern)
+
+
+class Manifests(unittest.TestCase):
+    def test_skill_frontmatter(self):
+        for d in SKILL_DIRS:
+            with self.subTest(skill=os.path.basename(d)):
+                with open(os.path.join(d, "SKILL.md"), encoding="utf-8") as fh:
+                    text = fh.read()
+                m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+                self.assertTrue(m, "frontmatter")
+                name = re.search(r"^name:\s*(.+)$", m.group(1), re.M).group(1).strip()
+                self.assertEqual(name, os.path.basename(d))
+                desc = m.group(1).split("description:", 1)[1].strip()
+                self.assertTrue(0 < len(desc) <= 1024, len(desc))
+
+    def test_plugin_json(self):
+        p = jload(".claude-plugin", "plugin.json")
+        m = jload(".claude-plugin", "marketplace.json")
+        self.assertEqual(m["plugins"][0]["name"], p["name"])
+        self.assertEqual(p["license"], "MIT")
+        self.assertRegex(p["version"], r"^\d+\.\d+\.\d+")
+        for url in (p["homepage"], p["repository"], m["plugins"][0]["homepage"]):
+            self.assertIn("GoldenSharkStudio/instagram-agent-skill", url)
+
+
+class StdlibOnly(unittest.TestCase):
+    """The README promises no dependencies. Every import must be stdlib or a
+    sibling tool from this repo."""
+
+    LOCAL = {os.path.splitext(os.path.basename(p))[0] for p in TOOLS.values()}
+
+    def test_imports(self):
+        stdlib = set(sys.stdlib_module_names)
+        for name, path in TOOLS.items():
+            with open(path, encoding="utf-8") as fh:
+                tree = ast.parse(fh.read())
+            mods = set()
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    mods |= {a.name.split(".")[0] for a in node.names}
+                elif isinstance(node, ast.ImportFrom) and node.module:
+                    mods.add(node.module.split(".")[0])
+            with self.subTest(tool=name):
+                self.assertEqual(sorted(mods - stdlib - self.LOCAL), [])
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+class ReadmeBlocksAreRealOutput(unittest.TestCase):
+    """Key lines of the README example blocks must appear verbatim in what the
+    tool prints for the matching fixture. Edit a tool, re-run, fix the README."""
+
+    def assertLinesIn(self, lines, output):
+        out = {l.rstrip() for l in output.splitlines()}
+        missing = [l for l in lines if l.rstrip() not in out]
+        self.assertEqual(missing, [], "README line not in real output")
+
+    def readme_lines(self, *starts):
+        text = prose_raw("README.md")
+        return [l for l in text.splitlines() if l.strip().startswith(starts)]
+
+    def test_hook_ranking(self):
+        from _support import fixture, run_tool
+        lines = self.readme_lines("->  85.6", "81.4 STRONG", "54.4 OK", "9.6 WEAK", "weakest:")
+        self.assertEqual(len(lines), 8)
+        self.assertLinesIn(lines, run_tool("hookscore", fixture("hooks.txt")).stdout)
+
+    def test_beat_sheet(self):
+        from _support import fixture, run_tool
+        lines = self.readme_lines("BEAT SHEET", "0:00.0", "0:17.4", "0:20.4", "0:23.3")
+        self.assertEqual(len(lines), 5)
+        self.assertLinesIn(lines, run_tool("beats", fixture("script.txt"), "--target", "30").stdout)
+
+    def test_caption(self):
+        from _support import fixture, run_tool
+        text = prose_raw("README.md")
+        block = text[text.index("  WHAT THE FEED SHOWS"):]
+        block = block[:block.index("```")]
+        lines = [l for l in block.splitlines()
+                 if l.strip().startswith(("PASS  ", "WARN  ", "| "))
+                 ]
+        self.assertEqual(len(lines), 12)
+        out = run_tool("caption", fixture("caption.txt"), "--keywords",
+                       "client contracts,freelance pricing").stdout
+        self.assertLinesIn(lines, out)
+
+    def test_swipe(self):
+        from _support import fixture, run_tool
+        lines = self.readme_lines("SWIPE FILE", "60.0x", "37.5x", "3.5x", "1.3x")
+        self.assertEqual(len(lines), 5)
+        self.assertLinesIn(lines, run_tool("swipe", fixture("captured.tsv")).stdout)
+
+    def test_humanizer_delta(self):
+        import tempfile
+        from _support import fixture, run_tool
+        with tempfile.TemporaryDirectory() as d:
+            after = os.path.join(d, "after.txt")
+            proc = run_tool("humanize", fixture("bad_draft.txt"), "-o", after)
+            self.assertEqual(proc.returncode, 0)
+            out = run_tool("detect", fixture("bad_draft.txt"), after).stdout
+        self.assertLinesIn(self.readme_lines("29.3 FLAGGED  ->"), out)
+        self.assertLinesIn(self.readme_lines("HUMAN SCORE   #######......"), out)
+
+
+def prose_raw(path):
+    with open(os.path.join(ROOT, path), encoding="utf-8") as fh:
+        return fh.read()

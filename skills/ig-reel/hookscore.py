@@ -212,6 +212,9 @@ def check_address(text):
 
 CHECKS = ["LENGTH", "SPECIFICITY", "STAKES", "FRONTLOAD", "ADDRESS"]
 
+# Exit 0 only if the best hook reaches this. The --json path uses it too.
+PASS_SCORE = 70
+
 
 def run(text):
     results = {
@@ -298,15 +301,13 @@ def main():
 
     if args.json:
         print(json.dumps(payload if len(payload) > 1 else payload[0], indent=2, ensure_ascii=False))
-        return
-
-    if len(payload) == 1:
+    elif len(payload) == 1:
         results, overall, verdict, flags = run(lines[0])
         render_one(lines[0], results, overall, verdict, flags)
     else:
         render_table(sorted(payload, key=lambda r: -r["score"]))
 
-    sys.exit(0 if max(p["score"] for p in payload) >= 70 else 1)
+    sys.exit(0 if max(p["score"] for p in payload) >= PASS_SCORE else 1)
 
 
 if __name__ == "__main__":

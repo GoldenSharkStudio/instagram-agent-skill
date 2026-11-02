@@ -93,6 +93,8 @@ HOOK RANKING
         weakest: STAKES (70)
         dealbreaker: Opens with "stop scrolling". Asking for attention proves
                      you have not earned it.
+        dealbreaker: Emoji in the hook. On-screen text at hook size has room
+                     for words or for an emoji, not both.
      9.6 WEAK    Hey guys, today I wanted to talk about content strategy
         weakest: FRONTLOAD (0)
         dealbreaker: Greeting. Nobody came to the feed to be greeted.
@@ -113,7 +115,7 @@ BEAT SHEET  ·  73 words  ·  ~26.6s at 165 wpm  ·  target 30.0s
   0:20.4   2.9s          Approval is a feeling. Delivery is a date.
   0:23.3   3.3s  CTA     That one word change is worth $18,000 to me.
 ------------------------------------------------------------------------
-  - Beat 2 runs past 4s. Either split the line or change what is on screen
+  - Beat(s) 2 run past 4s. Either split the line or change what is on screen
     inside it. A static frame is where people leave.
   - Loops: the last beat repeats "$18,000" from the hook. Second watches are
     free reach.
@@ -140,11 +142,14 @@ this prints is that window, as a box, the way a scrolling stranger reads it:
   +-------------------------------------------- ... more +
 
   PASS  LENGTH            389 / 2200 characters
-  WARN  FIRST LINE        133 characters, so it gets cut at 125 mid-thought
-  PASS  HOOK IS CONCRETE  2 numbers or names in the visible window
-  PASS  HASHTAGS          3 tags: #freelance #contracts #agencyowner
+  WARN  FIRST LINE        133 characters, so it gets cut at 125 mid-thought. Fine if the cut is a cliffhanger, bad if it is a subordinate clause
+  PASS  HOOK IS CONCRETE  2 number(s) or name(s) in the visible window
+  PASS  HASHTAGS          3 tag(s): #freelance #contracts #agencyowner
+  PASS  TAG PLACEMENT     tags are below the fold
+  PASS  LINKS             no dead links in the body
   PASS  ONE ASK           one call to action: comment a keyword
-  WARN  SEARCH TERMS      1/2 present. Missing: client contracts
+  PASS  EMOJI             0 emoji, 0.0 per 100 characters
+  WARN  SEARCH TERMS      1/2 present, 0 in the visible window. Missing: client contracts
 ```
 
 It enforces the current hashtag cap, which is **five per post**, not thirty.
@@ -178,22 +183,25 @@ hashtag walls, reflex follow bait, uniform sentence length. Changing the shape
 of a sentence needs judgement, so those come back for a rewrite rather than
 getting mangled by a regex.
 
-Run against a caption written to be as bad as possible:
+Run against a caption written to be as bad as possible
+([`tests/fixtures/bad_draft.txt`](tests/fixtures/bad_draft.txt)):
 
 ```
-  BURSTINESS    ###################.....  78.4
-  SPECIFICITY   #############...........  53.6    3.4 concrete markers per 100 words
-  SLOP DENSITY  ........................   0.0    20 stock terms, 23.0 per 100 words
-  FINGERPRINT   ################........  68.7    1 em dash
-  VOICE         #################.......  70.0    9 structural tells
+  BURSTINESS    #######################.  95.7    variation 0.68 across 10 sentences
+  SPECIFICITY   ###########.............  47.7    3.1 concrete markers per 100 words
+  SLOP DENSITY  ........................   0.0    17 stock terms, 17.7 per 100 words
+  FINGERPRINT   ############............  49.7    2 em dash
+  VOICE         ############............  50.8    13 structural tells
   ------------------------------------------------------------
-  HUMAN SCORE   ########................  32.5   FLAGGED
+  HUMAN SCORE   #######.................  29.3   FLAGGED
 ```
 
-After `humanize.py`, with the flagged structures still unrewritten:
+After `humanize.py`, with the flagged structures still unrewritten. It stops at
+REVIEW, not PASS, because the triads, the rocket bullets and the hashtag wall
+need a person:
 
 ```
-  HUMAN SCORE   ###################.....  79.7   PASS    (+47.2)
+  29.3 FLAGGED  ->  74.1 REVIEW   (+44.8)
 ```
 
 ### The swipe file
@@ -215,9 +223,22 @@ SWIPE FILE  ·  4 reels  ·  4 accounts  ·  baseline: account median
            "steal this four line follow up it took me two years"
     37.5x  hook  86  #3  Nobody Tells You       @a                 412,000
            "nobody tells you that your first 30 reels are supposed to flop"
+     3.5x  hook  81  #1  Cost Confession        @d                  21,000
+           "I lost $18,000 because of one missing contract"
      1.3x  hook  13  -   unclassified           @b               1,200,000
            "in this video I am going to show you my morning routine"
 ```
+
+### Tests
+
+```bash
+python3 -m unittest discover tests
+```
+
+stdlib only, like the tools. The example blocks above are golden tests: their
+inputs live in [`tests/fixtures/`](tests/fixtures/), and changing a tool's
+output without updating this README fails the suite. So does adding a term to
+`slop.json` or a formula to `hooks.json` without updating the counts quoted here.
 
 ## What I actually measured, which is the part worth reading
 

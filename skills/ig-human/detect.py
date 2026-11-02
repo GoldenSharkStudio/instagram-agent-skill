@@ -217,16 +217,16 @@ def main():
 
     if args.json:
         print(json.dumps(payload if args.compare else payload[0], indent=2))
-        return
-
-    for (name, text), p in zip(targets, payload):
-        results, overall, verdict = run(text, lex)
-        render(results, overall, verdict, label=os.path.basename(name) if args.compare else None)
-    if args.compare:
-        a, b = payload
-        delta = b["human_score"] - a["human_score"]
-        print(f"  {a['human_score']:.1f} {a['verdict']}  ->  "
-              f"{b['human_score']:.1f} {b['verdict']}   ({delta:+.1f})\n")
+    else:
+        for (name, text), p in zip(targets, payload):
+            results, overall, verdict = run(text, lex)
+            render(results, overall, verdict,
+                   label=os.path.basename(name) if args.compare else None)
+        if args.compare:
+            a, b = payload
+            delta = b["human_score"] - a["human_score"]
+            print(f"  {a['human_score']:.1f} {a['verdict']}  ->  "
+                  f"{b['human_score']:.1f} {b['verdict']}   ({delta:+.1f})\n")
 
     sys.exit(0 if payload[-1]["verdict"] == "PASS" else 1)
 
