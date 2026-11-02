@@ -11,7 +11,7 @@ Three passes, in this order:
                  any generated text.
   2. TYPOGRAPHIC em dash -> comma, en dash -> hyphen, curly quotes -> straight,
                  ellipsis -> three dots, bullet -> hyphen.
-  3. LEXICAL     replace the slop lexicon in slop.json with plain words,
+  3. LEXICAL     replace the slop lexicon in slop.en.json with plain words,
                  preserving capitalisation and leaving URLs untouched.
 
 Structural tells (rule-of-three, "not just X, it's Y", hashtag walls) are
@@ -34,15 +34,29 @@ import sys
 import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-LEX = os.path.join(HERE, "slop.json")
+LEX = os.path.join(HERE, "slop.en.json")
 
 URL_RE = re.compile(r"https?://\S+|www\.\S+|\S+@\S+\.\S+")
 SENT_RE = re.compile(r"[^.!?\n]+[.!?]*")
 
 
+class LexiconError(Exception):
+    """The lexicon is missing, unreadable or incomplete."""
+
+
 def load_lexicon(path=LEX):
-    with open(path, encoding="utf-8") as fh:
-        return json.load(fh)
+    """slop.<lang>.json. `connectives` are the words that, after an em dash
+    turned into a comma, leave a splice worth promoting to a full stop."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            lex = json.load(fh)
+        for key in ("invisible", "typographic", "words", "phrases", "structures",
+                    "connectives"):
+            if not isinstance(lex[key], list):
+                raise TypeError(f"{key} must be a list")
+        return lex
+    except (OSError, ValueError, KeyError, TypeError) as err:
+        raise LexiconError(f"{path}: {type(err).__name__}: {err}") from None
 
 
 def _cp(spec):
@@ -159,7 +173,8 @@ def pass_lexical(text, lex):
     text = re.sub(r"\n{3,}", "\n\n", text)
     # An em dash that became a comma, followed by a sentence connective, leaves
     # a splice ("is important, also, it's proof"). Promote it to a full stop.
-    text = re.sub(r",\s*(also|so|still|basically|in the end)\s*,\s*",
+    connectives = "|".join(re.escape(c) for c in lex["connectives"])
+    text = re.sub(r",\s*(" + connectives + r")\s*,\s*",
                   lambda m: ". " + m.group(1)[0].upper() + m.group(1)[1:] + ", ", text)
     return text, hits
 
@@ -259,11 +274,15 @@ def main():
     ap.add_argument("-o", "--out", help="write cleaned text here instead of stdout")
     ap.add_argument("--report", action="store_true", help="print what changed, to stderr")
     ap.add_argument("--json", action="store_true", help="emit {text, report} as JSON")
-    ap.add_argument("--lexicon", default=LEX, help="path to slop.json")
+    ap.add_argument("--lexicon", default=LEX, help="path to slop.<lang>.json")
     args = ap.parse_args()
 
     raw = sys.stdin.read() if args.input == "-" else open(args.input, encoding="utf-8").read()
-    lex = load_lexicon(args.lexicon)
+    try:
+        lex = load_lexicon(args.lexicon)
+    except LexiconError as err:
+        print(f"humanize.py: cannot load the lexicon, {err}", file=sys.stderr)
+        sys.exit(2)
     clean, report = humanize(raw, lex)
 
     if args.json:

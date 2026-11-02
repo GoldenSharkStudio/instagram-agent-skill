@@ -20,7 +20,7 @@ python3 detect.py draft.txt                    # score it, five checks
 python3 detect.py before.txt after.txt         # prove the delta
 ```
 
-Both read `slop.json`: 154 stock words and phrases with plain-English
+Both read `slop.en.json`: 154 stock words and phrases with plain-English
 replacements, 18 invisible character classes, 11 typographic substitutions and
 16 structural tells. The last block of each list is Instagram-specific, the
 vocabulary that only shows up in captions and voiceovers. It is meant to be

@@ -20,7 +20,7 @@ def jload(*parts):
         return json.load(fh)
 
 
-SLOP = jload("skills", "ig-human", "slop.json")
+SLOP = jload("skills", "ig-human", "slop.en.json")
 HOOKS = jload("skills", "ig-reel", "hooks.json")
 RUBRIC = jload("skills", "ig-profile", "rubric.json")
 SKILL_DIRS = sorted(d for d in glob.glob(os.path.join(SKILLS, "ig-*")) if os.path.isdir(d))

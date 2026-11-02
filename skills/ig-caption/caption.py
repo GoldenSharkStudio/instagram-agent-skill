@@ -23,9 +23,13 @@ Usage
 
 import argparse
 import json
+import os
 import re
 import sys
 import textwrap
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+LANG_DIR = os.path.join(HERE, "lang")
 
 LIMIT = 2200             # Instagram's hard caption limit.
 TRUNCATE = 125           # Roughly where the feed cuts to "... more".
@@ -42,20 +46,37 @@ LINK_RE = re.compile(r"https?://\S+|\bwww\.\S+|\b[a-z0-9-]+\.(?:com|co|io|net|or
 EMOJI_RE = re.compile(r"[\U0001F300-\U0001FAFF☀-➿←-⇿️]")
 CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
 
-ASKS = [
-    (re.compile(r"(?i)\bcomment (?:the word |\")?[A-Z0-9]{2,}\b"), "comment a keyword"),
-    (re.compile(r"(?i)\b(?:dm|message) me\b"), "DM me"),
-    (re.compile(r"(?i)\bsave (?:this|it)\b"), "save this"),
-    (re.compile(r"(?i)\bshare (?:this|it)\b"), "share this"),
-    (re.compile(r"(?i)\bfollow (?:me|for)\b"), "follow"),
-    (re.compile(r"(?i)\blink in (?:my )?bio\b"), "link in bio"),
-    (re.compile(r"(?i)\b(?:swipe|tap) (?:through|left|right|for|to)\b"), "swipe or tap"),
-    (re.compile(r"(?i)\btell me\b|\bwhat would you\b|\bwhich one\b"), "answer a question"),
-]
 
-FILLER_TAGS = {"#viral", "#fyp", "#explore", "#explorepage", "#foryou", "#foryoupage",
-               "#trending", "#instagood", "#love", "#follow", "#like4like", "#reels",
-               "#reelsinstagram", "#viralreels", "#instadaily"}
+
+class LangError(Exception):
+    """The language file is missing, unreadable, incomplete or has a bad regex."""
+
+
+def load_lang(code="en"):
+    """asks: the calls to action ONE ASK counts, each a regex and a name.
+    filler_tags: hashtags so generic they describe nothing."""
+    path = os.path.join(LANG_DIR, f"{code}.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            d = json.load(fh)["caption"]
+        return {
+            "ASKS": [(re.compile(x["regex"]), x["name"]) for x in d["asks"]],
+            "FILLER_TAGS": {t.lower() for t in d["filler_tags"]},
+        }
+    except (OSError, ValueError, KeyError, TypeError, re.error) as err:
+        raise LangError(f"{path}: {type(err).__name__}: {err}") from None
+
+
+try:
+    _LANG = load_lang()
+except LangError as _err:
+    if __name__ != "__main__":
+        raise
+    print(f"caption.py: cannot load language data, {_err}", file=sys.stderr)
+    sys.exit(2)
+
+ASKS = _LANG["ASKS"]
+FILLER_TAGS = _LANG["FILLER_TAGS"]
 
 
 def visible_window(text, cut):

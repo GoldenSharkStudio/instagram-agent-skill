@@ -175,7 +175,7 @@ python3 detect.py before.txt after.txt       # prove the delta
   The last block of it is Instagram-specific: "stop scrolling", "in today's
   video", "follow for more", "tag someone who needs this", "the algorithm
   loves", "run don't walk". It lives in
-  [`slop.json`](skills/ig-human/slop.json) and it is meant to be edited.
+  [`slop.en.json`](skills/ig-human/slop.en.json) and it is meant to be edited.
 
 **What gets flagged instead of fixed:** "It's not just X, it's Y", rule-of-three
 triads, the video preamble, emoji bullet lists, three shouted words in a row,
@@ -238,7 +238,7 @@ python3 -m unittest discover tests
 stdlib only, like the tools. The example blocks above are golden tests: their
 inputs live in [`tests/fixtures/`](tests/fixtures/), and changing a tool's
 output without updating this README fails the suite. So does adding a term to
-`slop.json` or a formula to `hooks.json` without updating the counts quoted here.
+`slop.en.json` or a formula to `hooks.json` without updating the counts quoted here.
 
 ## What I actually measured, which is the part worth reading
 
@@ -336,10 +336,12 @@ doing when you read it, Instagram is right.
 ```
 skills/ig-reel/hooks.json          26 hook formulas: template, example, on-screen line,
                                    what it is for, how it gets ruined, and a match regex
+skills/ig-reel/lang/en.json        the words hookscore and beats know: stakes, openers, numbers
 skills/ig-reel/hookscore.py        the five-property hook panel
 skills/ig-reel/beats.py            script to timed beat sheet
+skills/ig-caption/lang/en.json     the calls to action and the generic hashtags it knows
 skills/ig-caption/caption.py       the truncation preview and the caption linter
-skills/ig-human/slop.json          the lexicon: 154 terms, 18 invisible classes, 16 tells
+skills/ig-human/slop.en.json       the lexicon: 154 terms, 18 invisible classes, 16 tells
 skills/ig-human/humanize.py        the three cleaning passes
 skills/ig-human/detect.py          the five-check panel
 skills/ig-viral/swipe.py           outlier ranking and formula classification

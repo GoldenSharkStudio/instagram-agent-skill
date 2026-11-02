@@ -23,19 +23,42 @@ Usage
 
 import argparse
 import json
+import os
 import re
 import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+LANG_DIR = os.path.join(HERE, "lang")
 
 WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
 SENT_RE = re.compile(r"[^.!?]+[.!?]*")
 CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
-STOPWORDS = {
-    "the", "a", "an", "and", "or", "but", "if", "of", "to", "in", "on", "for",
-    "with", "that", "this", "it", "is", "are", "was", "were", "be", "been",
-    "you", "your", "i", "my", "me", "we", "our", "they", "them", "he", "she",
-    "so", "just", "not", "no", "do", "did", "does", "have", "has", "had",
-    "will", "can", "at", "as", "by", "from", "out", "up", "off", "one", "all",
-}
+
+
+class LangError(Exception):
+    """The language file is missing, unreadable or incomplete."""
+
+
+def load_lang(code="en"):
+    """stopwords: words too common to count as the hook coming back at the end."""
+    path = os.path.join(LANG_DIR, f"{code}.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            d = json.load(fh)["beats"]
+        return {"STOPWORDS": set(d["stopwords"])}
+    except (OSError, ValueError, KeyError, TypeError) as err:
+        raise LangError(f"{path}: {type(err).__name__}: {err}") from None
+
+
+try:
+    _LANG = load_lang()
+except LangError as _err:
+    if __name__ != "__main__":
+        raise
+    print(f"beats.py: cannot load language data, {_err}", file=sys.stderr)
+    sys.exit(2)
+
+STOPWORDS = _LANG["STOPWORDS"]
 
 HOOK_WINDOW = 3.0        # seconds. Past this, the thumb has already decided.
 MAX_BEAT = 4.0           # seconds on one idea with no change on screen.

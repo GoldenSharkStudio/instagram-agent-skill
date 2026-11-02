@@ -32,76 +32,78 @@ Usage
 
 import argparse
 import json
+import os
 import re
 import statistics
 import sys
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+LANG_DIR = os.path.join(HERE, "lang")
+
 WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
-NUMBER_RE = re.compile(
-    r"\$\s?\d[\d,]*(?:\.\d+)?"                       # money, whole
-    r"|\b\d[\d,]*(?:\.\d+)?\s?"                      # a figure, with or
-    r"(?:%|k\b|x\b|hrs?\b|hours?\b|mins?\b|minutes?\b"  # without a unit
-    r"|days?\b|weeks?\b|months?\b|years?\b)?",
-    re.IGNORECASE)
 PROPER_RE = re.compile(r"(?<!^)\b[A-Z][a-z]{2,}\b")
 HASHTAG_RE = re.compile(r"(?:^|\s)#\w+")
 EMOJI_RE = re.compile(r"[\U0001F300-\U0001FAFF☀-➿]")
 
-# Spoken hooks say their numbers out loud. "Zero dollars" and "twenty grand"
-# are as concrete as "$0" and "$20,000", and counting only digits missed them.
-# "one" and "first" are deliberately absent: they are filler far more often
-# than they are a quantity.
-SPOKEN_NUMBERS = {
-    "zero", "two", "three", "four", "five", "six", "seven", "eight", "nine",
-    "ten", "eleven", "twelve", "fifteen", "twenty", "thirty", "forty", "fifty",
-    "sixty", "seventy", "eighty", "ninety", "hundred", "thousand", "million",
-    "billion", "dozen", "half", "twice", "triple",
-}
-MONEY_WORDS = {
-    "dollars", "dollar", "bucks", "grand", "percent", "cents",
-    "millionaire", "billionaire", "revenue", "profit", "salary", "rent",
-}
 
-# Words that put something on the line. A hook with none of these is a
-# statement; a hook with one is a reason to keep watching.
-STAKES = {
-    "stop", "never", "wrong", "mistake", "mistakes", "lost", "lose", "losing",
-    "cost", "costs", "broke", "broken", "failed", "failure", "fail", "nobody",
-    "no", "not", "don't", "dont", "doesn't", "didn't", "can't", "won't",
-    "quit", "quitting", "fired", "deleted", "delete", "killed", "kills", "kill",
-    "replaced", "replaces", "cut", "beat", "free", "paid", "charged", "hired",
-    "saved", "first",
-    "banned", "illegal", "worst", "hate", "hated", "wasted", "waste", "scam",
-    "lie", "lied", "lying", "truth", "secret", "hidden", "stole", "stolen",
-    "before", "until", "instead", "but", "except", "unless", "problem",
-    "risk", "danger", "warning", "regret", "wish", "should", "shouldn't",
-    "still", "already", "only", "without", "versus", "vs", "actually",
-}
+class LangError(Exception):
+    """The language file is missing, unreadable, incomplete or has a bad regex."""
 
-# Openers that spend the first second saying nothing.
-WEAK_OPENERS = [
-    "so", "ok", "okay", "hey", "hi", "hello", "guys", "yo", "alright",
-    "welcome", "today", "basically", "honestly", "look", "listen", "um",
-    "just", "let", "lets", "let's", "i wanted", "i want", "one of",
-    "have you", "did you", "do you", "are you", "in this", "in today",
-    "the thing", "a lot", "there is", "there are", "this is", "it is",
-    "as a", "when it", "if you've", "you know",
-]
 
-# Imperatives that earn the front position.
-IMPERATIVES = {
-    "stop", "steal", "copy", "delete", "try", "watch", "read", "save",
-    "use", "build", "make", "write", "send", "take", "start", "quit",
-    "never", "always", "don't", "dont", "do", "put", "run", "check",
-}
+def load_lang(code="en"):
+    """Every word this script knows comes from lang/<code>.json.
 
-DEALBREAKERS = [
-    (re.compile(r"(?i)^\s*(?:stop scrolling|don'?t scroll)"),
-     "Opens with \"stop scrolling\". Asking for attention proves you have not earned it."),
-    (re.compile(r"(?i)\b(?:in (?:this|today'?s) (?:video|reel)|i'?m going to show you|i'?ll show you how)\b"),
-     "Video preamble. Delete it and open on the payoff."),
-    (re.compile(r"(?i)^\s*(?:hey |hi |what'?s up |welcome )"),
-     "Greeting. Nobody came to the feed to be greeted."),
+    spoken_numbers: spoken hooks say their numbers out loud ("twenty grand"),
+      and counting only digits missed them. "one" and "first" stay out: they
+      are filler far more often than a quantity.
+    stakes: words that put something on the line. A hook with none is a
+      statement; a hook with one is a reason to keep watching.
+    weak_openers: openers that spend the first second saying nothing. Order
+      matters, the first match is reported.
+    imperatives: verbs that earn the front position.
+    dealbreakers: language-bound ones only; hashtag and emoji live in code.
+    """
+    path = os.path.join(LANG_DIR, f"{code}.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            d = json.load(fh)["hookscore"]
+        return {
+            "NUMBER_RE": re.compile(
+                r"\$\s?\d[\d,]*(?:\.\d+)?"           # money, whole
+                r"|\b\d[\d,]*(?:\.\d+)?\s?"          # a figure, with or without a unit
+                r"(?:" + d["number_units"] + r")?",
+                re.IGNORECASE),
+            "SPOKEN_NUMBERS": set(d["spoken_numbers"]),
+            "MONEY_WORDS": set(d["money_words"]),
+            "STAKES": set(d["stakes"]),
+            "WEAK_OPENERS": list(d["weak_openers"]),
+            "IMPERATIVES": set(d["imperatives"]),
+            "ADDRESS_YOU": re.compile(d["address_you"]),
+            "ADDRESS_ME": re.compile(d["address_me"]),
+            "DEALBREAKERS": [(re.compile(x["regex"]), x["message"]) for x in d["dealbreakers"]],
+        }
+    except (OSError, ValueError, KeyError, TypeError, re.error) as err:
+        raise LangError(f"{path}: {type(err).__name__}: {err}") from None
+
+
+try:
+    _LANG = load_lang()
+except LangError as _err:
+    if __name__ != "__main__":
+        raise                                     # importers (swipe.py) decide
+    print(f"hookscore.py: cannot load language data, {_err}", file=sys.stderr)
+    sys.exit(2)
+
+NUMBER_RE = _LANG["NUMBER_RE"]
+SPOKEN_NUMBERS = _LANG["SPOKEN_NUMBERS"]
+MONEY_WORDS = _LANG["MONEY_WORDS"]
+STAKES = _LANG["STAKES"]
+WEAK_OPENERS = _LANG["WEAK_OPENERS"]
+IMPERATIVES = _LANG["IMPERATIVES"]
+ADDRESS_YOU = _LANG["ADDRESS_YOU"]
+ADDRESS_ME = _LANG["ADDRESS_ME"]
+
+DEALBREAKERS = _LANG["DEALBREAKERS"] + [
     (HASHTAG_RE,
      "Hashtag in the hook. Hashtags belong at the bottom of the caption, if anywhere."),
     (EMOJI_RE,
@@ -201,11 +203,11 @@ def check_address(text):
     """Aimed at one viewer, or floating in the air."""
     low = text.lower()
     w = [x.lower().strip("'’") for x in words(text)]
-    if re.search(r"\b(you|your|you're|youre|yourself)\b", low):
+    if ADDRESS_YOU.search(low):
         return 100.0, "speaks to the viewer"
     if w and w[0] in IMPERATIVES:
         return 90.0, f"imperative opener (\"{w[0]}\")"
-    if re.search(r"\b(i|my|me|we|our)\b", low):
+    if ADDRESS_ME.search(low):
         return 70.0, "first person, no viewer named"
     return 35.0, "third person, nobody in the room"
 

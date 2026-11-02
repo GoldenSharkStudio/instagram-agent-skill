@@ -1,0 +1,57 @@
+{
+  "lang": "en",
+  "note": "Language data for caption.py. Regexes are Python syntax, flags inline.",
+  "caption": {
+    "asks": [
+      {
+        "regex": "(?i)\\bcomment (?:the word |\\\")?[A-Z0-9]{2,}\\b",
+        "name": "comment a keyword"
+      },
+      {
+        "regex": "(?i)\\b(?:dm|message) me\\b",
+        "name": "DM me"
+      },
+      {
+        "regex": "(?i)\\bsave (?:this|it)\\b",
+        "name": "save this"
+      },
+      {
+        "regex": "(?i)\\bshare (?:this|it)\\b",
+        "name": "share this"
+      },
+      {
+        "regex": "(?i)\\bfollow (?:me|for)\\b",
+        "name": "follow"
+      },
+      {
+        "regex": "(?i)\\blink in (?:my )?bio\\b",
+        "name": "link in bio"
+      },
+      {
+        "regex": "(?i)\\b(?:swipe|tap) (?:through|left|right|for|to)\\b",
+        "name": "swipe or tap"
+      },
+      {
+        "regex": "(?i)\\btell me\\b|\\bwhat would you\\b|\\bwhich one\\b",
+        "name": "answer a question"
+      }
+    ],
+    "filler_tags": [
+      "#explore",
+      "#explorepage",
+      "#follow",
+      "#foryou",
+      "#foryoupage",
+      "#fyp",
+      "#instadaily",
+      "#instagood",
+      "#like4like",
+      "#love",
+      "#reels",
+      "#reelsinstagram",
+      "#trending",
+      "#viral",
+      "#viralreels"
+    ]
+  }
+}

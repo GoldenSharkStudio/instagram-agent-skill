@@ -30,14 +30,32 @@ import sys
 import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-LEX = os.path.join(HERE, "slop.json")
+LEX = os.path.join(HERE, "slop.en.json")
 
 SENT_RE = re.compile(r"[^.!?\n]+[.!?]*")
 WORD_RE = re.compile(r"[A-Za-z']+")
-CONTRACTIONS = re.compile(r"\b\w+'(?:s|t|re|ve|ll|d|m)\b", re.IGNORECASE)
-PRONOUNS = re.compile(r"\b(i|me|my|mine|we|us|our|you|your)\b", re.IGNORECASE)
 NUMBERS = re.compile(r"\b\d[\d,.]*%?\b|\$\d")
 PROPER = re.compile(r"(?<![.!?]\s)(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
+
+
+class LexiconError(Exception):
+    """The lexicon is missing, unreadable, incomplete or has a bad regex."""
+
+
+def load_lexicon(path=LEX):
+    """slop.<lang>.json. `voice` holds the two voice regexes: contractions
+    and personal pronouns, the words that put a person in the text."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            lex = json.load(fh)
+        for key in ("words", "phrases", "structures"):
+            if not isinstance(lex[key], list):
+                raise TypeError(f"{key} must be a list")
+        for key in ("contractions", "pronouns"):
+            re.compile(lex["voice"][key])
+        return lex
+    except (OSError, ValueError, KeyError, TypeError, re.error) as err:
+        raise LexiconError(f"{path}: {type(err).__name__}: {err}") from None
 
 
 def clamp(n):
@@ -124,8 +142,9 @@ def check_voice(text, lex):
     if len(w) < 25:
         return 50.0, "too short to judge"
     per100 = 100 / len(w)
-    contractions = len(CONTRACTIONS.findall(text)) * per100
-    person = len(PRONOUNS.findall(text)) * per100
+    voice = lex["voice"]
+    contractions = len(re.findall(voice["contractions"], text)) * per100
+    person = len(re.findall(voice["pronouns"], text)) * per100
     tells = 0
     names = []
     for s in lex["structures"]:
@@ -198,7 +217,11 @@ def main():
     ap.add_argument("--lexicon", default=LEX)
     args = ap.parse_args()
 
-    lex = json.load(open(args.lexicon, encoding="utf-8"))
+    try:
+        lex = load_lexicon(args.lexicon)
+    except LexiconError as err:
+        print(f"detect.py: cannot load the lexicon, {err}", file=sys.stderr)
+        sys.exit(2)
     read = lambda p: sys.stdin.read() if p == "-" else open(p, encoding="utf-8").read()
 
     targets = [(args.input, read(args.input))]

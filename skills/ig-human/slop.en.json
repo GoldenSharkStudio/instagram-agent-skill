@@ -1021,5 +1021,17 @@
       "name": "Reflex follow or tag bait",
       "fix": "Ask for the one action this post actually earns. The generic ask trains the audience to ignore every ask."
     }
+  ],
+  "lang": "en",
+  "voice": {
+    "contractions": "(?i)\\b\\w+'(?:s|t|re|ve|ll|d|m)\\b",
+    "pronouns": "(?i)\\b(i|me|my|mine|we|us|our|you|your)\\b"
+  },
+  "connectives": [
+    "also",
+    "so",
+    "still",
+    "basically",
+    "in the end"
   ]
 }

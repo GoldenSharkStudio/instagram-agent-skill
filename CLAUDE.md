@@ -16,7 +16,7 @@ Every tool reads a file path or `-` / stdin, and supports `--json`. Run from any
 python3 skills/ig-reel/hookscore.py hooks.txt          # one hook per line; or --hook "..."
 python3 skills/ig-reel/beats.py script.txt --target 30 [--wpm 165]
 python3 skills/ig-caption/caption.py caption.txt --keywords "a,b" [--truncate 125]
-python3 skills/ig-human/humanize.py draft.txt --report [-o out.txt] [--lexicon slop.json]
+python3 skills/ig-human/humanize.py draft.txt --report [-o out.txt] [--lexicon slop.en.json]
 python3 skills/ig-human/detect.py draft.txt [after.txt]  # second arg = before/after delta
 python3 skills/ig-viral/swipe.py captured.tsv [--out swipe.md] [--hooks path/to/hooks.json]
 ```
@@ -34,8 +34,8 @@ Run from the repo root. Golden tests pin the numbers in the README example block
 
 ## Architecture and coupling
 
-- **Data vs. logic.** Tunable content lives in JSON, meant to be edited by users: `ig-human/slop.json` (lexicon + replacements, invisible-char classes, typography substitutions, structural tells), `ig-reel/hooks.json` (26 formulas, each with a `match` regex), `ig-profile/rubric.json` (12-item, 100-point score, read by the model, not by code). Prefer changing the JSON over hardcoding in Python.
-- **`humanize.py` fixes, `detect.py` scores.** Both read `slop.json`. humanize applies three passes (invisible chars → typography → lexicon) and only *flags* structural tells (they need human rewriting, not regex). Lowercase-only voices are deliberately preserved when restoring capitals after a deleted opener.
+- **Data vs. logic.** Tunable content lives in JSON, meant to be edited by users: `ig-human/slop.en.json` (lexicon + replacements, invisible-char classes, typography substitutions, structural tells, voice regexes, splice connectives), `ig-reel/lang/en.json` and `ig-caption/lang/en.json` (every word list and language-bound regex the scripts use; `tests/test_lang.py` fails if one is hardcoded in Python), `ig-reel/hooks.json` (26 formulas, each with a `match` regex), `ig-profile/rubric.json` (12-item, 100-point score, read by the model, not by code). Prefer changing the JSON over hardcoding in Python.
+- **`humanize.py` fixes, `detect.py` scores.** Both read `slop.en.json`. humanize applies three passes (invisible chars → typography → lexicon) and only *flags* structural tells (they need human rewriting, not regex). Lowercase-only voices are deliberately preserved when restoring capitals after a deleted opener.
 - **Cross-skill dependency:** `ig-viral/swipe.py` reads `../ig-reel/hooks.json` and optionally imports `hookscore.run` from `../ig-reel` via `sys.path`. Both are wrapped so swipe degrades gracefully if `ig-viral` is copied alone — keep it that way. Changing `hookscore.run`'s signature or `hooks.json`'s schema affects swipe.
 - **Duplicated regexes.** `WORD_RE`, `CONCRETE_RE`, `EMOJI_RE`, etc. are copied across scripts on purpose (each folder is standalone). When fixing one (e.g. the spoken-numbers fix in SPECIFICITY), check the sibling copies in the other scripts.
 - **Shared user state** lives outside the repo in `~/.claude/instagram/`: `voice.md` (from `templates/voice.md`, read by every skill), `swipe.md` (written by `/ig-viral`, read by `/ig-reel` and `/ig-plan`), `log.md` (appended on post approval, read by `/ig-plan`, `/ig-comment`, `/ig-audit`), `plan.md` (written by `/ig-plan`).
