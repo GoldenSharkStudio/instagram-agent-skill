@@ -1033,5 +1033,15 @@
     "still",
     "basically",
     "in the end"
+  ],
+  "conjunctions": [
+    "and",
+    "or",
+    "but",
+    "so",
+    "plus",
+    "yet",
+    "nor",
+    "then"
   ]
 }

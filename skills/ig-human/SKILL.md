@@ -88,7 +88,8 @@ PASS, and it is the part a script cannot do.
 
 The verdict weights the mean at 60% and the **weakest single check** at 40%,
 because one signal is enough. PASS needs an overall of 70+ with no check
-below 55.
+below 55, and no structural tell left: while one remains the verdict stops at
+REVIEW, whatever the score, and the output says how many.
 
 ## Say this honestly
 
@@ -105,7 +106,8 @@ do not tell a user their text is undetectable.
 1. `humanize.py draft.txt -o clean.txt --report`
 2. Read the structural flags. Rewrite those lines yourself.
 3. `detect.py draft.txt clean.txt` to show the before and after.
-4. If the verdict is not PASS, fix the weakest check named in the output and go
-   again. Two rounds is normal. Five means the draft was written by formula,
-   and the fix is a different draft, not more passes.
+4. If the verdict is not PASS, fix what the output names (the structural tells
+   still left, or else the weakest check) and go again. Two rounds is normal.
+   Five means the draft was written by formula, and the fix is a different
+   draft, not more passes.
 5. Show the user the cleaned text and the score. Never the score alone.

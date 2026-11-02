@@ -170,6 +170,13 @@ class DuplicatedRegexes(unittest.TestCase):
         pats = {n: load(n).CONCRETE_RE.pattern for n in ("beats", "caption")}
         self.assertEqual(len(set(pats.values())), 1, pats)
 
+    def test_lexicon_term_re(self):
+        # humanize replaces what detect counts: same regex for every entry.
+        hz, dt = load("humanize"), load("detect")
+        drift = [e["find"] for e in SLOP["words"] + SLOP["phrases"]
+                 if hz.term_re(e["find"]).pattern != dt.term_re(e["find"]).pattern]
+        self.assertEqual(drift, [])
+
     def test_hashtag_and_emoji_drift_is_known(self):
         # hookscore and caption disagree on what an emoji is (caption also
         # counts arrows and U+FE0F). Logged in A Fazer for phase 2; this test

@@ -46,12 +46,13 @@ class LexiconError(Exception):
 
 def load_lexicon(path=LEX):
     """slop.<lang>.json. `connectives` are the words that, after an em dash
-    turned into a comma, leave a splice worth promoting to a full stop."""
+    turned into a comma, leave a splice worth promoting to a full stop.
+    `conjunctions` are the words that go with a deleted phrase they joined."""
     try:
         with open(path, encoding="utf-8") as fh:
             lex = json.load(fh)
         for key in ("invisible", "typographic", "words", "phrases", "structures",
-                    "connectives"):
+                    "connectives", "conjunctions"):
             if not isinstance(lex[key], list):
                 raise TypeError(f"{key} must be a list")
         return lex
@@ -140,6 +141,19 @@ def _match_case(src, repl):
     return repl
 
 
+def term_re(find):
+    """A lexicon entry as a regex: whitespace-tolerant, whole words. The edge
+    \\b only goes on an edge that is a word character: after the "?" of
+    "what are your thoughts?" a \\b demands a letter, so the entry never
+    matched at the end of a caption. Same function in humanize.py and detect.py."""
+    lead = r"\b" if re.match(r"\w", find[0]) else ""
+    trail = r"\b" if re.match(r"\w", find[-1]) else ""
+    return re.compile(lead + re.escape(find).replace(r"\ ", r"\s+") + trail, re.IGNORECASE)
+
+
+DELETED = "\x00DEL\x00"   # marks where an entry was deleted, until cleanup
+
+
 def pass_lexical(text, lex):
     """Replace slop words and phrases. Longest first so phrases win."""
     hits = []
@@ -147,14 +161,25 @@ def pass_lexical(text, lex):
                      key=lambda e: len(e["find"]), reverse=True)
     for entry in entries:
         find = entry["find"]
-        pattern = re.compile(r"\b" + re.escape(find).replace(r"\ ", r"\s+") + r"\b",
-                             re.IGNORECASE)
+        pattern = term_re(find)
         found = pattern.findall(text)
         if not found:
             continue
         hits.append({"find": find, "replace": entry["replace"] or "(deleted)",
                      "count": len(found), "family": entry["family"]})
-        text = pattern.sub(lambda m: _match_case(m.group(0), entry["replace"]), text)
+        text = pattern.sub(lambda m: _match_case(m.group(0), entry["replace"])
+                           if entry["replace"] else DELETED, text)
+    # A conjunction that joined a deleted phrase to the sentence goes with it
+    # ("today and follow for more." left "today and."). Only one touching a
+    # deletion: the writer's own "I think so." is not residue.
+    conj = "|".join(re.escape(c) for c in lex["conjunctions"])
+    text = re.sub(r"[ \t]*,?[ \t]*\b(?:" + conj + r")[ \t]+(?=" + DELETED + ")",
+                  "", text, flags=re.IGNORECASE)
+    # A line that was nothing but deleted phrases goes whole, newline too.
+    # Left alone it keeps its end mark ("!"), which the joins below would
+    # glue onto the line above, or a blank line the writer never wrote.
+    text = re.sub(r"(?m)^(?:[ \t,]*" + DELETED + r")+[ \t,.;:!?]*(?:\n|$)", "", text)
+    text = text.replace(DELETED, "")
     # Clean up after deletions. Deleting a whole clause leaves orphaned
     # punctuation behind ("system. ." or a line that now opens on a comma),
     # and that reads worse than the slop did.

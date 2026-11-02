@@ -100,6 +100,16 @@ def check_specificity(text):
     return score, f"{hits} concrete markers, {density:.1f} per 100 words (want 4+)"
 
 
+def term_re(find):
+    """A lexicon entry as a regex: whitespace-tolerant, whole words. The edge
+    \\b only goes on an edge that is a word character: after the "?" of
+    "what are your thoughts?" a \\b demands a letter, so the entry never
+    matched at the end of a caption. Same function in humanize.py and detect.py."""
+    lead = r"\b" if re.match(r"\w", find[0]) else ""
+    trail = r"\b" if re.match(r"\w", find[-1]) else ""
+    return re.compile(lead + re.escape(find).replace(r"\ ", r"\s+") + trail, re.IGNORECASE)
+
+
 def check_slop(text, lex):
     """Stock vocabulary density against the lexicon."""
     w = words(text)
@@ -111,8 +121,7 @@ def check_slop(text, lex):
     entries = sorted(lex["phrases"] + lex["words"], key=lambda e: len(e["find"]), reverse=True)
     rest = text
     for entry in entries:
-        pattern = re.compile(r"\b" + re.escape(entry["find"]).replace(r"\ ", r"\s+") + r"\b",
-                             re.IGNORECASE)
+        pattern = term_re(entry["find"])
         n = len(pattern.findall(rest))
         if n:
             hits += n
@@ -141,6 +150,21 @@ def check_fingerprint(text):
     return score, detail
 
 
+def count_tells(text, lex):
+    """Structural tells: the shapes humanize.py flags for a person to rewrite.
+    Returns (count, ids)."""
+    tells, names = 0, []
+    for s in lex["structures"]:
+        try:
+            n = len(re.compile(s["regex"], re.MULTILINE).findall(text))
+        except re.error:
+            continue
+        if n:
+            tells += n
+            names.append(s["id"])
+    return tells, names
+
+
 def check_voice(text, lex):
     """Contractions, person, and the shapes models default to."""
     w = words(text)
@@ -150,16 +174,7 @@ def check_voice(text, lex):
     voice = lex["voice"]
     contractions = len(re.findall(voice["contractions"], text)) * per100
     person = len(re.findall(voice["pronouns"], text)) * per100
-    tells = 0
-    names = []
-    for s in lex["structures"]:
-        try:
-            n = len(re.compile(s["regex"], re.MULTILINE).findall(text))
-        except re.error:
-            continue
-        if n:
-            tells += n
-            names.append(s["id"])
+    tells, names = count_tells(text, lex)
     bullets = [len(b.split()) for b in re.findall(r"(?m)^\s*[-*•]\s+(.+)$", text)]
     uniform = (len(bullets) >= 3 and statistics.pstdev(bullets) < 1.6)
     score = (scale(contractions, human=3.0, machine=0.0) * 0.35
@@ -176,6 +191,12 @@ def check_voice(text, lex):
 
 
 CHECKS = ["BURSTINESS", "SPECIFICITY", "SLOP DENSITY", "FINGERPRINT", "VOICE"]
+PASS_SCORE, CHECK_FLOOR, REVIEW_SCORE = 70, 55, 50
+
+
+def scores_pass(results, overall):
+    """The numbers alone would pass: overall 70+ and no check below 55."""
+    return overall >= PASS_SCORE and min(r[0] for r in results.values()) >= CHECK_FLOOR
 
 
 def run(text, lex):
@@ -188,8 +209,12 @@ def run(text, lex):
     scores = [results[c][0] for c in CHECKS]
     # The weakest check drags the verdict: a detector only needs one signal.
     overall = statistics.mean(scores) * 0.6 + min(scores) * 0.4
-    verdict = "PASS" if overall >= 70 and min(scores) >= 55 else (
-        "REVIEW" if overall >= 50 else "FLAGGED")
+    verdict = "PASS" if scores_pass(results, overall) else (
+        "REVIEW" if overall >= REVIEW_SCORE else "FLAGGED")
+    # A structural tell is the part a script cannot rewrite. While one is
+    # left the draft stops at REVIEW, however well the numbers came out.
+    if verdict == "PASS" and count_tells(text, lex)[0]:
+        verdict = "REVIEW"
     return results, overall, verdict
 
 
@@ -198,7 +223,7 @@ def bar(score, width=24):
     return "#" * filled + "." * (width - filled)
 
 
-def render(results, overall, verdict, label=None, out=sys.stdout):
+def render(results, overall, verdict, label=None, out=sys.stdout, tells=0):
     title = "AI DETECTION PANEL" + (f"  -  {label}" if label else "")
     print("\n" + title, file=out)
     print("=" * max(len(title), 62), file=out)
@@ -208,7 +233,10 @@ def render(results, overall, verdict, label=None, out=sys.stdout):
         print(f"  {'':<13} {detail}", file=out)
     print("-" * 62, file=out)
     print(f"  {'HUMAN SCORE':<13} {bar(overall)} {overall:5.1f}   {verdict}", file=out)
-    if verdict != "PASS":
+    if verdict == "REVIEW" and scores_pass(results, overall):
+        print(f"\n  Held at REVIEW: {tells} structural tell(s) left. Rewrite them by "
+              "hand; humanize.py --report lists them.", file=out)
+    elif verdict != "PASS":
         weakest = min(CHECKS, key=lambda c: results[c][0])
         print(f"\n  Weakest signal: {weakest}. Fix that first.", file=out)
     print("", file=out)
@@ -241,6 +269,7 @@ def main():
             "checks": {k: {"score": round(v[0], 1), "detail": v[1]} for k, v in results.items()},
             "human_score": round(overall, 1),
             "verdict": verdict,
+            "structural_tells": count_tells(text, lex)[0],
         })
 
     if args.json:
@@ -249,7 +278,8 @@ def main():
         for (name, text), p in zip(targets, payload):
             results, overall, verdict = run(text, lex)
             render(results, overall, verdict,
-                   label=os.path.basename(name) if args.compare else None)
+                   label=os.path.basename(name) if args.compare else None,
+                   tells=p["structural_tells"])
         if args.compare:
             a, b = payload
             delta = b["human_score"] - a["human_score"]

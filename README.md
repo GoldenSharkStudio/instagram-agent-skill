@@ -196,12 +196,13 @@ Run against a caption written to be as bad as possible
   HUMAN SCORE   #######.................  29.3   FLAGGED
 ```
 
-After `humanize.py`, with the flagged structures still unrewritten. It stops at
-REVIEW, not PASS, because the triads, the rocket bullets and the hashtag wall
-need a person:
+After `humanize.py`, with the flagged structures still unrewritten. The score
+clears 70, but it stops at REVIEW, not PASS: while a structural tell is left
+(the triads, the rocket bullets, the hashtag wall) the verdict waits for a
+person:
 
 ```
-  29.3 FLAGGED  ->  74.1 REVIEW   (+44.8)
+  29.3 FLAGGED  ->  74.4 REVIEW   (+45.1)
 ```
 
 ### The swipe file

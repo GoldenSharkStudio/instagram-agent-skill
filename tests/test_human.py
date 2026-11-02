@@ -76,12 +76,90 @@ class LexicalPass(unittest.TestCase):
         for line in out.splitlines():
             self.assertNotRegex(line, r"^\s*[,.;:!?]")
 
-    @unittest.expectedFailure
-    def test_known_bug_orphan_conjunction(self):
-        # Two deleted phrases joined by "and" leave "And!" on its own line.
-        # Logged in docs/PM/A Fazer.md; fix with fix-de-classe in phase 2.
+    def test_orphan_conjunction_sample(self):
+        # The original report: two deleted phrases joined by "and" left "And!".
         out = clean("Line one.\nFollow for more and tag someone who needs this!\n")
-        self.assertNotIn("And!", out)
+        self.assertEqual(out, "Line one.\n")
+
+
+def deletable_entries(lex):
+    """Every lexicon entry whose replacement is empty, read from slop.en.json,
+    so a new deletion joins the net below without being registered."""
+    return [e["find"] for e in lex["phrases"] + lex["words"] if e["replace"] == ""]
+
+
+# English coordinating conjunctions plus the two spoken joiners ("so", "then",
+# "plus") that captions use the same way. This is the spec the data must meet:
+# drop one from slop.en.json and the coverage guard below names it.
+CONJUNCTIONS = ("and", "or", "but", "so", "plus", "yet", "nor", "then")
+
+
+class OrphanConjunctionNet(unittest.TestCase):
+    """Class net: deleting a lexicon entry takes the conjunction that joined it
+    to the sentence along with it. Every deletable entry x every conjunction x
+    the four places a conjunction sits next to a deleted chunk."""
+
+    CASES = (
+        ("Line one.\n{a} {c} {b}!\n", "Line one.\n"),
+        ("We shipped it today {c} {a}.\n", "We shipped it today.\n"),
+        ("We shipped it today, {c} {a}!\n", "We shipped it today!\n"),
+        ("{a}, {c} {b}.\nLine two.\n", "Line two.\n"),
+    )
+
+    def test_data_covers_every_conjunction(self):
+        missing = [c for c in CONJUNCTIONS if c not in LEX["conjunctions"]]
+        self.assertEqual(missing, [], "slop.en.json conjunctions lost an entry")
+
+    def test_no_conjunction_survives_a_deletion(self):
+        entries = deletable_entries(LEX)
+        self.assertGreater(len(entries), 0)  # the scan reached the data
+        broken = []
+        for i, a in enumerate(entries):
+            b = entries[(i + 1) % len(entries)]
+            for c in CONJUNCTIONS:
+                for template, want in self.CASES:
+                    text = template.format(a=a, b=b, c=c)
+                    got = clean(text)
+                    if got != want:
+                        broken.append((text, got))
+        self.assertEqual(broken[:5], [], f"{len(broken)} cases strand a conjunction")
+
+    def test_users_own_conjunctions_are_kept(self):
+        # Only a conjunction touching a deleted chunk goes. The writer's own
+        # "so" and "and" at the end of a clause are not residue.
+        for text in ("I think so.\n", "Salt and pepper, or so.\n",
+                     "Rock and roll. Follow for more.\n", "Then what? And then?\n"):
+            with self.subTest(text=text):
+                self.assertEqual(clean(text), text.replace(" Follow for more.", ""))
+
+
+class EveryEntryMatchesAtTheEdges(unittest.TestCase):
+    """Class net: a lexicon entry is found wherever it sits, including at the
+    very end of the text and right before "!", where closers live. An entry
+    that starts or ends on punctuation ("what are your thoughts?") broke a
+    fixed \\b there. Both compilers (humanize, detect) over every entry."""
+
+    PLACES = ("Great post. {find}", "Great post, {find}!\n", "{find}\n")
+
+    def entries(self):
+        found = LEX["phrases"] + LEX["words"]
+        self.assertGreater(len(found), 100)  # the scan reached the data
+        return found
+
+    def test_humanize_replaces_every_entry_everywhere(self):
+        missed = []
+        for e in self.entries():
+            if e["find"].lower() in e["replace"].lower():
+                continue  # a replacement that contains its own find cannot be checked this way
+            for place in self.PLACES:
+                if e["find"].lower() in clean(place.format(find=e["find"])).lower():
+                    missed.append((e["find"], place))
+        self.assertEqual(missed, [])
+
+    def test_detect_counts_every_entry_everywhere(self):
+        missed = [(e["find"], place) for e in self.entries() for place in self.PLACES
+                  if dt.check_slop(place.format(find=e["find"]), LEX)[1].startswith("0 stock")]
+        self.assertEqual(missed, [])
 
 
 def nested_lexicon_pairs(lex):
@@ -191,7 +269,7 @@ class Detect(unittest.TestCase):
     def test_humanize_moves_the_score(self):
         before = dt.run(read_fixture("bad_draft.txt"), LEX)[1]
         after_results, after, verdict = dt.run(clean(read_fixture("bad_draft.txt")), LEX)
-        self.assertEqual(round(after, 1), 74.1)
+        self.assertEqual(round(after, 1), 74.4)
         self.assertEqual(verdict, "REVIEW")  # structures are flagged, not fixed
         self.assertGreater(after, before + 40)
         self.assertEqual(after_results["FINGERPRINT"][0], 100.0)
@@ -205,6 +283,43 @@ class Detect(unittest.TestCase):
         dirty = text.replace(" ", "​ ", 5)
         self.assertLess(dt.run(dirty, LEX)[0]["FINGERPRINT"][0],
                         dt.run(text, LEX)[0]["FINGERPRINT"][0])
+
+
+class TellsHoldThePass(unittest.TestCase):
+    """Owner's rule (02/11): a structural tell is the part a script cannot
+    rewrite, so while one is left the verdict stops at REVIEW, whatever the
+    score. The rule reads only the tell count, so three tells of different
+    shape (sentence, line prefix, tag run) stand for all of them."""
+
+    def test_humanized_bad_draft_stops_at_review(self):
+        after = clean(read_fixture("bad_draft.txt"))
+        results, overall, verdict = dt.run(after, LEX)
+        self.assertGreaterEqual(overall, 70)               # the score alone would pass
+        self.assertGreaterEqual(min(r[0] for r in results.values()), 55)
+        self.assertEqual(verdict, "REVIEW")
+
+    def test_one_tell_of_any_kind_holds_a_passing_draft(self):
+        base = read_fixture("good_draft.txt")
+        self.assertEqual(dt.run(base, LEX)[2], "PASS")
+        samples = {"not-just": "It's not just a tool, it's a system.",
+                   "rocket": "🚀 Post daily",
+                   "hashtag-wall": "#a #b #c #d #e #f #g #h"}
+        ids = {s["id"] for s in LEX["structures"]}
+        self.assertLessEqual(set(samples), ids, "a sample names a tell slop.en.json lost")
+        for tell, sample in samples.items():
+            with self.subTest(tell=tell):
+                text = base + "\n" + sample + "\n"
+                self.assertGreater(dt.count_tells(text, LEX)[0], 0, "sample does not trip it")
+                self.assertEqual(dt.run(text, LEX)[2], "REVIEW")
+
+    def test_render_names_the_tells_not_the_weakest_check(self):
+        with tempfile.TemporaryDirectory() as d:
+            after = os.path.join(d, "after.txt")
+            run_tool("humanize", fixture("bad_draft.txt"), "-o", after)
+            proc = run_tool("detect", after)
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("structural tell(s) left", proc.stdout)
+        self.assertNotIn("Weakest signal", proc.stdout)
 
 
 class DetectCli(unittest.TestCase):
@@ -231,6 +346,12 @@ class DetectCli(unittest.TestCase):
             self.assertIsInstance(data, list)
             self.assertEqual([p["verdict"] for p in data], ["FLAGGED", "PASS"])
             self.assertEqual(proc.returncode, 0)
+
+    def test_json_reports_structural_tells(self):
+        _, data = run_json("detect", fixture("bad_draft.txt"))
+        self.assertEqual(data["structural_tells"], 13)
+        _, data = run_json("detect", fixture("good_draft.txt"))
+        self.assertEqual(data["structural_tells"], 0)
 
     def test_stdin_equals_file(self):
         a = run_tool("detect", fixture("bad_draft.txt")).stdout
