@@ -106,13 +106,18 @@ def check_slop(text, lex):
     if not w:
         return 50.0, "empty"
     hits, found = 0, []
-    for entry in lex["words"] + lex["phrases"]:
+    # Longest first, and a match is blanked out once counted, so "delve into"
+    # is one stock term and not also a "delve". Same order humanize.py uses.
+    entries = sorted(lex["phrases"] + lex["words"], key=lambda e: len(e["find"]), reverse=True)
+    rest = text
+    for entry in entries:
         pattern = re.compile(r"\b" + re.escape(entry["find"]).replace(r"\ ", r"\s+") + r"\b",
                              re.IGNORECASE)
-        n = len(pattern.findall(text))
+        n = len(pattern.findall(rest))
         if n:
             hits += n
             found.append(entry["find"])
+            rest = pattern.sub(lambda m: " " * len(m.group(0)), rest)
     density = hits * 100 / len(w)
     score = scale(density, human=0.0, machine=4.0)
     detail = f"{hits} stock terms, {density:.1f} per 100 words"

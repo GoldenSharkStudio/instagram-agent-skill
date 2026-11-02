@@ -105,13 +105,29 @@ class Checks(unittest.TestCase):
         cases = [
             "Stop scrolling, this matters",
             "In this video I explain contracts",
-            "Hey there, contracts matter",  # "Hey," with a comma is a known gap (A Fazer)
+            "Hey there, contracts matter",
             "Contracts matter #freelance",
             "Contracts matter 🔥",
         ]
         for text, (pattern, _) in zip(cases, hs.DEALBREAKERS):
             with self.subTest(text=text):
                 self.assertTrue(pattern.search(text))
+
+    def test_greeting_with_punctuation_fires(self):
+        greeting = next(p for p, m in hs.DEALBREAKERS if m.startswith("Greeting"))
+        for text in ("Hey, you lost $18,000", "Hi, I'm Sam and I lost $18,000",
+                     "Hi! You lost $18,000", "What's up, guys", "Welcome back.",
+                     "Hello, you lost $18,000", "  hey you lost $18,000"):
+            with self.subTest(text=text):
+                self.assertTrue(greeting.search(text))
+
+    def test_greeting_needs_a_whole_word(self):
+        greeting = next(p for p, m in hs.DEALBREAKERS if m.startswith("Greeting"))
+        for text in ("Hiring is broken", "Highest paid job I quit", "Heyday of the agency",
+                     "Welcomed by 3 clients", "Helloworld scripts cost me $400",
+                     "They said hey to me"):
+            with self.subTest(text=text):
+                self.assertFalse(greeting.search(text))
 
     def test_dealbreaker_blocks_strong(self):
         _, _, verdict, flags = hs.run("Stop scrolling: you lost $18,000 on one contract")

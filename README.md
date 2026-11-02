@@ -189,7 +189,7 @@ Run against a caption written to be as bad as possible
 ```
   BURSTINESS    #######################.  95.7    variation 0.68 across 10 sentences
   SPECIFICITY   ###########.............  47.7    3.1 concrete markers per 100 words
-  SLOP DENSITY  ........................   0.0    17 stock terms, 17.7 per 100 words
+  SLOP DENSITY  ........................   0.0    16 stock terms, 16.7 per 100 words
   FINGERPRINT   ############............  49.7    2 em dash
   VOICE         ############............  50.8    13 structural tells
   ------------------------------------------------------------

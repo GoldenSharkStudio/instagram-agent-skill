@@ -208,7 +208,7 @@
         "message": "Video preamble. Delete it and open on the payoff."
       },
       {
-        "regex": "(?i)^\\s*(?:hey |hi |what'?s up |welcome )",
+        "regex": "(?i)^\\s*(?:hey|hi|hello|what'?s up|welcome)\\b",
         "message": "Greeting. Nobody came to the feed to be greeted."
       }
     ]

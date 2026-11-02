@@ -3,6 +3,7 @@ the before/after delta, and the exit-code contract."""
 
 import json
 import os
+import re
 import tempfile
 import unittest
 
@@ -83,6 +84,46 @@ class LexicalPass(unittest.TestCase):
         self.assertNotIn("And!", out)
 
 
+def nested_lexicon_pairs(lex):
+    """(short, long) for every lexicon entry found whole-word inside another.
+    Read from slop.en.json, so a new overlapping entry joins the net."""
+    entries = [e["find"] for e in lex["words"] + lex["phrases"]]
+    return [(a, b) for a in entries for b in entries
+            if a != b and re.search(r"\b" + re.escape(a) + r"\b", b, re.IGNORECASE)]
+
+
+class NestedLexiconCountsOnce(unittest.TestCase):
+    """Class net: a phrase that contains another entry is one stock term,
+    not two. Every member of the lexicon that counts matches is checked."""
+
+    def test_pairs_come_from_the_lexicon(self):
+        pairs = nested_lexicon_pairs(LEX)
+        self.assertIn(("delve", "delve into"), pairs)
+        self.assertGreaterEqual(len(pairs), 6)
+
+    def test_detect_counts_the_long_phrase_once(self):
+        for short, long in nested_lexicon_pairs(LEX):
+            with self.subTest(phrase=long):
+                detail = dt.check_slop(f"Today we {long} it.", LEX)[1]
+                self.assertTrue(detail.startswith("1 stock terms"), detail)
+                self.assertTrue(detail.endswith(f"({long})"), detail)
+
+    def test_detect_still_counts_the_short_word_alone(self):
+        for short, long in nested_lexicon_pairs(LEX):
+            with self.subTest(word=short):
+                self.assertTrue(dt.check_slop(f"Today we {short} it.", LEX)[1].startswith("1 stock"))
+
+    def test_detect_counts_both_when_both_appear_apart(self):
+        detail = dt.check_slop("We delve into it. Then we delve again.", LEX)[1]
+        self.assertTrue(detail.startswith("2 stock terms"), detail)
+
+    def test_humanize_replaces_the_long_phrase_once(self):
+        for short, long in nested_lexicon_pairs(LEX):
+            with self.subTest(phrase=long):
+                hits = hz.pass_lexical(f"Today we {long} it.", LEX)[1]
+                self.assertEqual([(h["find"], h["count"]) for h in hits], [(long, 1)])
+
+
 class Structures(unittest.TestCase):
     def test_flags_not_fixes(self):
         text = "It's not just about posting, it's about the craft."
@@ -139,7 +180,7 @@ class Detect(unittest.TestCase):
         self.assertEqual(verdict, "FLAGGED")
         self.assertEqual(round(overall, 1), 29.3)
         self.assertEqual(results["SLOP DENSITY"][0], 0.0)
-        self.assertIn("17 stock terms", results["SLOP DENSITY"][1])
+        self.assertIn("16 stock terms", results["SLOP DENSITY"][1])
         self.assertIn("2 em dash", results["FINGERPRINT"][1])
 
     def test_good_draft_passes(self):

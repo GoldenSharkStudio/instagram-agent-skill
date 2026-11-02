@@ -177,6 +177,116 @@ class DuplicatedRegexes(unittest.TestCase):
         self.assertNotEqual(load("hookscore").EMOJI_RE.pattern, load("caption").EMOJI_RE.pattern)
 
 
+# Keys whose string values the tools hand to re.compile. A regex-looking
+# string under any other key fails RegexDataNet.test_every_regex_key_is_known,
+# so a new regex field cannot dodge the net below.
+REGEX_KEYS = {"regex", "match", "contractions", "pronouns", "address_me",
+              "address_you", "number_units"}
+REGEX_HINTS = ("\\b", "(?", "\\s", "\\d", "[^")
+
+
+def data_strings():
+    """(file, key, value) for every string in every JSON under skills/."""
+    out = []
+
+    def walk(obj, key, path):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                walk(v, k, path)
+        elif isinstance(obj, list):
+            for v in obj:
+                walk(v, key, path)
+        elif isinstance(obj, str):
+            out.append((path, key, obj))
+
+    for path in sorted(glob.glob(os.path.join(SKILLS, "**", "*.json"), recursive=True)):
+        with open(path, encoding="utf-8") as fh:
+            walk(json.load(fh), None, os.path.relpath(path, ROOT))
+    return out
+
+
+def _skip_siblings(pattern, pos):
+    """From a "|", return the index of the ")" closing this group, or len."""
+    depth, in_class, n = 0, False, len(pattern)
+    while pos < n:
+        c = pattern[pos]
+        if c == "\\":
+            pos += 2
+            continue
+        if in_class:
+            in_class = c != "]"
+        elif c == "[":
+            in_class = True
+        elif c == "(":
+            depth += 1
+        elif c == ")":
+            if depth == 0:
+                return pos
+            depth -= 1
+        pos += 1
+    return n
+
+
+def _tail_is_empty(pattern, pos):
+    """True if nothing after `pos` can consume a character."""
+    n = len(pattern)
+    while pos < n:
+        c = pattern[pos]
+        if c == "|":
+            pos = _skip_siblings(pattern, pos + 1)
+        elif c == ")" or c in "?*+$":
+            pos += 1
+        elif pattern.startswith("\\b", pos) or pattern.startswith("\\Z", pos):
+            pos += 2
+        else:
+            return False
+    return True
+
+
+def terminal_space_alternatives(pattern):
+    """Alternatives that end the whole match on a literal space ("hey |hi )").
+    A trailing space used as a word end misses "Hey," and "Hi!", which is how
+    the greeting dealbreaker leaked. A space followed by more pattern is a
+    separator between words and is fine."""
+    hits, in_class, i, n = [], False, 0, len(pattern)
+    while i < n:
+        c = pattern[i]
+        if c == "\\":
+            i += 2
+            continue
+        if in_class:
+            in_class = c != "]"
+        elif c == "[":
+            in_class = True
+        elif c == " " and _tail_is_empty(pattern, i + 1):
+            start = max(pattern.rfind("|", 0, i), pattern.rfind("(", 0, i)) + 1
+            hits.append(pattern[start:i + 1])
+        i += 1
+    return hits
+
+
+class RegexDataNet(unittest.TestCase):
+    """Class net for "trailing space as a word end" in the JSON regexes."""
+
+    def test_detector_sees_a_planted_trailing_space(self):
+        self.assertTrue(terminal_space_alternatives(r"(?i)^\s*(?:hey |hi )"))
+        self.assertTrue(terminal_space_alternatives(r"\bfoo |\bbar\b"))
+        self.assertFalse(terminal_space_alternatives(r"(?i)^\s*(?:hey|hi)\b"))
+        self.assertFalse(terminal_space_alternatives(r"\bcomment (?:the word |\")?[A-Z]{2,}\b"))
+        self.assertFalse(terminal_space_alternatives(r"\bnow (?:it )?(?:only )?takes?\b"))
+
+    def test_every_regex_key_is_known(self):
+        stray = [(f, k, v[:40]) for f, k, v in data_strings()
+                 if k not in REGEX_KEYS and any(h in v for h in REGEX_HINTS)]
+        self.assertEqual(stray, [], "regex-looking data under a key the net does not scan")
+
+    def test_no_regex_ends_on_a_literal_space(self):
+        regexes = [(f, k, v) for f, k, v in data_strings() if k in REGEX_KEYS]
+        self.assertGreater(len(regexes), 50)  # the scan reached the data
+        bad = [(f, k, hit) for f, k, v in regexes for hit in terminal_space_alternatives(v)]
+        self.assertEqual(bad, [])
+
+
 class Manifests(unittest.TestCase):
     def test_skill_frontmatter(self):
         for d in SKILL_DIRS:
@@ -268,6 +378,26 @@ class ReadmeBlocksAreRealOutput(unittest.TestCase):
         lines = self.readme_lines("SWIPE FILE", "60.0x", "37.5x", "3.5x", "1.3x")
         self.assertEqual(len(lines), 5)
         self.assertLinesIn(lines, run_tool("swipe", fixture("captured.tsv")).stdout)
+
+    def test_detect_panel(self):
+        """The README panel is a two-column summary of the real one: the bar
+        and score are verbatim, and every number in the summary must appear
+        in that check's detail line."""
+        from _support import fixture, run_tool
+        names = ("BURSTINESS", "SPECIFICITY", "SLOP DENSITY", "FINGERPRINT", "VOICE")
+        rows = self.readme_lines(*names)
+        self.assertEqual(len(rows), 5)
+        out = run_tool("detect", fixture("bad_draft.txt")).stdout.splitlines()
+        for row in rows:
+            with self.subTest(row=row.strip()[:14]):
+                m = re.match(r"(\s*[A-Z ]+?\s+[#.]+\s+[\d.]+)\s+(.*)$", row)
+                self.assertIsNotNone(m, row)
+                head, summary = m.groups()
+                idx = [i for i, l in enumerate(out) if l.rstrip() == head.rstrip()]
+                self.assertEqual(len(idx), 1, f"bar/score not in output: {head!r}")
+                detail = out[idx[0] + 1]
+                for num in re.findall(r"\d+(?:\.\d+)?", summary):
+                    self.assertRegex(detail, r"(?<![\d.])" + re.escape(num) + r"(?![\d.])")
 
     def test_humanizer_delta(self):
         import tempfile
