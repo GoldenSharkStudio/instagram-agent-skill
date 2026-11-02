@@ -159,16 +159,76 @@ class SlopJson(unittest.TestCase):
                 self.assertIn("to", e)
 
 
+def script_paths():
+    """Every tool script, read from the tree (not from the TOOLS registry)."""
+    return sorted(p for p in glob.glob(os.path.join(SKILLS, "*", "*.py"))
+                  if not os.path.basename(p).startswith("_"))
+
+
+def module_regexes():
+    """{NAME_RE: {tool: (pattern, flags source)}} for every module-level
+    `NAME_RE = re.compile("literal", ...)` in every script, parsed from src."""
+    by_path = {os.path.realpath(p): n for n, p in TOOLS.items()}
+    out = {}
+    for path in script_paths():
+        with open(path, encoding="utf-8") as fh:
+            tree = ast.parse(fh.read())
+        for node in tree.body:
+            if not (isinstance(node, ast.Assign) and len(node.targets) == 1
+                    and isinstance(node.targets[0], ast.Name)
+                    and node.targets[0].id.endswith("_RE")
+                    and isinstance(node.value, ast.Call)
+                    and ast.unparse(node.value.func) == "re.compile"):
+                continue
+            pattern = ast.literal_eval(node.value.args[0])
+            flags = " ".join(ast.unparse(a) for a in node.value.args[1:])
+            tool = by_path.get(os.path.realpath(path), os.path.relpath(path, ROOT))
+            out.setdefault(node.targets[0].id, {})[tool] = (pattern, flags)
+    return out
+
+
+# Same name, different regex, on purpose. Each entry says why; anything not
+# listed here must be byte-identical in every script that defines the name.
+DRIFT_ALLOWED = {
+    ("SENT_RE", "beats"): "beats splits the script into lines before sentences, "
+                          "so it has no newline to exclude; the result is the same",
+    ("WORD_RE", "detect"): "detect counts letters for voice and slop, not tokens "
+                           "with $ and %; revisit in the ASCII-only step (A Fazer)",
+    ("HASHTAG_RE", "caption"): "caption captures the tag text for counting; the ASCII "
+                               "class is the ASCII-only finding, fixed in that step",
+}
+
+
 class DuplicatedRegexes(unittest.TestCase):
     """Copied on purpose so each folder stands alone. Copies must not drift."""
 
-    def test_word_re(self):
-        pats = {n: load(n).WORD_RE.pattern for n in ("hookscore", "beats", "swipe")}
-        self.assertEqual(len(set(pats.values())), 1, pats)
+    def test_tools_registry_covers_every_script(self):
+        # Every net that loops over TOOLS is blind to a script missing here.
+        registered = {os.path.realpath(p) for p in TOOLS.values()}
+        missing = [os.path.relpath(p, ROOT) for p in script_paths()
+                   if os.path.realpath(p) not in registered]
+        self.assertEqual(missing, [], "add these to TOOLS in tests/_support.py")
 
-    def test_concrete_re(self):
-        pats = {n: load(n).CONCRETE_RE.pattern for n in ("beats", "caption")}
-        self.assertEqual(len(set(pats.values())), 1, pats)
+    def test_same_name_same_regex(self):
+        regexes = module_regexes()
+        self.assertIn("EMOJI_RE", regexes)  # the parser still sees the copies
+        drift = {}
+        for name, copies in regexes.items():
+            kept = {t: v for t, v in copies.items() if (name, t) not in DRIFT_ALLOWED}
+            if len(set(kept.values())) > 1:
+                drift[name] = kept
+        self.assertEqual(drift, {})
+
+    def test_drift_allowances_are_live(self):
+        # An allowance for a copy that no longer differs (or no longer exists)
+        # is a hole waiting for the next real drift: remove it.
+        regexes = module_regexes()
+        for (name, tool), why in DRIFT_ALLOWED.items():
+            with self.subTest(name=name, tool=tool):
+                copies = regexes.get(name, {})
+                self.assertIn(tool, copies)
+                others = {v for t, v in copies.items() if t != tool}
+                self.assertTrue(others and copies[tool] not in others, why)
 
     def test_lexicon_term_re(self):
         # humanize replaces what detect counts: same regex for every entry.
@@ -177,11 +237,28 @@ class DuplicatedRegexes(unittest.TestCase):
                  if hz.term_re(e["find"]).pattern != dt.term_re(e["find"]).pattern]
         self.assertEqual(drift, [])
 
-    def test_hashtag_and_emoji_drift_is_known(self):
-        # hookscore and caption disagree on what an emoji is (caption also
-        # counts arrows and U+FE0F). Logged in A Fazer for phase 2; this test
-        # fails when someone aligns them, so the decision gets recorded.
-        self.assertNotEqual(load("hookscore").EMOJI_RE.pattern, load("caption").EMOJI_RE.pattern)
+
+# What a reader counts as one emoji. A copy of EMOJI_RE in any script must
+# count these the same way (the scripts are found from src, not listed here).
+EMOJI_CASES = [
+    ("🔥", 1), ("❤️", 1), ("👍🏽", 1), ("👨‍👩‍👧", 1), ("🇧🇷", 1), ("1️⃣", 1),
+    ("⭐", 1), ("✅", 1), ("☀️", 1), ("➡️", 1), ("⬇️", 1), ("↘️", 1), ("‼️", 1),
+    ("🇧🇷🔥", 2), ("❤️❤️", 2), ("👩🏾‍💻 ok 🚀", 2),
+    ("→", 0), ("Before → after", 0), ("™", 0), ("©", 0), ("#1 tip", 0), ("1.", 0),
+    ("plain text", 0), ("“quotes” — dash…", 0),
+]
+
+
+class EmojiCount(unittest.TestCase):
+
+    def test_every_copy_counts_clusters(self):
+        tools = sorted(module_regexes()["EMOJI_RE"])
+        self.assertGreaterEqual(len(tools), 2)
+        for tool in tools:
+            rx = getattr(load(tool), "EMOJI_RE")
+            for text, n in EMOJI_CASES:
+                with self.subTest(tool=tool, text=text):
+                    self.assertEqual(len(rx.findall(text)), n)
 
 
 # Keys whose string values the tools hand to re.compile. A regex-looking

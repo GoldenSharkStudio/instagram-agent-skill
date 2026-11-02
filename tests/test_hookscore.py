@@ -113,6 +113,14 @@ class Checks(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertTrue(pattern.search(text))
 
+    def test_emoji_dealbreaker_sees_flags_and_stars(self):
+        # Both escaped the old range: a hook with a flag scored as clean.
+        emoji = next(p for p, m in hs.DEALBREAKERS if m.startswith("Emoji"))
+        for text in ("Contracts matter 🇧🇷", "Contracts matter ⭐", "1️⃣ rule for contracts"):
+            with self.subTest(text=text):
+                self.assertTrue(emoji.search(text))
+        self.assertIsNone(emoji.search("Before → after: contracts"))
+
     def test_greeting_with_punctuation_fires(self):
         greeting = next(p for p, m in hs.DEALBREAKERS if m.startswith("Greeting"))
         for text in ("Hey, you lost $18,000", "Hi, I'm Sam and I lost $18,000",

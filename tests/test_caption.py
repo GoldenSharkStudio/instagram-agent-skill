@@ -104,6 +104,12 @@ class Checks(unittest.TestCase):
     def test_emoji_density(self):
         self.assertEqual(statuses(self.a("I lost $5 🔥🔥🔥🔥"))["EMOJI"], "WARN")
 
+    def test_emoji_counted_as_the_reader_sees_them(self):
+        # One heart with its selector is one emoji, a flag is one, an arrow
+        # in a sentence is typography (EMOJI_CASES in test_invariants).
+        self.assertEqual(self.a("Done ❤️ 🇧🇷 👍🏽")["emoji"], 3)
+        self.assertEqual(self.a("Before → after")["emoji"], 0)
+
     def test_search_terms_all_missing_fails(self):
         a = self.a("I lost $5.", keywords=["proposal software"])
         self.assertEqual(statuses(a)["SEARCH TERMS"], "FAIL")

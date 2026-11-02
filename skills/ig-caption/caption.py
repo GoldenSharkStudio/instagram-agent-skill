@@ -43,7 +43,18 @@ HASHTAG_RE = re.compile(r"(?:^|\s)(#[A-Za-z0-9_]+)")
 MENTION_RE = re.compile(r"(?:^|\s)(@[A-Za-z0-9_.]+)")
 LINK_RE = re.compile(r"https?://\S+|\bwww\.\S+|\b[a-z0-9-]+\.(?:com|co|io|net|org|ai|app)/\S*",
                      re.IGNORECASE)
-EMOJI_RE = re.compile(r"[\U0001F300-\U0001FAFF☀-➿←-⇿️]")
+# One emoji as a reader counts it: a flag pair, a keycap, or a pictograph with
+# its skin tone, variation selector and ZWJ-joined parts. Text-style symbols
+# (arrows, double bang, trademark, copyright) count only when U+FE0F asks for
+# the emoji form. Copied in hookscore.py and caption.py; a test keeps them equal.
+EMOJI_RE = re.compile(
+    r"[\U0001F1E6-\U0001F1FF]{2}"
+    r"|[0-9#*]\uFE0F?\u20E3"
+    r"|(?:[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\u231A-\u23FF]"
+    r"|[\u2190-\u21FF\u203C\u2049\u2122\u2139\u00A9\u00AE]\uFE0F)"
+    r"[\U0001F3FB-\U0001F3FF]?\uFE0F?"
+    r"(?:\u200D[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF]"
+    r"[\U0001F3FB-\U0001F3FF]?\uFE0F?)*")
 CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
 
 
