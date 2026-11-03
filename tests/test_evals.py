@@ -67,7 +67,7 @@ class CasesOnDisk(unittest.TestCase):
 
 
 class GraderRegexes(unittest.TestCase):
-    """Run each case's regexes against the Skill input of all 13 skills."""
+    """Run each case's regexes against the Skill input of every skill."""
 
     def test_fired_matches_its_skill_only(self):
         for skill in SKILLS:

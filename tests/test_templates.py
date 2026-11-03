@@ -69,6 +69,29 @@ class VoiceTemplates(unittest.TestCase):
                 self.assertEqual(sorted(re.findall(r"`([^`]+)`", m.group(1))), sorted(langs()))
                 self.assertIn("`%s`" % lang, m.group(1))
 
+    def test_skill_copies_equal_the_templates(self):
+        """ig-setup writes voice.md from its own copy of each form (a skill
+        folder works alone). Every voice.*.md under skills/ is such a copy."""
+        copies = sorted(glob.glob(os.path.join(SKILLS, "*", "voice.*.md")))
+        self.assertEqual([os.path.relpath(p, SKILLS) for p in copies],
+                         sorted(os.path.join("ig-setup", n) for n in VOICES.values()))
+        for path in copies:
+            with self.subTest(copy=os.path.relpath(path, ROOT)):
+                with open(path, encoding="utf-8") as fh:
+                    self.assertEqual(fh.read(), read("templates", os.path.basename(path)))
+        setup = read("skills", "ig-setup", "SKILL.md")
+        for name in VOICES.values():
+            self.assertIn("`%s`" % name, setup)
+
+    def test_setup_shows_the_language_line_the_forms_use(self):
+        """ig-setup writes the line literally; it must be the forms' shape."""
+        setup = read("skills", "ig-setup", "SKILL.md")
+        shown = re.findall(r"^- \*\*Language:\*\* (\S+)$", setup, re.M)
+        self.assertEqual(len(shown), 1)
+        self.assertIn(shown[0], langs())
+        for name in VOICES.values():
+            self.assertRegex(read("templates", name), r"(?m)^- \*\*Language:\*\* ")
+
     def test_pt_br_is_translated(self):
         """Every field label but Language is in Portuguese: no label is shared."""
         en, pt = (set(FIELD.findall(read("templates", VOICES[k]))) for k in ("en", "pt-BR"))

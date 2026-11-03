@@ -131,6 +131,18 @@
       "Tenho um vídeo no YouTube sobre minha rotina da manhã, como levo isso pro Instagram?"
     ]
   },
+  "ig-setup": {
+    "en": [
+      "I just installed the Instagram skills. Set me up so they know how I sound.",
+      "Write my voice.md from these three captions of mine:\n\n1. Nobody told me my first client would be my cousin. It was. Still counts.\n2. I charge $400 for a logo now. Two years ago I charged $40 and hated every one.\n3. Unpopular: you don't need a niche, you need a person. Mine is bakery owners.",
+      "My posts are in Portuguese now, not English. Update my voice.md so the checks use the right language."
+    ],
+    "pt-BR": [
+      "Acabei de instalar as skills de Instagram. Me configura para elas saberem como eu falo.",
+      "Escreve meu voice.md a partir destas três legendas minhas:\n\n1. Ninguém me contou que meu primeiro cliente ia ser meu primo. Foi. Conta igual.\n2. Hoje cobro R$ 400 por um logo. Há dois anos cobrava R$ 40 e odiava cada um.\n3. Impopular: você não precisa de nicho, precisa de uma pessoa. A minha é dona de padaria.",
+      "Agora eu posto em inglês, não mais em português. Atualiza meu voice.md para as checagens usarem a língua certa."
+    ]
+  },
   "ig-story": {
     "en": [
       "What do I post on my stories today? I run a small bakery.",

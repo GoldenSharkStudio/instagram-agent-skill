@@ -1,6 +1,6 @@
 # The Instagram agent skill
 
-Thirteen Claude skills that run an Instagram account. Free, MIT, no signup, no
+Fourteen Claude skills that run an Instagram account. Free, MIT, no signup, no
 API key, nothing to connect.
 
 One of them writes your Reels off 26 hook formulas and scores the hook before
@@ -24,7 +24,7 @@ Paste this into Claude:
 ```
 https://github.com/GoldenSharkStudio/instagram-agent-skill
 
-Install this skill, then confirm /ig-reel works.
+Install this skill, then run /ig-setup.
 ```
 
 Or do it yourself, in Claude Code:
@@ -46,16 +46,18 @@ Project-local instead of global: copy the same folders into your repo's
 of a chat and it runs as a mode. You lose the five Python tools, which is most
 of the point of `/ig-reel` and `/ig-human`, but the rest works.
 
-Then spend ten minutes on `templates/voice.en.md` (or `templates/voice.pt-BR.md`
-if you post in Portuguese). Copy it to `~/.claude/instagram/voice.md` and fill
-it in, or send Claude three of your own reels and say "write my voice.md from
-these". Every skill reads that file. It matters more here than on other
-platforms, because you have to say the words out loud.
+Then run `/ig-setup`: ten minutes, once. It writes `~/.claude/instagram/voice.md`
+with you, from three of your own reels or a short interview. By hand works too:
+copy `templates/voice.en.md` (or `templates/voice.pt-BR.md` if you post in
+Portuguese) to `~/.claude/instagram/voice.md` and fill it in. Every skill reads
+that file. It matters more here than on other platforms, because you have to
+say the words out loud.
 
-## The thirteen
+## The fourteen
 
 | command | what it does |
 | --- | --- |
+| `/ig-setup` | Start here. Writes your `voice.md` with you, from three of your own posts or a short interview, and picks the language your posts are checked in. |
 | `/ig-reel` | One idea into a Reel. Three hooks from [26 formulas](skills/ig-reel/hooks.json), scored, then the script, the on-screen text and a timed beat sheet. |
 | `/ig-viral` | Goes and finds what is working in your niche, ranks it by multiple over each account's own median, names the formula, writes the swipe file. |
 | `/ig-caption` | The caption, linted. Shows you the 125 characters the feed actually shows before the tap. |
@@ -373,6 +375,7 @@ skills/ig-viral/lang/en.json       every sentence swipe prints and writes to swi
 skills/ig-viral/lang/pt-BR.json    the same in Portuguese
 skills/ig-viral/swipe.py           outlier ranking and formula classification
 skills/ig-profile/rubric.json      the 100-point profile score
+skills/ig-setup/voice.*.md         copies of the two forms below, so /ig-setup works alone
 templates/voice.en.md              your voice profile. Fill this in first.
 templates/voice.pt-BR.md           the same form in Portuguese
 templates/log.md                   the line the skills append to log.md, and read back

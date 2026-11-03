@@ -11,7 +11,7 @@ import unittest
 
 from _support import ROOT, SKILLS, TOOLS, load
 
-WORD_NUMBERS = {"five": 5, "twelve": 12, "thirteen": 13, "sixteen": 16, "eighteen": 18,
+WORD_NUMBERS = {"five": 5, "twelve": 12, "thirteen": 13, "fourteen": 14, "sixteen": 16, "eighteen": 18,
                 "twenty-six": 26}
 
 
@@ -78,8 +78,14 @@ class CountsInProse(unittest.TestCase):
 
     def test_skill_count(self):
         self.assertClaims(NUM + r" (?:claude )?skills\b", len(SKILL_DIRS), 4)
-        self.assertIn("## The thirteen", prose("README.md"))
-        self.assertEqual(len(SKILL_DIRS), 13)
+        self.assertIn("## The fourteen", prose("README.md"))
+        self.assertEqual(len(SKILL_DIRS), 14)
+
+    def test_readme_table_lists_every_skill(self):
+        """One row per skill folder, in the table under "## The fourteen"."""
+        table = re.search(r"## The fourteen\n\n(.*?)\n\n", prose("README.md"), re.S).group(1)
+        rows = re.findall(r"^\| `/(ig-[a-z]+)` \|", table, re.M)
+        self.assertEqual(sorted(rows), [os.path.basename(d) for d in SKILL_DIRS])
 
     def test_rubric(self):
         self.assertClaims(NUM + r"-part rubric", len(RUBRIC["items"]), 2)
