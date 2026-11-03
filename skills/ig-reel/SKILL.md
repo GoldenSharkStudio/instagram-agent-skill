@@ -17,24 +17,42 @@ Two tools live in this folder and they both actually run. Use them. Do not
 eyeball the hook and do not guess at the length.
 
 ```bash
-python3 hookscore.py hooks.txt --lang {language}               # rank your hook options
-python3 hookscore.py --hook "one line" --lang {language}       # score a single one
-python3 beats.py script.txt --target 30 --lang {language}      # timed beat sheet
+python3 {skill_dir}/hookscore.py hooks.txt --lang {language}               # rank your hook options
+python3 {skill_dir}/hookscore.py --hook "one line" --lang {language}       # score a single one
+python3 {skill_dir}/beats.py script.txt --target 30 --lang {language}      # timed beat sheet
 ```
 
-`{language}` is the **Language:** line of `~/.claude/instagram/voice.md`:
-`en`, `pt-BR` or `auto`. With no voice.md, or no Language line in it, use `en`.
-A language whose data is not in this folder yet is refused with exit 2 and the
-name of the missing file. Tell the user, and run with `--lang en` only if they
-agree, saying the checks are tuned for English.
-
+<!-- shared:before-you-write -->
 ## Before you write
 
-1. Read `~/.claude/instagram/voice.md` if it exists. That is the user's voice
-   profile: how they talk on camera, what they never say, who they are talking
-   to. If it does not exist, ask for **three of their own reels**, transcribe or
-   read them, infer the voice, and write the file. A script in the wrong voice
-   is unusable, because they have to say it out loud.
+The same steps open every ig-* skill.
+
+1. Read `~/.claude/instagram/voice.md` if it exists: who the user is, who they
+   talk to, how they sound, what they never say. If it does not exist, ask once
+   for three of their own posts (reels, captions or comments), infer the voice
+   from them, write the file, and tell the user you did. Never invent a voice.
+2. Answer in the language of its **Language:** line: `en` is English, `pt-BR`
+   is Brazilian Portuguese. With `auto`, no voice.md or no Language line, answer
+   in the language the user writes to you in. These instructions are in English;
+   what you write for the user is in their language.
+3. `{language}` in a command is that same line: `en`, `pt-BR` or `auto`. With no
+   voice.md, or no Language line in it, use `en`. A language whose data is not
+   in the skill folder yet is refused with exit 2 and the name of the missing
+   file. Tell the user, and run with `--lang en` only if they agree, saying the
+   checks are tuned for English.
+4. `{skill_dir}` is the folder this SKILL.md was loaded from (Claude Code names
+   it as the skill's base directory). Run every script as
+   `python3 {skill_dir}/name.py`, never from the current folder, and read every
+   file this skill calls "in this folder" from there. If the folder has no
+   scripts (this file was pasted on its own), do the checks by hand and say
+   they were not run.
+<!-- /shared:before-you-write -->
+
+Then, for a Reel:
+
+1. The three posts of step 1 are **three of their own reels**, transcribed or
+   read. A script in the wrong voice is unusable, because they have to say it
+   out loud.
 2. Read `hooks.json` in this folder. 26 formulas, each with a template, a filled
    example, the on-screen version, what it is for, and how it gets ruined.
    Four of them are in there because they kept turning up in real hooks, not
@@ -77,7 +95,7 @@ not have the hook yet and no amount of editing fixes that.
 user actually talks. Contractions. Short lines. No sentence they would have to
 rehearse.
 
-**4. Time it.** Run `beats.py script.txt --target {length} --lang {language}`.
+**4. Time it.** Run `python3 {skill_dir}/beats.py script.txt --target {length} --lang {language}`.
 Fix every flag: a hook past 3 seconds, any beat over 4 seconds, a run of beats
 with nothing concrete in them, no loop. Re-run until it is clean.
 

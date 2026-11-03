@@ -15,17 +15,12 @@ Two tools live in this folder and they both actually run. Use them. Do not
 eyeball this.
 
 ```bash
-python3 humanize.py draft.txt --report --lang {language}   # clean it, show what changed
-python3 detect.py draft.txt --lang {language}              # score it, five checks
-python3 detect.py before.txt after.txt --lang {language}   # prove the delta
+python3 {skill_dir}/humanize.py draft.txt --report --lang {language}   # clean it, show what changed
+python3 {skill_dir}/detect.py draft.txt --lang {language}              # score it, five checks
+python3 {skill_dir}/detect.py before.txt after.txt --lang {language}   # prove the delta
 ```
 
-`{language}` is the **Language:** line of `~/.claude/instagram/voice.md`:
-`en`, `pt-BR` or `auto`. With no voice.md, or no Language line in it, use `en`.
-A language whose data is not in this folder yet is refused with exit 2 and the
-name of the missing file. Tell the user, and run with `--lang en` only if they
-agree, saying the checks are tuned for English. `--lexicon` wins over `--lang`
-when both are given.
+`--lexicon` wins over `--lang` when both are given.
 
 Both read `slop.en.json`: 240 stock words and phrases with plain-English
 replacements, 18 invisible character classes, 11 typographic substitutions and
@@ -33,6 +28,32 @@ replacements, 18 invisible character classes, 11 typographic substitutions and
 vocabulary that only shows up in captions and voiceovers. It is meant to be
 edited. If the user has a word they always use that the lexicon strips, take it
 out of the file.
+
+<!-- shared:before-you-write -->
+## Before you write
+
+The same steps open every ig-* skill.
+
+1. Read `~/.claude/instagram/voice.md` if it exists: who the user is, who they
+   talk to, how they sound, what they never say. If it does not exist, ask once
+   for three of their own posts (reels, captions or comments), infer the voice
+   from them, write the file, and tell the user you did. Never invent a voice.
+2. Answer in the language of its **Language:** line: `en` is English, `pt-BR`
+   is Brazilian Portuguese. With `auto`, no voice.md or no Language line, answer
+   in the language the user writes to you in. These instructions are in English;
+   what you write for the user is in their language.
+3. `{language}` in a command is that same line: `en`, `pt-BR` or `auto`. With no
+   voice.md, or no Language line in it, use `en`. A language whose data is not
+   in the skill folder yet is refused with exit 2 and the name of the missing
+   file. Tell the user, and run with `--lang en` only if they agree, saying the
+   checks are tuned for English.
+4. `{skill_dir}` is the folder this SKILL.md was loaded from (Claude Code names
+   it as the skill's base directory). Run every script as
+   `python3 {skill_dir}/name.py`, never from the current folder, and read every
+   file this skill calls "in this folder" from there. If the folder has no
+   scripts (this file was pasted on its own), do the checks by hand and say
+   they were not run.
+<!-- /shared:before-you-write -->
 
 ## Why this matters more on Instagram than it looks
 
@@ -119,9 +140,9 @@ do not tell a user their text is undetectable.
 
 ## Order of operations
 
-1. `humanize.py draft.txt -o clean.txt --report --lang {language}`
+1. `python3 {skill_dir}/humanize.py draft.txt -o clean.txt --report --lang {language}`
 2. Read the structural flags, held deletions included. Rewrite those lines yourself.
-3. `detect.py draft.txt clean.txt --lang {language}` to show the before and after.
+3. `python3 {skill_dir}/detect.py draft.txt clean.txt --lang {language}` to show the before and after.
 4. If the verdict is not PASS, fix what the output names (the structural tells
    still left, or else the weakest check) and go again. Two rounds is normal.
    Five means the draft was written by formula, and the fix is a different

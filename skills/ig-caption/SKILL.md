@@ -13,19 +13,39 @@ description: >-
 One tool lives in this folder and it runs:
 
 ```bash
-python3 caption.py caption.txt --lang {language}
-python3 caption.py caption.txt --keywords "client proposals,agency pricing" --lang {language}
+python3 {skill_dir}/caption.py caption.txt --lang {language}
+python3 {skill_dir}/caption.py caption.txt --keywords "client proposals,agency pricing" --lang {language}
 ```
-
-`{language}` is the **Language:** line of `~/.claude/instagram/voice.md`:
-`en`, `pt-BR` or `auto`. With no voice.md, or no Language line in it, use `en`.
-A language whose data is not in this folder yet is refused with exit 2 and the
-name of the missing file. Tell the user, and run with `--lang en` only if they
-agree, saying the checks are tuned for English.
 
 It prints the caption the way the feed prints it: the first 125 characters in a
 box, everything else behind the tap. Read that box before you read anything
 else you wrote.
+
+<!-- shared:before-you-write -->
+## Before you write
+
+The same steps open every ig-* skill.
+
+1. Read `~/.claude/instagram/voice.md` if it exists: who the user is, who they
+   talk to, how they sound, what they never say. If it does not exist, ask once
+   for three of their own posts (reels, captions or comments), infer the voice
+   from them, write the file, and tell the user you did. Never invent a voice.
+2. Answer in the language of its **Language:** line: `en` is English, `pt-BR`
+   is Brazilian Portuguese. With `auto`, no voice.md or no Language line, answer
+   in the language the user writes to you in. These instructions are in English;
+   what you write for the user is in their language.
+3. `{language}` in a command is that same line: `en`, `pt-BR` or `auto`. With no
+   voice.md, or no Language line in it, use `en`. A language whose data is not
+   in the skill folder yet is refused with exit 2 and the name of the missing
+   file. Tell the user, and run with `--lang en` only if they agree, saying the
+   checks are tuned for English.
+4. `{skill_dir}` is the folder this SKILL.md was loaded from (Claude Code names
+   it as the skill's base directory). Run every script as
+   `python3 {skill_dir}/name.py`, never from the current folder, and read every
+   file this skill calls "in this folder" from there. If the folder has no
+   scripts (this file was pasted on its own), do the checks by hand and say
+   they were not run.
+<!-- /shared:before-you-write -->
 
 ## First, decide which job this caption has
 
@@ -84,7 +104,7 @@ that reads normally. "Client proposals" as words in line three, not
 Ask for two or three of those terms, then pass them to the linter:
 
 ```bash
-python3 caption.py draft.txt --keywords "client proposals,agency pricing" --lang {language}
+python3 {skill_dir}/caption.py draft.txt --keywords "client proposals,agency pricing" --lang {language}
 ```
 
 ## Rules
