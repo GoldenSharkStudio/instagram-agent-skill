@@ -1,0 +1,158 @@
+{
+  "ig-audit": {
+    "en": [
+      "Which of my last reels actually worked and what should I stop making?\n\n1. 'My pricing mistake' 41k views, 900 saves\n2. 'Day in my studio' 2.1k views, 12 saves\n3. '3 contract clauses' 18k views, 1.2k saves\n4. 'Studio tour' 1.8k views, 9 saves",
+      "My reel from Tuesday flopped hard compared to the others, can you tell me why?",
+      "These are my October insights, tell me what to do more of: reach 52k (-8%), followers +140, top reel 'rent vs buy' 30k views, carousels average 4% saves, talking-head reels average 1.5k views."
+    ],
+    "pt-BR": [
+      "Quais dos meus últimos reels funcionaram e o que eu devia parar de fazer?\n\n1. 'Meu erro de preço' 41 mil views, 900 salvamentos\n2. 'Um dia no estúdio' 2,1 mil views, 12 salvamentos\n3. '3 cláusulas de contrato' 18 mil views, 1,2 mil salvamentos\n4. 'Tour pelo estúdio' 1,8 mil views, 9 salvamentos",
+      "Meu último reel flopou feio comparado aos outros, me ajuda a entender por quê?",
+      "Esses são meus insights de outubro, me diz o que eu devia fazer mais: alcance 52 mil (-8%), seguidores +140, reel top 'alugar ou comprar' 30 mil views, carrosséis com média de 4% de salvamentos, reels falando pra câmera com média de 1,5 mil views."
+    ]
+  },
+  "ig-caption": {
+    "en": [
+      "The reel is edited and ready, it's about how I price logo projects. Write the text that goes under it.",
+      "What should I put in the description of this carousel about cold brew at home?",
+      "How many hashtags should I use on this post and which ones? It's a reel about budgeting for freelancers."
+    ],
+    "pt-BR": [
+      "Tenho um reel pronto sobre como precificar serviço de design, escreve a legenda pra mim.",
+      "O que eu coloco na descrição desse carrossel sobre café coado em casa?",
+      "Quantas hashtags eu uso nesse post e quais? É um reel sobre organizar as finanças de freelancer."
+    ]
+  },
+  "ig-carousel": {
+    "en": [
+      "Turn my 7 tips for first-time home buyers into slides people swipe through.",
+      "I want a carousel explaining the three steps of my onboarding process.",
+      "This list of the 5 mistakes new runners make would die as a single image. Make it a swipe post."
+    ],
+    "pt-BR": [
+      "Transforma minhas 7 dicas pra quem vai comprar o primeiro apartamento em slides.",
+      "Quero um carrossel explicando os três passos do meu processo de onboarding.",
+      "Essa lista dos 5 erros de quem começa a correr não cabe numa imagem só. Faz um post de arrastar."
+    ]
+  },
+  "ig-comment": {
+    "en": [
+      "A bigger coach in my niche just posted this reel. What do I comment on it?\n\n\"Burnout isn't a time problem. It's a boundaries problem. Here's the one sentence I use to say no without guilt.\"",
+      "Give me comments for my daily engagement round on these posts:\n1. @runwithana: 'My first marathon at 41, finished in 4:52'\n2. @tinykitchenlab: 'Sourdough attempt #14, finally an open crumb'\n3. @mikeplans: 'I stopped using to-do lists. Here's what replaced them'",
+      "Someone I want to collab with posted this. What do I say under it?\n\n\"We did it. Doors open Saturday at 8. Three years of baking in my apartment and now it has a sign.\""
+    ],
+    "pt-BR": [
+      "Uma coach maior do meu nicho postou esse reel. O que eu comento nele?\n\n\"Burnout não é falta de tempo. É falta de limite. Essa é a frase que eu uso pra dizer não sem culpa.\"",
+      "Me dá comentários pra minha rodada de engajamento do dia nesses posts:\n1. @corrida.da.ana: 'Minha primeira maratona aos 41, terminei em 4h52'\n2. @cozinhapequena: 'Fermentação natural tentativa 14, finalmente com alvéolos'\n3. @miguelplaneja: 'Larguei a lista de tarefas. Isso aqui substituiu'",
+      "Uma pessoa com quem eu quero fazer collab postou isso. O que eu escrevo lá?\n\n\"Conseguimos. Abrimos sábado às 8. Três anos fazendo bolo no apartamento e agora tem placa na porta.\""
+    ]
+  },
+  "ig-dm": {
+    "en": [
+      "A woman commented PRICE on my reel. What message do I send her?",
+      "I want to pitch a collab to a coffee brand on Instagram. Write the first DM.",
+      "I messaged a potential client last week and she never answered. How do I follow up?"
+    ],
+    "pt-BR": [
+      "Uma moça comentou PREÇO no meu reel. Que mensagem eu mando pra ela no direct?",
+      "Quero propor uma parceria pra uma marca de café no Instagram. Escreve a primeira DM.",
+      "Mandei mensagem pra uma possível cliente semana passada e ela nunca respondeu. Como eu faço o follow-up?"
+    ]
+  },
+  "ig-human": {
+    "en": [
+      "Does this caption sound like AI wrote it? Fix it so it reads like me.\n\n\"In today's fast-paced world, it's not just about working harder — it's about unlocking your true potential and elevating your craft.\"",
+      "ChatGPT wrote this caption and it's full of em dashes and words like elevate. Clean it up.\n\n\"Elevate your mornings — discover a seamless routine that empowers you to thrive. Let's dive in!\"",
+      "Make this script sound human before I record it, it feels robotic.\n\n\"Are you ready to transform your finances? In this video, we'll delve into three game-changing strategies that will revolutionize the way you save.\""
+    ],
+    "pt-BR": [
+      "Essa legenda tá com cara de que foi o ChatGPT que escreveu? Arruma pra parecer eu.\n\n\"No mundo acelerado de hoje, não se trata apenas de trabalhar mais — trata-se de desbloquear todo o seu potencial e elevar o seu trabalho a outro patamar.\"",
+      "Esse texto tá cheio de travessão e palavra de robô. Deixa ele com cara de gente.\n\n\"Transforme suas manhãs — descubra uma rotina fluida que te empodera a prosperar. Vamos mergulhar nisso!\"",
+      "Humaniza esse roteiro antes de eu gravar, tá muito artificial.\n\n\"Você está pronto para transformar suas finanças? Neste vídeo, vamos explorar três estratégias revolucionárias que vão mudar completamente a forma como você economiza.\""
+    ]
+  },
+  "ig-plan": {
+    "en": [
+      "Plan my Instagram week, I have no idea what to post.",
+      "Build me a content calendar for the next seven days, I sell handmade candles.",
+      "I have nothing to post about this week. What should go up and when?"
+    ],
+    "pt-BR": [
+      "Planeja minha semana no Instagram, não faço ideia do que postar.",
+      "Monta um calendário de conteúdo pros próximos sete dias, eu vendo velas artesanais.",
+      "Não tenho nada pra postar essa semana. O que eu publico e em que dia?"
+    ]
+  },
+  "ig-profile": {
+    "en": [
+      "Why don't people follow me after visiting my profile?\n\nName: Julia\nBio: coffee lover | dreamer | designer ✨\nLink: linktr.ee/julia\nHighlights: 'me', 'travel', '2023'",
+      "Give my Instagram profile a score and tell me what to fix.",
+      "Rewrite my bio, it says 'coffee lover | dreamer | designer' and nobody gets what I do."
+    ],
+    "pt-BR": [
+      "Por que as pessoas entram no meu perfil e não me seguem?\n\nNome: Julia\nBio: apaixonada por café | sonhadora | designer ✨\nLink: linktr.ee/julia\nDestaques: 'eu', 'viagens', '2023'",
+      "Dá uma nota pro meu perfil do Instagram e diz o que eu arrumo.",
+      "Reescreve minha bio, tá escrito 'apaixonada por café | sonhadora | designer' e ninguém entende o que eu faço."
+    ]
+  },
+  "ig-reel": {
+    "en": [
+      "Make a reel about why most people quit the gym in February.",
+      "I'm recording tomorrow about how I paid off my student loans and I don't have the first line yet.",
+      "Write me a short-form video script with a strong hook about meal prep for lazy people."
+    ],
+    "pt-BR": [
+      "Faz um reel sobre por que a maioria larga a academia em fevereiro.",
+      "Vou gravar amanhã sobre como eu quitei meu financiamento estudantil e ainda não tenho a primeira frase.",
+      "Escreve um roteiro de vídeo curto com um gancho forte sobre marmita pra quem tem preguiça."
+    ]
+  },
+  "ig-reply": {
+    "en": [
+      "These are the comments under my last reel. Reply to the ones worth answering.\n\n- 'this is so true 🔥'\n- 'how do you charge for revisions?'\n- 'nice'\n- 'my clients never pay on time, any tip?'",
+      "Someone commented on my reel that my advice is garbage. How do I answer?",
+      "A follower asked under my post how much my mentoring costs. What do I reply?"
+    ],
+    "pt-BR": [
+      "Esses são os comentários do meu último reel. Responde os que valem resposta.\n\n- 'muito real 🔥'\n- 'como você cobra as alterações?'\n- 'top'\n- 'meus clientes nunca pagam em dia, alguma dica?'",
+      "Uma pessoa comentou no meu reel que meu conselho é lixo. Como eu respondo?",
+      "Uma seguidora perguntou no meu post quanto custa minha mentoria. O que eu respondo lá?"
+    ]
+  },
+  "ig-repurpose": {
+    "en": [
+      "Here's part of the transcript of my 40-minute podcast episode. Turn it into a week of reels.\n\n\"...so the first year I charged by the hour and I was broke. The day I switched to a flat project fee, two things happened. Clients stopped arguing about hours, and I finished faster because speed was finally mine...\"",
+      "I wrote this long newsletter about pricing. Cut it up into Instagram posts.\n\n\"Most freelancers price from fear. They pick a number they can say without blushing. Here is the problem: the client reads your number as your confidence. Three things changed my pricing: a minimum, a flat fee, and saying the number first...\"",
+      "I have a YouTube video about my morning routine, how do I get it onto Instagram?"
+    ],
+    "pt-BR": [
+      "Segue um trecho da transcrição do meu episódio de podcast de 40 minutos. Transforma numa semana de reels.\n\n\"...então no primeiro ano eu cobrava por hora e vivia quebrada. No dia em que mudei pra preço fechado por projeto, duas coisas aconteceram. O cliente parou de discutir hora, e eu terminava mais rápido porque a velocidade finalmente era minha...\"",
+      "Escrevi essa newsletter longa sobre precificação. Corta ela em posts pro Instagram.\n\n\"A maioria dos freelancers cobra com medo. Escolhe um número que consegue falar sem ficar vermelho. O problema: o cliente lê o seu preço como a sua confiança. Três coisas mudaram meu preço: um mínimo, preço fechado e falar o número primeiro...\"",
+      "Tenho um vídeo no YouTube sobre minha rotina da manhã, como levo isso pro Instagram?"
+    ]
+  },
+  "ig-story": {
+    "en": [
+      "What do I post on my stories today? I run a small bakery.",
+      "I want to sell my new workshop through stories without making a post about it.",
+      "Give me a poll idea and a story sequence for tomorrow."
+    ],
+    "pt-BR": [
+      "O que eu posto nos stories hoje? Eu tenho uma confeitaria pequena.",
+      "Quero vender meu workshop novo pelos stories sem fazer post sobre ele.",
+      "Me dá uma ideia de enquete e uma sequência de stories pra amanhã."
+    ]
+  },
+  "ig-viral": {
+    "en": [
+      "Find the reels that are blowing up in the personal finance niche right now.",
+      "Reverse engineer @moneywithmaya for me, why are her reels doing numbers?",
+      "Build me a swipe file of what's working for fitness coaches on Instagram."
+    ],
+    "pt-BR": [
+      "Acha os reels que estão bombando agora no nicho de finanças pessoais.",
+      "Faz a engenharia reversa da @financasdamaya, por que os reels dela estão performando tanto?",
+      "Monta um swipe file do que está funcionando pra personal trainers no Instagram."
+    ]
+  }
+}
