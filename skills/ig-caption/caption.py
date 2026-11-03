@@ -43,7 +43,7 @@ HASHTAG_LIMIT = 5        # Instagram's cap per post or reel since 18 Dec 2025,
 # copy a regex or word list is matched against does too. Same length, so
 # spans still line up, and the user's own text is never rewritten.
 APOSTROPHES = str.maketrans("‘’", "''")
-HASHTAG_RE = re.compile(r"(?:^|\s)(#[A-Za-z0-9_]+)")
+HASHTAG_RE = re.compile(r"(?:^|\s)(#\w+)")
 MENTION_RE = re.compile(r"(?:^|\s)(@[A-Za-z0-9_.]+)")
 LINK_RE = re.compile(r"https?://\S+|\bwww\.\S+|\b[a-z0-9-]+\.(?:com|co|io|net|org|ai|app)/\S*",
                      re.IGNORECASE)
@@ -59,7 +59,7 @@ EMOJI_RE = re.compile(
     r"[\U0001F3FB-\U0001F3FF]?\uFE0F?"
     r"(?:\u200D[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF]"
     r"[\U0001F3FB-\U0001F3FF]?\uFE0F?)*")
-CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
+CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zß-öø-ÿ]{2,}\b", re.MULTILINE)
 
 
 

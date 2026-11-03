@@ -37,9 +37,9 @@ LEX = os.path.join(HERE, "slop.en.json")
 # spans still line up, and the user's own text is never rewritten.
 APOSTROPHES = str.maketrans("‘’", "''")
 SENT_RE = re.compile(r"[^.!?\n]+[.!?]*")
-WORD_RE = re.compile(r"[A-Za-z']+")
+WORD_RE = re.compile(r"(?:[^\W\d_]|')+")
 NUMBERS = re.compile(r"\b\d[\d,.]*%?\b|\$\d")
-PROPER = re.compile(r"(?<![.!?]\s)(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
+PROPER = re.compile(r"(?<![.!?]\s)(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zß-öø-ÿ]{2,}\b", re.MULTILINE)
 
 
 class LexiconError(Exception):

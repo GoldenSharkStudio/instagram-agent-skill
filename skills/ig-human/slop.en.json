@@ -1011,7 +1011,7 @@
     },
     {
       "id": "caps-shout",
-      "regex": "\\b[A-Z]{3,}\\b(?:\\s+\\b[A-Z]{3,}\\b){2,}",
+      "regex": "\\b[A-ZÀ-ÖØ-Þ]{3,}\\b(?:\\s+\\b[A-ZÀ-ÖØ-Þ]{3,}\\b){2,}",
       "name": "Three or more shouted words in a row",
       "fix": "Caps are a volume knob, not a highlighter. One word, at most."
     },

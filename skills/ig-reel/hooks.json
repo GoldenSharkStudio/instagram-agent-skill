@@ -148,7 +148,7 @@
       "on_screen": "PHOTOGRAPHERS UNDER $2K",
       "best_for": "Cutting a broad audience down to the one that converts. Send rate goes up because people tag each other.",
       "trap": "A group so large it is not a callout. 'Entrepreneurs' is not a group.",
-      "match": "^\\s*(?:every|all|any)\\s+\\w+|^\\s*[a-z][\\w ]{2,28}(?:ers|ists|ors|ants)\\b\\s*[,:]|^\\s*for (?:viewers|people|anyone|those|everyone)\\b|^\\s*(?:attention|listen up)\\b"
+      "match": "^\\s*(?:every|all|any)\\s+\\w+|^\\s*[^\\W\\d_][\\w ]{2,28}(?:ers|ists|ors|ants)\\b\\s*[,:]|^\\s*for (?:viewers|people|anyone|those|everyone)\\b|^\\s*(?:attention|listen up)\\b"
     },
     {
       "id": 15,
@@ -228,7 +228,7 @@
       "on_screen": "NICE GUYS FINISH FIRST",
       "best_for": "Comments. The viewer has to stop and check whether they misheard you.",
       "trap": "Flipping a saying nobody says. The original has to be a reflex, or the inversion is just a sentence.",
-      "match": "^\\s*[A-Za-z][\\w' ]{2,34}\\b(?:finish|finishes|win|wins|lose|loses|beats?|is|are)\\s+(?:first|last|dead|wrong|right|better|overrated|underrated)\\b"
+      "match": "^\\s*[^\\W\\d_][\\w' ]{2,34}\\b(?:finish|finishes|win|wins|lose|loses|beats?|is|are)\\s+(?:first|last|dead|wrong|right|better|overrated|underrated)\\b"
     },
     {
       "id": 23,

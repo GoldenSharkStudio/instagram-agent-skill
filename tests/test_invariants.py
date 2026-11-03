@@ -192,10 +192,9 @@ def module_regexes():
 DRIFT_ALLOWED = {
     ("SENT_RE", "beats"): "beats splits the script into lines before sentences, "
                           "so it has no newline to exclude; the result is the same",
-    ("WORD_RE", "detect"): "detect counts letters for voice and slop, not tokens "
-                           "with $ and %; revisit in the ASCII-only step (A Fazer)",
-    ("HASHTAG_RE", "caption"): "caption captures the tag text for counting; the ASCII "
-                               "class is the ASCII-only finding, fixed in that step",
+    ("WORD_RE", "detect"): "detect counts words for voice and slop: letters and "
+                           "apostrophes only, no digits, $ or % (test_unicode keeps "
+                           "both shapes Unicode)",
 }
 
 

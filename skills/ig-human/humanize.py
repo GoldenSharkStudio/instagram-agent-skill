@@ -236,10 +236,10 @@ def restore_capitals(original, text):
     a deliberately lower-case voice is a style, not an artefact, and shouting
     over it would be exactly the kind of thing this script exists to stop.
     """
-    starts = re.findall(r"(?:^|[.!?]\s+|\n)\s*([A-Za-z])", original)
+    starts = re.findall(r"(?:^|[.!?]\s+|\n)\s*([^\W\d_])", original)
     if not starts or sum(1 for c in starts if c.isupper()) * 2 < len(starts):
         return text
-    return re.sub(r"(?:^|(?<=[.!?] )|(?<=[.!?]\n)|(?<=\n))\s*([a-z])",
+    return re.sub(r"(?:^|(?<=[.!?] )|(?<=[.!?]\n)|(?<=\n))\s*([a-zß-öø-ÿ])",
                   lambda m: m.group(0)[:-1] + m.group(1).upper(), text)
 
 

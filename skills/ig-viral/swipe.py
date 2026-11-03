@@ -38,7 +38,7 @@ HOOKS = os.path.join(HERE, "..", "ig-reel", "hooks.json")
 # copy a regex or word list is matched against does too. Same length, so
 # spans still line up, and the user's own text is never rewritten.
 APOSTROPHES = str.maketrans("‘’", "''")
-WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
+WORD_RE = re.compile(r"(?:[^\W_]|[$%'’-])+")
 
 try:                                              # optional: score the hooks too
     sys.path.insert(0, os.path.join(HERE, "..", "ig-reel"))

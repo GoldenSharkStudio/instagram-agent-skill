@@ -30,13 +30,13 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 LANG_DIR = os.path.join(HERE, "lang")
 
-WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
+WORD_RE = re.compile(r"(?:[^\W_]|[$%'’-])+")
 # iOS types "’" for "'". The data spells every apostrophe straight, so the
 # copy a regex or word list is matched against does too. Same length, so
 # spans still line up, and the user's own text is never rewritten.
 APOSTROPHES = str.maketrans("‘’", "''")
 SENT_RE = re.compile(r"[^.!?]+[.!?]*")
-CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
+CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zß-öø-ÿ]{2,}\b", re.MULTILINE)
 
 
 class LangError(Exception):
