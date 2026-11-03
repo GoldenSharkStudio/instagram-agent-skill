@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A Claude Code plugin (`.claude-plugin/plugin.json` + `marketplace.json`) that ships 13 skills under `skills/ig-*/`. Each skill is a `SKILL.md` (frontmatter `name` + `description`, the description is the trigger text). Four of them (`ig-reel`, `ig-caption`, `ig-human`, `ig-viral`) ship Python CLI tools, six scripts in all; `ig-profile` ships only JSON data. There is no build, no package manager, no dependencies, no linter config. Tools are stdlib-only Python 3 and must stay that way (the README promises "no dependencies, no network").
+A Claude Code plugin (`.claude-plugin/plugin.json` + `marketplace.json`) that ships 13 skills under `skills/ig-*/`. Each skill is a `SKILL.md` (frontmatter `name` + `description`, the description is the trigger text). The description holds triggers only, English then Portuguese in the same text ("Use when …" then "Use quando …", ≤1024 chars), with no summary of the workflow and no numbers; `tests/test_descriptions.py` enforces it. Four of them (`ig-reel`, `ig-caption`, `ig-human`, `ig-viral`) ship Python CLI tools, six scripts in all; `ig-profile` ships only JSON data. There is no build, no package manager, no dependencies, no linter config. Tools are stdlib-only Python 3 and must stay that way (the README promises "no dependencies, no network").
 
 Users install by copying `skills/ig-*` into `~/.claude/skills/`, or by pasting a single `SKILL.md` into a chat. So **every skill folder must work on its own**, and a SKILL.md must still make sense without its scripts.
 

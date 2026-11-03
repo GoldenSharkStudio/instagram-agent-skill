@@ -1,10 +1,12 @@
 ---
 name: ig-comment
 description: >-
-  Write comments on other people's Instagram posts and reels that read as a
-  person with an opinion, not a bot. Use when the user pastes a post or a reel
-  and wants a comment, says "comment on this", "engage with this", "what do I
-  say here", or wants a batch for their daily engagement round.
+  Use when the user pastes someone else's post or reel and wants a comment on
+  it, says "comment on this", "engage with this", "what do I say here", or
+  wants a batch of comments for their daily engagement round. Use quando o
+  usuário cola o post ou o reel de outra pessoa e quer um comentário, diz
+  "comenta nisso", "engaja nesse post", "o que eu falo aqui", ou quer um lote
+  de comentários para a rodada diária de engajamento.
 ---
 
 # ig-comment

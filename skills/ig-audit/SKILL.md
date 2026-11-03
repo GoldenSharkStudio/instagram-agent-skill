@@ -1,11 +1,13 @@
 ---
 name: ig-audit
 description: >-
-  Post-mortem on what the user has already posted - which reels actually
-  worked, why, and what to stop making. Use when the user pastes their
-  Instagram insights or past posts and asks "what's working", "why did this
-  flop", "read my analytics", "audit my content", or wants to know what to do
-  more of.
+  Use when the user pastes their Instagram insights, analytics or past posts
+  and asks "what's working", "why did this flop", "read my analytics", "audit
+  my content", or wants to know which reels to make more of and which to stop.
+  Use quando o usuário cola os insights, as métricas ou os posts antigos do
+  Instagram e pergunta "o que está funcionando", "por que esse flopou", "lê
+  minhas métricas", "audita meu conteúdo", ou quer saber o que fazer mais e o
+  que parar de postar.
 ---
 
 # ig-audit

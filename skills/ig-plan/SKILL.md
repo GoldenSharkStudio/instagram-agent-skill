@@ -1,10 +1,11 @@
 ---
 name: ig-plan
 description: >-
-  Build the week on Instagram - what to post, which format, when, and who to
-  engage with. Use when the user says "plan my week", "what should I post",
-  "content calendar", "I have nothing to post about", or wants a posting
-  schedule and an engagement list.
+  Use when the user says "plan my week", "what should I post", "content
+  calendar", "I have nothing to post about", or wants a posting schedule and a
+  list of accounts to engage with. Use quando o usuário diz "planeja minha
+  semana", "o que eu posto", "calendário de conteúdo", "não tenho nada pra
+  postar", ou quer um cronograma de posts e uma lista de contas para engajar.
 ---
 
 # ig-plan

@@ -1,13 +1,14 @@
 ---
 name: ig-viral
 description: >-
-  Go and find the reels that are actually working right now in the user's
-  niche, rank them by how far each beat its own account, name the hook formula
-  each one used, and turn that into a swipe file they can shoot from. Use when
-  the user says "find viral videos", "what's working right now", "what are
-  people posting in my niche", "reverse engineer this account", "build me a
-  swipe file", "why is this reel doing numbers", or asks what to make next and
-  has no evidence to answer with.
+  Use when the user says "find viral videos", "what's working right now",
+  "what are people posting in my niche", "reverse engineer this account",
+  "build me a swipe file", "why is this reel doing numbers", or asks what to
+  make next and has no evidence to answer with. Use quando o usuário diz "acha
+  vídeos virais", "o que está bombando agora", "o que estão postando no meu
+  nicho", "faz engenharia reversa dessa conta", "monta um swipe file", "por
+  que esse reel está performando", ou pergunta o que fazer em seguida sem dado
+  para responder.
 ---
 
 # ig-viral

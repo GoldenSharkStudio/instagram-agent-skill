@@ -1,10 +1,12 @@
 ---
 name: ig-reply
 description: >-
-  Handle the comments under the user's own reels and posts - draft replies to
-  the ones worth answering, sorted by which ones are. Use when the user pastes
-  their comments, says "reply to these", "handle my comments", "someone said X
-  on my reel", or is dealing with a critic, a hater or a lead in the comments.
+  Use when the user pastes the comments under their own reels or posts, says
+  "reply to these", "handle my comments", "someone said X on my reel", or is
+  dealing with a critic, a hater or a lead in their comments. Use quando o
+  usuário cola os comentários dos próprios reels ou posts, diz "responde
+  esses", "cuida dos meus comentários", "fulano comentou X no meu reel", ou
+  está lidando com um crítico, um hater ou um lead nos comentários.
 ---
 
 # ig-reply

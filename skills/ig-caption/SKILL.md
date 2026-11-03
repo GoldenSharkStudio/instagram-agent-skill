@@ -1,11 +1,12 @@
 ---
 name: ig-caption
 description: >-
-  Write the Instagram caption - the line that survives the "... more" cut, the
-  body, the single ask, the search terms and the three hashtags - and lint it
-  before it goes out. Use when the user says "write the caption", "caption this",
-  "what do I put in the description", has a reel or a carousel ready and needs
-  the text, or asks about hashtags.
+  Use when the user needs the text that goes under a reel or a carousel, says
+  "write the caption", "caption this", "what do I put in the description", or
+  asks about hashtags or what shows before "... more". Use quando o usuário
+  precisa do texto que vai embaixo de um reel ou carrossel, diz "escreve a
+  legenda", "faz a legenda disso", "o que eu coloco na descrição", ou pergunta
+  sobre hashtags ou sobre o que aparece antes do "... mais".
 ---
 
 # ig-caption
