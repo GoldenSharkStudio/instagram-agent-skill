@@ -173,7 +173,7 @@ class AccentedWitnesses(unittest.TestCase):
         self.assertEqual(len(rx.findall("Atenção você precisa")), 0)
 
     def test_comment_keyword_ask_takes_an_accented_word(self):
-        asks = load("caption").ASKS
+        asks = load("caption").load_lang()["ASKS"]
         hit = [n for rx, n in asks if rx.search('Comment "AÇÃO" below')]
         self.assertIn("comment a keyword", hit)
 

@@ -43,9 +43,23 @@ WORD_RE = re.compile(r"(?:[^\W_]|[$%'’-])+")
 
 try:                                              # optional: score the hooks too
     sys.path.insert(0, os.path.join(HERE, "..", "ig-reel"))
-    from hookscore import run as score_hook       # noqa: E402
+    from hookscore import (run as score_hook, load_lang, LangError,   # noqa: E402
+                           pick_lang, auto_candidates)
 except Exception:                                 # ig-viral copied on its own
     score_hook = None
+
+LANGS = ("en", "pt-BR", "auto")
+
+
+def hook_lang_error(lang):
+    """Why hookscore cannot score in this language, or None if it can."""
+    if score_hook is None:
+        return None
+    try:
+        load_lang(lang)
+    except LangError as err:
+        return str(err)
+    return None
 
 
 def load_formulas(path):
@@ -107,7 +121,8 @@ def read_rows(path):
     return rows
 
 
-def analyse(rows, formulas):
+def analyse(rows, formulas, lang="en"):
+    scoring = score_hook is not None and hook_lang_error(lang) is None
     used_median = any(r.get("median") for r in rows)
     for r in rows:
         base = r.get("median") or r.get("followers") or 0
@@ -115,8 +130,8 @@ def analyse(rows, formulas):
         r["outlier"] = round(r["views"] / base, 2) if base else None
         r["formula_id"], r["formula"] = classify(r["hook"], formulas)
         r["words"] = len(WORD_RE.findall(r["hook"]))
-        if score_hook:
-            _, overall, verdict, _ = score_hook(r["hook"])
+        if scoring:
+            _, overall, verdict, _ = score_hook(r["hook"], lang=lang)
             r["hook_score"], r["hook_verdict"] = round(overall, 1), verdict
         else:
             r["hook_score"], r["hook_verdict"] = None, None
@@ -187,12 +202,25 @@ def to_markdown(a):
     return "\n".join(lines) + "\n"
 
 
+def pick_swipe_lang(rows):
+    """--lang auto: the language of all the hooks together, by hookscore's data."""
+    if score_hook is None:
+        print("lang: auto -> en (hookscore.py not importable, nothing to compare)",
+              file=sys.stderr)
+        return "en"
+    code, note = pick_lang("\n".join(r["hook"] for r in rows), auto_candidates())
+    print(note, file=sys.stderr)
+    return code
+
+
 def main():
     ap = argparse.ArgumentParser(description="Rank collected reels by outlier multiple.")
     ap.add_argument("input", nargs="?", default="-", help="TSV file, or - for stdin")
     ap.add_argument("--hooks", default=HOOKS, help="path to ig-reel/hooks.json")
     ap.add_argument("--out", help="also write the swipe file as markdown here")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--lang", choices=LANGS, default="en",
+                    help="language the hooks are scored in; auto picks by stopwords")
     args = ap.parse_args()
 
     rows = read_rows(args.input)
@@ -201,11 +229,17 @@ def main():
               file=sys.stderr)
         sys.exit(2)
     formulas = load_formulas(args.hooks)
-    a = analyse(rows, formulas)
+    lang = args.lang
+    if lang == "auto":
+        lang = pick_swipe_lang(rows)
+    a = analyse(rows, formulas, lang)
     if not formulas:
         print("note: hooks.json not found, formulas not named. Pass --hooks.", file=sys.stderr)
     if score_hook is None:
         print("note: hookscore.py not importable, hook scores skipped.", file=sys.stderr)
+    elif hook_lang_error(lang):
+        print(f"note: hookscore.py not importable for {lang} ({hook_lang_error(lang)}), "
+              "hook scores skipped.", file=sys.stderr)
 
     if args.json:
         print(json.dumps(a, indent=2, ensure_ascii=False))

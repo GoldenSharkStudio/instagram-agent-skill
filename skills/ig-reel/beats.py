@@ -44,26 +44,55 @@ class LangError(Exception):
     """The language file is missing, unreadable or incomplete."""
 
 
+_LOADED = {}                                      # code -> loaded dict, filled on success only
+
+
 def load_lang(code="en"):
     """stopwords: words too common to count as the hook coming back at the end."""
+    if code in _LOADED:
+        return _LOADED[code]
     path = os.path.join(LANG_DIR, f"{code}.json")
     try:
         with open(path, encoding="utf-8") as fh:
             d = json.load(fh)["beats"]
-        return {"STOPWORDS": set(d["stopwords"])}
+        loaded = {"STOPWORDS": set(d["stopwords"])}
     except (OSError, ValueError, KeyError, TypeError) as err:
         raise LangError(f"{path}: {type(err).__name__}: {err}") from None
+    _LOADED[code] = loaded
+    return loaded
 
 
-try:
-    _LANG = load_lang()
-except LangError as _err:
-    if __name__ != "__main__":
-        raise
-    print(f"beats.py: cannot load language data, {_err}", file=sys.stderr)
-    sys.exit(2)
+LANGS = ("en", "pt-BR", "auto")
 
-STOPWORDS = _LANG["STOPWORDS"]
+
+def pick_lang(text, candidates):
+    """candidates: {code: set of stopwords}. Returns (code, note): the language
+    whose function words the text uses most. A tie, or nothing to compare, is "en"."""
+    # Composed first: a decomposed "você" would split into "vo" + "c".
+    text = unicodedata.normalize("NFC", text).lower().replace("’", "'")
+    tokens = re.findall(r"[^\W\d_]+(?:'[^\W\d_]+)?", text)
+    counts = {c: sum(t in sw for t in tokens) for c, sw in candidates.items()}
+    best = max(counts.values(), default=0)
+    leaders = [c for c, n in counts.items() if n == best]
+    if len(counts) < 2:
+        return "en", "lang: auto -> en (no other language on disk)"
+    code = leaders[0] if len(leaders) == 1 else "en"
+    order = sorted(counts, key=lambda c: (c != code, c))
+    shown = " vs ".join(str(counts[c]) for c in order)
+    return code, f"lang: auto -> {code} ({'tie, ' if len(leaders) > 1 else ''}{shown})"
+
+
+def auto_candidates():
+    """{code: stopwords} for each language file on disk that carries them."""
+    found = {}
+    for code in (c for c in LANGS if c != "auto"):
+        try:
+            with open(os.path.join(LANG_DIR, f"{code}.json"), encoding="utf-8") as fh:
+                found[code] = set(json.load(fh)["auto"]["stopwords"])
+        except (OSError, ValueError, KeyError, TypeError):
+            continue                              # skipped for auto; the normal load reports it
+    return found
+
 
 HOOK_WINDOW = 3.0        # seconds. Past this, the thumb has already decided.
 MAX_BEAT = 4.0           # seconds on one idea with no change on screen.
@@ -115,9 +144,10 @@ def num(x):
     return f"{x:g}"
 
 
-def analyse(raw, wpm=165, target=None):
+def analyse(raw, wpm=165, target=None, lang="en"):
     # Decomposed accents (NFD, macOS paste) split words in `re`: compose them.
     raw = unicodedata.normalize("NFC", raw)
+    stopwords = load_lang(lang)["STOPWORDS"]
     wps = wpm / 60.0
     beats = split_beats(raw, wps)
     if not beats:
@@ -181,8 +211,8 @@ def analyse(raw, wpm=165, target=None):
             run, start = 0, None
 
     # Does the last line hand you back to the first one?
-    first = {w.lower() for w in words(rows[0]["text"]) if w.lower() not in STOPWORDS}
-    last = {w.lower() for w in words(rows[-1]["text"]) if w.lower() not in STOPWORDS}
+    first = {w.lower() for w in words(rows[0]["text"]) if w.lower() not in stopwords}
+    last = {w.lower() for w in words(rows[-1]["text"]) if w.lower() not in stopwords}
     loop = sorted(pretty(w) for w in first & last)
     if loop:
         notes.append(f"Loops: the last beat repeats \"{', '.join(loop[:3])}\" from the hook. "
@@ -242,10 +272,20 @@ def main():
     ap.add_argument("--wpm", type=float, default=165, help="speaking rate (default 165)")
     ap.add_argument("--target", type=float, help="target length in seconds")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--lang", choices=LANGS, default="en",
+                    help="language data to use; auto picks by stopwords")
     args = ap.parse_args()
 
     raw = read_text(args.input)
-    a = analyse(raw, wpm=args.wpm, target=args.target)
+    lang = args.lang
+    if lang == "auto":
+        lang, note = pick_lang(raw, auto_candidates())
+        print(note, file=sys.stderr)
+    try:
+        a = analyse(raw, wpm=args.wpm, target=args.target, lang=lang)
+    except LangError as err:
+        print(f"beats.py: cannot load language data, {err}", file=sys.stderr)
+        sys.exit(2)
     if not a:
         print("empty script", file=sys.stderr)
         sys.exit(2)

@@ -66,6 +66,9 @@ class LangError(Exception):
     """The language file is missing, unreadable, incomplete or has a bad regex."""
 
 
+_LOADED = {}                                      # code -> loaded dict, filled on success only
+
+
 def load_lang(code="en"):
     """Every word this script knows comes from lang/<code>.json.
 
@@ -79,11 +82,13 @@ def load_lang(code="en"):
     imperatives: verbs that earn the front position.
     dealbreakers: language-bound ones only; hashtag and emoji live in code.
     """
+    if code in _LOADED:
+        return _LOADED[code]
     path = os.path.join(LANG_DIR, f"{code}.json")
     try:
         with open(path, encoding="utf-8") as fh:
             d = json.load(fh)["hookscore"]
-        return {
+        loaded = {
             "NUMBER_RE": re.compile(
                 r"\$\s?\d[\d,]*(?:\.\d+)?"           # money, whole
                 r"|\b\d[\d,]*(?:\.\d+)?\s?"          # a figure, with or without a unit
@@ -96,35 +101,50 @@ def load_lang(code="en"):
             "IMPERATIVES": set(d["imperatives"]),
             "ADDRESS_YOU": re.compile(d["address_you"]),
             "ADDRESS_ME": re.compile(d["address_me"]),
-            "DEALBREAKERS": [(re.compile(x["regex"]), x["message"]) for x in d["dealbreakers"]],
+            # The language's own first, then the two that live in code.
+            "DEALBREAKERS": [(re.compile(x["regex"]), x["message"]) for x in d["dealbreakers"]] + [
+                (HASHTAG_RE,
+                 "Hashtag in the hook. Hashtags belong at the bottom of the caption, if anywhere."),
+                (EMOJI_RE,
+                 "Emoji in the hook. On-screen text at hook size has room for words or for an emoji, not both."),
+            ],
         }
     except (OSError, ValueError, KeyError, TypeError, re.error) as err:
         raise LangError(f"{path}: {type(err).__name__}: {err}") from None
+    _LOADED[code] = loaded
+    return loaded
 
 
-try:
-    _LANG = load_lang()
-except LangError as _err:
-    if __name__ != "__main__":
-        raise                                     # importers (swipe.py) decide
-    print(f"hookscore.py: cannot load language data, {_err}", file=sys.stderr)
-    sys.exit(2)
+LANGS = ("en", "pt-BR", "auto")
 
-NUMBER_RE = _LANG["NUMBER_RE"]
-SPOKEN_NUMBERS = _LANG["SPOKEN_NUMBERS"]
-MONEY_WORDS = _LANG["MONEY_WORDS"]
-STAKES = _LANG["STAKES"]
-WEAK_OPENERS = _LANG["WEAK_OPENERS"]
-IMPERATIVES = _LANG["IMPERATIVES"]
-ADDRESS_YOU = _LANG["ADDRESS_YOU"]
-ADDRESS_ME = _LANG["ADDRESS_ME"]
 
-DEALBREAKERS = _LANG["DEALBREAKERS"] + [
-    (HASHTAG_RE,
-     "Hashtag in the hook. Hashtags belong at the bottom of the caption, if anywhere."),
-    (EMOJI_RE,
-     "Emoji in the hook. On-screen text at hook size has room for words or for an emoji, not both."),
-]
+def pick_lang(text, candidates):
+    """candidates: {code: set of stopwords}. Returns (code, note): the language
+    whose function words the text uses most. A tie, or nothing to compare, is "en"."""
+    # Composed first: a decomposed "você" would split into "vo" + "c".
+    text = unicodedata.normalize("NFC", text).lower().replace("’", "'")
+    tokens = re.findall(r"[^\W\d_]+(?:'[^\W\d_]+)?", text)
+    counts = {c: sum(t in sw for t in tokens) for c, sw in candidates.items()}
+    best = max(counts.values(), default=0)
+    leaders = [c for c, n in counts.items() if n == best]
+    if len(counts) < 2:
+        return "en", "lang: auto -> en (no other language on disk)"
+    code = leaders[0] if len(leaders) == 1 else "en"
+    order = sorted(counts, key=lambda c: (c != code, c))
+    shown = " vs ".join(str(counts[c]) for c in order)
+    return code, f"lang: auto -> {code} ({'tie, ' if len(leaders) > 1 else ''}{shown})"
+
+
+def auto_candidates():
+    """{code: stopwords} for each language file on disk that carries them."""
+    found = {}
+    for code in (c for c in LANGS if c != "auto"):
+        try:
+            with open(os.path.join(LANG_DIR, f"{code}.json"), encoding="utf-8") as fh:
+                found[code] = set(json.load(fh)["auto"]["stopwords"])
+        except (OSError, ValueError, KeyError, TypeError):
+            continue                              # skipped for auto; the normal load reports it
+    return found
 
 
 def clamp(n):
@@ -153,12 +173,12 @@ def check_length(text):
     return clamp(score), f"{n} words, {chars} chars, ~{secs:.1f}s spoken (want 5-12 words)"
 
 
-def check_specificity(text):
+def check_specificity(text, L):
     """One concrete thing beats three abstract ones."""
-    nums = [n.strip() for n in NUMBER_RE.findall(text) if n.strip()]
+    nums = [n.strip() for n in L["NUMBER_RE"].findall(text) if n.strip()]
     propers = set(PROPER_RE.findall(text))
     low = [w.lower().strip("'’") for w in words(text)]
-    spoken = [w for w in low if w in SPOKEN_NUMBERS or w in MONEY_WORDS]
+    spoken = [w for w in low if w in L["SPOKEN_NUMBERS"] or w in L["MONEY_WORDS"]]
     hits = len(nums) + len(propers) + len(spoken)
     score = 15.0 if hits == 0 else clamp(45 + hits * 30)
     found = ", ".join(nums[:2] + sorted(propers)[:2] + spoken[:2])
@@ -166,10 +186,10 @@ def check_specificity(text):
                    " - no number, no name, nothing checkable"))
 
 
-def check_stakes(text):
+def check_stakes(text, L):
     """Tension, cost, negation. Something the viewer might lose."""
     w = [x.lower().strip("'’") for x in words(text)]
-    hits = [x for x in w if x in STAKES]
+    hits = [x for x in w if x in L["STAKES"]]
     markers = sorted(set(hits))
     if re.search(r"\$\s?\d", text):
         markers.append("a price")
@@ -180,7 +200,7 @@ def check_stakes(text):
     return clamp(score), detail
 
 
-def check_frontload(text):
+def check_frontload(text, L):
     """The interesting word cannot be in position nine."""
     w = words(text)
     if not w:
@@ -189,14 +209,14 @@ def check_frontload(text):
     opener = " ".join(low[:2])
     penalty = 0
     hit_opener = None
-    for weak in WEAK_OPENERS:
+    for weak in L["WEAK_OPENERS"]:
         if opener.startswith(weak) or low[0] == weak:
             penalty, hit_opener = 30, weak
             break
     payload = None
     for i, token in enumerate(low):
-        if (token in STAKES or token in SPOKEN_NUMBERS or token in MONEY_WORDS
-                or NUMBER_RE.match(w[i]) or (i and PROPER_RE.match(w[i]))):
+        if (token in L["STAKES"] or token in L["SPOKEN_NUMBERS"]
+                or token in L["MONEY_WORDS"] or L["NUMBER_RE"].match(w[i]) or (i and PROPER_RE.match(w[i]))):
             payload = i
             break
     if payload is None:
@@ -215,15 +235,15 @@ def check_frontload(text):
     return clamp(base - penalty), detail
 
 
-def check_address(text):
+def check_address(text, L):
     """Aimed at one viewer, or floating in the air."""
     low = text.lower()
     w = [x.lower().strip("'’") for x in words(text)]
-    if ADDRESS_YOU.search(low):
+    if L["ADDRESS_YOU"].search(low):
         return 100.0, "speaks to the viewer"
-    if w and w[0] in IMPERATIVES:
+    if w and w[0] in L["IMPERATIVES"]:
         return 90.0, f"imperative opener (\"{w[0]}\")"
-    if ADDRESS_ME.search(low):
+    if L["ADDRESS_ME"].search(low):
         return 70.0, "first person, no viewer named"
     return 35.0, "third person, nobody in the room"
 
@@ -234,17 +254,18 @@ CHECKS = ["LENGTH", "SPECIFICITY", "STAKES", "FRONTLOAD", "ADDRESS"]
 PASS_SCORE = 70
 
 
-def run(text):
+def run(text, lang="en"):
     # Decomposed accents (NFD, macOS paste) split words in `re`: compose them.
     text = unicodedata.normalize("NFC", text).translate(APOSTROPHES)
+    L = load_lang(lang)
     results = {
         "LENGTH": check_length(text),
-        "SPECIFICITY": check_specificity(text),
-        "STAKES": check_stakes(text),
-        "FRONTLOAD": check_frontload(text),
-        "ADDRESS": check_address(text),
+        "SPECIFICITY": check_specificity(text, L),
+        "STAKES": check_stakes(text, L),
+        "FRONTLOAD": check_frontload(text, L),
+        "ADDRESS": check_address(text, L),
     }
-    flags = [msg for pattern, msg in DEALBREAKERS if pattern.search(text)]
+    flags = [msg for pattern, msg in L["DEALBREAKERS"] if pattern.search(text)]
     scores = [results[c][0] for c in CHECKS]
     # The weakest property caps the hook, same logic as detect.py: one bad
     # property is enough for the thumb to keep moving.
@@ -304,6 +325,8 @@ def main():
     ap.add_argument("input", nargs="?", default="-", help="file with one hook per line, or -")
     ap.add_argument("--hook", help="score a single hook given on the command line")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--lang", choices=LANGS, default="en",
+                    help="language data to score with; auto picks by stopwords")
     args = ap.parse_args()
 
     if args.hook:
@@ -317,9 +340,19 @@ def main():
         print("nothing to score", file=sys.stderr)
         sys.exit(2)
 
+    lang = args.lang
+    if lang == "auto":
+        lang, note = pick_lang("\n".join(lines), auto_candidates())
+        print(note, file=sys.stderr)
+    try:
+        load_lang(lang)
+    except LangError as err:
+        print(f"hookscore.py: cannot load language data, {err}", file=sys.stderr)
+        sys.exit(2)
+
     payload = []
     for line in lines:
-        results, overall, verdict, flags = run(line)
+        results, overall, verdict, flags = run(line, lang)
         payload.append({
             "hook": line,
             "checks": {k: {"score": round(v[0], 1), "detail": v[1]} for k, v in results.items()},
@@ -332,7 +365,7 @@ def main():
     if args.json:
         print(json.dumps(payload if len(payload) > 1 else payload[0], indent=2, ensure_ascii=False))
     elif len(payload) == 1:
-        results, overall, verdict, flags = run(lines[0])
+        results, overall, verdict, flags = run(lines[0], lang)
         render_one(lines[0], results, overall, verdict, flags)
     else:
         render_table(sorted(payload, key=lambda r: -r["score"]))

@@ -34,7 +34,6 @@ import sys
 import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-LEX = os.path.join(HERE, "slop.en.json")
 
 URL_RE = re.compile(r"https?://\S+|www\.\S+|\S+@\S+\.\S+")
 SENT_RE = re.compile(r"[^.!?\n]+[.!?]*")
@@ -44,13 +43,14 @@ class LexiconError(Exception):
     """The lexicon is missing, unreadable or incomplete."""
 
 
-def load_lexicon(path=LEX):
+def load_lexicon(path=None, lang="en"):
     """slop.<lang>.json. `connectives` are the words that, after an em dash
     turned into a comma, leave a splice worth promoting to a full stop.
     `conjunctions` are the words that go with a deleted phrase they joined.
     `dependents` open a clause that hangs on the phrase before it, so that
     phrase is kept and flagged instead of deleted; `complementizers` ("that")
     go with a deleted opener and leave the clause after them standing."""
+    path = path or os.path.join(HERE, f"slop.{lang}.json")
     try:
         with open(path, encoding="utf-8") as fh:
             lex = json.load(fh)
@@ -61,6 +61,38 @@ def load_lexicon(path=LEX):
         return lex
     except (OSError, ValueError, KeyError, TypeError) as err:
         raise LexiconError(f"{path}: {type(err).__name__}: {err}") from None
+
+
+LANGS = ("en", "pt-BR", "auto")
+
+
+def pick_lang(text, candidates):
+    """candidates: {code: set of stopwords}. Returns (code, note): the language
+    whose function words the text uses most. A tie, or nothing to compare, is "en"."""
+    # Composed first: a decomposed "você" would split into "vo" + "c".
+    text = unicodedata.normalize("NFC", text).lower().replace("’", "'")
+    tokens = re.findall(r"[^\W\d_]+(?:'[^\W\d_]+)?", text)
+    counts = {c: sum(t in sw for t in tokens) for c, sw in candidates.items()}
+    best = max(counts.values(), default=0)
+    leaders = [c for c, n in counts.items() if n == best]
+    if len(counts) < 2:
+        return "en", "lang: auto -> en (no other language on disk)"
+    code = leaders[0] if len(leaders) == 1 else "en"
+    order = sorted(counts, key=lambda c: (c != code, c))
+    shown = " vs ".join(str(counts[c]) for c in order)
+    return code, f"lang: auto -> {code} ({'tie, ' if len(leaders) > 1 else ''}{shown})"
+
+
+def auto_candidates():
+    """{code: stopwords} for each lexicon on disk that carries them."""
+    found = {}
+    for code in (c for c in LANGS if c != "auto"):
+        try:
+            with open(os.path.join(HERE, f"slop.{code}.json"), encoding="utf-8") as fh:
+                found[code] = set(json.load(fh)["auto"]["stopwords"])
+        except (OSError, ValueError, KeyError, TypeError):
+            continue                              # skipped for auto; the normal load reports it
+    return found
 
 
 def _cp(spec):
@@ -365,12 +397,19 @@ def main():
     ap.add_argument("-o", "--out", help="write cleaned text here instead of stdout")
     ap.add_argument("--report", action="store_true", help="print what changed, to stderr")
     ap.add_argument("--json", action="store_true", help="emit {text, report} as JSON")
-    ap.add_argument("--lexicon", default=LEX, help="path to slop.<lang>.json")
+    ap.add_argument("--lexicon", default=None,
+                    help="path to slop.<lang>.json; wins over --lang")
+    ap.add_argument("--lang", choices=LANGS, default="en",
+                    help="which slop.<lang>.json to use; auto picks by stopwords")
     args = ap.parse_args()
 
     raw = read_text(args.input)
+    lang = args.lang
+    if lang == "auto" and not args.lexicon:
+        lang, note = pick_lang(raw, auto_candidates())
+        print(note, file=sys.stderr)
     try:
-        lex = load_lexicon(args.lexicon)
+        lex = load_lexicon(args.lexicon, "en" if lang == "auto" else lang)
     except LexiconError as err:
         print(f"humanize.py: cannot load the lexicon, {err}", file=sys.stderr)
         sys.exit(2)

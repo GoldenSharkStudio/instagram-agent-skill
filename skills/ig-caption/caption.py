@@ -68,31 +68,58 @@ class LangError(Exception):
     """The language file is missing, unreadable, incomplete or has a bad regex."""
 
 
+_LOADED = {}                                      # code -> loaded dict, filled on success only
+
+
 def load_lang(code="en"):
     """asks: the calls to action ONE ASK counts, each a regex and a name.
     filler_tags: hashtags so generic they describe nothing."""
+    if code in _LOADED:
+        return _LOADED[code]
     path = os.path.join(LANG_DIR, f"{code}.json")
     try:
         with open(path, encoding="utf-8") as fh:
             d = json.load(fh)["caption"]
-        return {
+        loaded = {
             "ASKS": [(re.compile(x["regex"]), x["name"]) for x in d["asks"]],
             "FILLER_TAGS": {t.lower() for t in d["filler_tags"]},
         }
     except (OSError, ValueError, KeyError, TypeError, re.error) as err:
         raise LangError(f"{path}: {type(err).__name__}: {err}") from None
+    _LOADED[code] = loaded
+    return loaded
 
 
-try:
-    _LANG = load_lang()
-except LangError as _err:
-    if __name__ != "__main__":
-        raise
-    print(f"caption.py: cannot load language data, {_err}", file=sys.stderr)
-    sys.exit(2)
+LANGS = ("en", "pt-BR", "auto")
 
-ASKS = _LANG["ASKS"]
-FILLER_TAGS = _LANG["FILLER_TAGS"]
+
+def pick_lang(text, candidates):
+    """candidates: {code: set of stopwords}. Returns (code, note): the language
+    whose function words the text uses most. A tie, or nothing to compare, is "en"."""
+    # Composed first: a decomposed "você" would split into "vo" + "c".
+    text = unicodedata.normalize("NFC", text).lower().replace("’", "'")
+    tokens = re.findall(r"[^\W\d_]+(?:'[^\W\d_]+)?", text)
+    counts = {c: sum(t in sw for t in tokens) for c, sw in candidates.items()}
+    best = max(counts.values(), default=0)
+    leaders = [c for c, n in counts.items() if n == best]
+    if len(counts) < 2:
+        return "en", "lang: auto -> en (no other language on disk)"
+    code = leaders[0] if len(leaders) == 1 else "en"
+    order = sorted(counts, key=lambda c: (c != code, c))
+    shown = " vs ".join(str(counts[c]) for c in order)
+    return code, f"lang: auto -> {code} ({'tie, ' if len(leaders) > 1 else ''}{shown})"
+
+
+def auto_candidates():
+    """{code: stopwords} for each language file on disk that carries them."""
+    found = {}
+    for code in (c for c in LANGS if c != "auto"):
+        try:
+            with open(os.path.join(LANG_DIR, f"{code}.json"), encoding="utf-8") as fh:
+                found[code] = set(json.load(fh)["auto"]["stopwords"])
+        except (OSError, ValueError, KeyError, TypeError):
+            continue                              # skipped for auto; the normal load reports it
+    return found
 
 
 def visible_window(text, cut):
@@ -113,9 +140,10 @@ def render_box(window, truncated, out=sys.stdout, width=52):
     print("  +" + "-" * (width + 2 - len(tail) - 2) + f" {tail} " + "+", file=out)
 
 
-def analyse(text, cut=TRUNCATE, keywords=None):
+def analyse(text, cut=TRUNCATE, keywords=None, lang="en"):
     # Decomposed accents (NFD, macOS paste) split words in `re` and count twice
     # as characters: compose them, the way a reader sees the caption.
+    L = load_lang(lang)
     text = unicodedata.normalize("NFC", text).rstrip()
     stripped = text.strip()
     chars = len(stripped)
@@ -128,8 +156,8 @@ def analyse(text, cut=TRUNCATE, keywords=None):
     window = visible_window(stripped, cut)
     truncated = chars > cut
     match = stripped.translate(APOSTROPHES)
-    asks = [name for pattern, name in ASKS if pattern.search(match)]
-    filler = [t for t in tags if t.lower() in FILLER_TAGS]
+    asks = [name for pattern, name in L["ASKS"] if pattern.search(match)]
+    filler = [t for t in tags if t.lower() in L["FILLER_TAGS"]]
     keywords = [unicodedata.normalize("NFC", k.strip()) for k in (keywords or []) if k.strip()]
 
     checks = []
@@ -249,10 +277,20 @@ def main():
                     help=f"characters shown before '... more' (default {TRUNCATE})")
     ap.add_argument("--keywords", default="", help="comma-separated terms you want to be found for")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--lang", choices=LANGS, default="en",
+                    help="language data to use; auto picks by stopwords")
     args = ap.parse_args()
 
     raw = read_text(args.input)
-    a = analyse(raw, cut=args.truncate, keywords=args.keywords.split(","))
+    lang = args.lang
+    if lang == "auto":
+        lang, note = pick_lang(raw, auto_candidates())
+        print(note, file=sys.stderr)
+    try:
+        a = analyse(raw, cut=args.truncate, keywords=args.keywords.split(","), lang=lang)
+    except LangError as err:
+        print(f"caption.py: cannot load language data, {err}", file=sys.stderr)
+        sys.exit(2)
     if args.json:
         print(json.dumps(a, indent=2, ensure_ascii=False))
     else:

@@ -270,5 +270,30 @@
       "you",
       "your"
     ]
+  },
+  "auto": {
+    "note": "Function words --lang auto counts to guess the language of a text. Same list in every en file.",
+    "stopwords": [
+      "the",
+      "and",
+      "of",
+      "to",
+      "is",
+      "it",
+      "you",
+      "that",
+      "this",
+      "with",
+      "for",
+      "was",
+      "are",
+      "have",
+      "not",
+      "what",
+      "your",
+      "but",
+      "they",
+      "we"
+    ]
   }
 }

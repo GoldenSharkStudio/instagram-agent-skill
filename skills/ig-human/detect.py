@@ -30,7 +30,6 @@ import sys
 import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-LEX = os.path.join(HERE, "slop.en.json")
 
 # iOS types "’" for "'". The data spells every apostrophe straight, so the
 # copy a regex or word list is matched against does too. Same length, so
@@ -46,9 +45,10 @@ class LexiconError(Exception):
     """The lexicon is missing, unreadable, incomplete or has a bad regex."""
 
 
-def load_lexicon(path=LEX):
+def load_lexicon(path=None, lang="en"):
     """slop.<lang>.json. `voice` holds the two voice regexes: contractions
     and personal pronouns, the words that put a person in the text."""
+    path = path or os.path.join(HERE, f"slop.{lang}.json")
     try:
         with open(path, encoding="utf-8") as fh:
             lex = json.load(fh)
@@ -60,6 +60,38 @@ def load_lexicon(path=LEX):
         return lex
     except (OSError, ValueError, KeyError, TypeError, re.error) as err:
         raise LexiconError(f"{path}: {type(err).__name__}: {err}") from None
+
+
+LANGS = ("en", "pt-BR", "auto")
+
+
+def pick_lang(text, candidates):
+    """candidates: {code: set of stopwords}. Returns (code, note): the language
+    whose function words the text uses most. A tie, or nothing to compare, is "en"."""
+    # Composed first: a decomposed "você" would split into "vo" + "c".
+    text = unicodedata.normalize("NFC", text).lower().replace("’", "'")
+    tokens = re.findall(r"[^\W\d_]+(?:'[^\W\d_]+)?", text)
+    counts = {c: sum(t in sw for t in tokens) for c, sw in candidates.items()}
+    best = max(counts.values(), default=0)
+    leaders = [c for c, n in counts.items() if n == best]
+    if len(counts) < 2:
+        return "en", "lang: auto -> en (no other language on disk)"
+    code = leaders[0] if len(leaders) == 1 else "en"
+    order = sorted(counts, key=lambda c: (c != code, c))
+    shown = " vs ".join(str(counts[c]) for c in order)
+    return code, f"lang: auto -> {code} ({'tie, ' if len(leaders) > 1 else ''}{shown})"
+
+
+def auto_candidates():
+    """{code: stopwords} for each lexicon on disk that carries them."""
+    found = {}
+    for code in (c for c in LANGS if c != "auto"):
+        try:
+            with open(os.path.join(HERE, f"slop.{code}.json"), encoding="utf-8") as fh:
+                found[code] = set(json.load(fh)["auto"]["stopwords"])
+        except (OSError, ValueError, KeyError, TypeError):
+            continue                              # skipped for auto; the normal load reports it
+    return found
 
 
 def clamp(n):
@@ -305,18 +337,25 @@ def main():
     ap.add_argument("input", nargs="?", default="-", help="file, or - for stdin")
     ap.add_argument("compare", nargs="?", help="second file, to show before/after")
     ap.add_argument("--json", action="store_true")
-    ap.add_argument("--lexicon", default=LEX)
+    ap.add_argument("--lexicon", default=None,
+                    help="path to slop.<lang>.json; wins over --lang")
+    ap.add_argument("--lang", choices=LANGS, default="en",
+                    help="which slop.<lang>.json to use; auto picks by stopwords")
     args = ap.parse_args()
-
-    try:
-        lex = load_lexicon(args.lexicon)
-    except LexiconError as err:
-        print(f"detect.py: cannot load the lexicon, {err}", file=sys.stderr)
-        sys.exit(2)
 
     targets = [(args.input, read_text(args.input))]
     if args.compare:
         targets.append((args.compare, read_text(args.compare)))
+
+    lang = args.lang
+    if lang == "auto" and not args.lexicon:
+        lang, note = pick_lang(targets[0][1], auto_candidates())
+        print(note, file=sys.stderr)
+    try:
+        lex = load_lexicon(args.lexicon, "en" if lang == "auto" else lang)
+    except LexiconError as err:
+        print(f"detect.py: cannot load the lexicon, {err}", file=sys.stderr)
+        sys.exit(2)
 
     payload = []
     for name, text in targets:

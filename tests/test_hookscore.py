@@ -76,30 +76,30 @@ class Checks(unittest.TestCase):
 
     def test_spoken_numbers_count_as_concrete(self):
         # The fixed bug named in the README: "zero dollars" scored as abstract.
-        score, detail = hs.check_specificity("I made zero dollars from three books")
+        score, detail = hs.check_specificity("I made zero dollars from three books", hs.load_lang())
         self.assertGreater(score, 15.0)
         self.assertIn("zero", detail)
 
     def test_one_and_first_are_not_quantities(self):
-        score, _ = hs.check_specificity("the one thing everybody gets wrong")
+        score, _ = hs.check_specificity("the one thing everybody gets wrong", hs.load_lang())
         self.assertEqual(score, 15.0)
 
     def test_stakes(self):
-        self.assertEqual(hs.check_stakes("a nice morning")[0], 20.0)
-        self.assertEqual(hs.check_stakes("never do this")[0], 70.0)
-        self.assertEqual(hs.check_stakes("never pay $5 for it")[0], 100.0)
+        self.assertEqual(hs.check_stakes("a nice morning", hs.load_lang())[0], 20.0)
+        self.assertEqual(hs.check_stakes("never do this", hs.load_lang())[0], 70.0)
+        self.assertEqual(hs.check_stakes("never pay $5 for it", hs.load_lang())[0], 100.0)
 
     def test_frontload_weak_opener_penalty(self):
-        strong, _ = hs.check_frontload("Never sign a contract like this")
-        weak, detail = hs.check_frontload("So basically never sign this")
+        strong, _ = hs.check_frontload("Never sign a contract like this", hs.load_lang())
+        weak, detail = hs.check_frontload("So basically never sign this", hs.load_lang())
         self.assertGreater(strong, weak)
         self.assertIn("weak opener", detail)
 
     def test_address_ladder(self):
-        self.assertEqual(hs.check_address("you are doing it wrong")[0], 100.0)
-        self.assertEqual(hs.check_address("Steal this contract clause")[0], 90.0)
-        self.assertEqual(hs.check_address("I lost the deal")[0], 70.0)
-        self.assertEqual(hs.check_address("The market moved")[0], 35.0)
+        self.assertEqual(hs.check_address("you are doing it wrong", hs.load_lang())[0], 100.0)
+        self.assertEqual(hs.check_address("Steal this contract clause", hs.load_lang())[0], 90.0)
+        self.assertEqual(hs.check_address("I lost the deal", hs.load_lang())[0], 70.0)
+        self.assertEqual(hs.check_address("The market moved", hs.load_lang())[0], 35.0)
 
     def test_every_dealbreaker_fires(self):
         cases = [
@@ -109,20 +109,20 @@ class Checks(unittest.TestCase):
             "Contracts matter #freelance",
             "Contracts matter 🔥",
         ]
-        for text, (pattern, _) in zip(cases, hs.DEALBREAKERS):
+        for text, (pattern, _) in zip(cases, hs.load_lang()["DEALBREAKERS"]):
             with self.subTest(text=text):
                 self.assertTrue(pattern.search(text))
 
     def test_emoji_dealbreaker_sees_flags_and_stars(self):
         # Both escaped the old range: a hook with a flag scored as clean.
-        emoji = next(p for p, m in hs.DEALBREAKERS if m.startswith("Emoji"))
+        emoji = next(p for p, m in hs.load_lang()["DEALBREAKERS"] if m.startswith("Emoji"))
         for text in ("Contracts matter 🇧🇷", "Contracts matter ⭐", "1️⃣ rule for contracts"):
             with self.subTest(text=text):
                 self.assertTrue(emoji.search(text))
         self.assertIsNone(emoji.search("Before → after: contracts"))
 
     def test_greeting_with_punctuation_fires(self):
-        greeting = next(p for p, m in hs.DEALBREAKERS if m.startswith("Greeting"))
+        greeting = next(p for p, m in hs.load_lang()["DEALBREAKERS"] if m.startswith("Greeting"))
         for text in ("Hey, you lost $18,000", "Hi, I'm Sam and I lost $18,000",
                      "Hi! You lost $18,000", "What's up, guys", "Welcome back.",
                      "Hello, you lost $18,000", "  hey you lost $18,000"):
@@ -130,7 +130,7 @@ class Checks(unittest.TestCase):
                 self.assertTrue(greeting.search(text))
 
     def test_greeting_needs_a_whole_word(self):
-        greeting = next(p for p, m in hs.DEALBREAKERS if m.startswith("Greeting"))
+        greeting = next(p for p, m in hs.load_lang()["DEALBREAKERS"] if m.startswith("Greeting"))
         for text in ("Hiring is broken", "Highest paid job I quit", "Heyday of the agency",
                      "Welcomed by 3 clients", "Helloworld scripts cost me $400",
                      "They said hey to me"):
