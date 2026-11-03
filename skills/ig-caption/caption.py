@@ -39,6 +39,10 @@ HASHTAG_LIMIT = 5        # Instagram's cap per post or reel since 18 Dec 2025,
                          # rather than many generic ones, can improve both your
                          # content's performance and people's experience".
 
+# iOS types "’" for "'". The data spells every apostrophe straight, so the
+# copy a regex or word list is matched against does too. Same length, so
+# spans still line up, and the user's own text is never rewritten.
+APOSTROPHES = str.maketrans("‘’", "''")
 HASHTAG_RE = re.compile(r"(?:^|\s)(#[A-Za-z0-9_]+)")
 MENTION_RE = re.compile(r"(?:^|\s)(@[A-Za-z0-9_.]+)")
 LINK_RE = re.compile(r"https?://\S+|\bwww\.\S+|\b[a-z0-9-]+\.(?:com|co|io|net|org|ai|app)/\S*",
@@ -120,7 +124,8 @@ def analyse(text, cut=TRUNCATE, keywords=None):
     emoji = EMOJI_RE.findall(stripped)
     window = visible_window(stripped, cut)
     truncated = chars > cut
-    asks = [name for pattern, name in ASKS if pattern.search(stripped)]
+    match = stripped.translate(APOSTROPHES)
+    asks = [name for pattern, name in ASKS if pattern.search(match)]
     filler = [t for t in tags if t.lower() in FILLER_TAGS]
     keywords = [k.strip() for k in (keywords or []) if k.strip()]
 
@@ -187,10 +192,12 @@ def analyse(text, cut=TRUNCATE, keywords=None):
         + (" - reads as decoration" if density > 4 else ""))
 
     if keywords:
-        low = stripped.lower()
-        found = [k for k in keywords if k.lower() in low]
-        missing = [k for k in keywords if k.lower() not in low]
-        in_window = [k for k in found if k.lower() in window.lower()]
+        low = match.lower()
+        win = window.translate(APOSTROPHES).lower()
+        key = lambda k: k.translate(APOSTROPHES).lower()   # noqa: E731
+        found = [k for k in keywords if key(k) in low]
+        missing = [k for k in keywords if key(k) not in low]
+        in_window = [k for k in found if key(k) in win]
         status = "PASS" if not missing else ("WARN" if found else "FAIL")
         add("SEARCH TERMS", status,
             f"{len(found)}/{len(keywords)} present"

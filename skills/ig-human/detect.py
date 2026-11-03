@@ -32,6 +32,10 @@ import unicodedata
 HERE = os.path.dirname(os.path.abspath(__file__))
 LEX = os.path.join(HERE, "slop.en.json")
 
+# iOS types "’" for "'". The data spells every apostrophe straight, so the
+# copy a regex or word list is matched against does too. Same length, so
+# spans still line up, and the user's own text is never rewritten.
+APOSTROPHES = str.maketrans("‘’", "''")
 SENT_RE = re.compile(r"[^.!?\n]+[.!?]*")
 WORD_RE = re.compile(r"[A-Za-z']+")
 NUMBERS = re.compile(r"\b\d[\d,.]*%?\b|\$\d")
@@ -152,7 +156,9 @@ def check_fingerprint(text):
 
 def count_tells(text, lex):
     """Structural tells: the shapes humanize.py flags for a person to rewrite.
-    Returns (count, ids)."""
+    Returns (count, ids). Callable on its own (main() uses it), so it
+    straightens apostrophes itself."""
+    text = text.translate(APOSTROPHES)
     tells, names = 0, []
     for s in lex["structures"]:
         try:
@@ -200,12 +206,15 @@ def scores_pass(results, overall):
 
 
 def run(text, lex):
+    # FINGERPRINT reads the raw text: curly quotes are one of its tells.
+    # Every other check matches words, so it reads the straightened copy.
+    match = text.translate(APOSTROPHES)
     results = {}
-    results["BURSTINESS"] = check_burstiness(text)
-    results["SPECIFICITY"] = check_specificity(text)
-    results["SLOP DENSITY"] = check_slop(text, lex)
+    results["BURSTINESS"] = check_burstiness(match)
+    results["SPECIFICITY"] = check_specificity(match)
+    results["SLOP DENSITY"] = check_slop(match, lex)
     results["FINGERPRINT"] = check_fingerprint(text)
-    results["VOICE"] = check_voice(text, lex)
+    results["VOICE"] = check_voice(match, lex)
     scores = [results[c][0] for c in CHECKS]
     # The weakest check drags the verdict: a detector only needs one signal.
     overall = statistics.mean(scores) * 0.6 + min(scores) * 0.4
@@ -213,7 +222,7 @@ def run(text, lex):
         "REVIEW" if overall >= REVIEW_SCORE else "FLAGGED")
     # A structural tell is the part a script cannot rewrite. While one is
     # left the draft stops at REVIEW, however well the numbers came out.
-    if verdict == "PASS" and count_tells(text, lex)[0]:
+    if verdict == "PASS" and count_tells(match, lex)[0]:
         verdict = "REVIEW"
     return results, overall, verdict
 

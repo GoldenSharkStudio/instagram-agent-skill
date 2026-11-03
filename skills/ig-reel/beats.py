@@ -31,6 +31,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 LANG_DIR = os.path.join(HERE, "lang")
 
 WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
+# iOS types "’" for "'". The data spells every apostrophe straight, so the
+# copy a regex or word list is matched against does too. Same length, so
+# spans still line up, and the user's own text is never rewritten.
+APOSTROPHES = str.maketrans("‘’", "''")
 SENT_RE = re.compile(r"[^.!?]+[.!?]*")
 CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
 
@@ -67,7 +71,7 @@ ABSTRACT_RUN = 3         # beats in a row with nothing checkable in them.
 
 def words(text):
     # "$18,000" is one word when it is spoken, so it is one word here too.
-    return WORD_RE.findall(re.sub(r"(?<=\d),(?=\d)", "", text))
+    return WORD_RE.findall(re.sub(r"(?<=\d),(?=\d)", "", text.translate(APOSTROPHES)))
 
 
 def pretty(token):

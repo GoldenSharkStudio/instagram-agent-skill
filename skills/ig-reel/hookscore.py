@@ -41,6 +41,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 LANG_DIR = os.path.join(HERE, "lang")
 
 WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
+# iOS types "’" for "'". The data spells every apostrophe straight, so the
+# copy a regex or word list is matched against does too. Same length, so
+# spans still line up, and the user's own text is never rewritten.
+APOSTROPHES = str.maketrans("‘’", "''")
 PROPER_RE = re.compile(r"(?<!^)\b[A-Z][a-z]{2,}\b")
 HASHTAG_RE = re.compile(r"(?:^|\s)#\w+")
 # One emoji as a reader counts it: a flag pair, a keycap, or a pictograph with
@@ -230,6 +234,7 @@ PASS_SCORE = 70
 
 
 def run(text):
+    text = text.translate(APOSTROPHES)
     results = {
         "LENGTH": check_length(text),
         "SPECIFICITY": check_specificity(text),

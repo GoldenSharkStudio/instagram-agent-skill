@@ -34,6 +34,10 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOOKS = os.path.join(HERE, "..", "ig-reel", "hooks.json")
+# iOS types "’" for "'". The data spells every apostrophe straight, so the
+# copy a regex or word list is matched against does too. Same length, so
+# spans still line up, and the user's own text is never rewritten.
+APOSTROPHES = str.maketrans("‘’", "''")
 WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
 
 try:                                              # optional: score the hooks too
@@ -57,6 +61,7 @@ def load_formulas(path):
 def classify(hook, formulas):
     if not formulas:
         return None, "unclassified"
+    hook = hook.translate(APOSTROPHES)
     for fid, name, pattern in formulas:
         if pattern.search(hook):
             return fid, name
