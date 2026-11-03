@@ -8,7 +8,7 @@ Every command must carry `--lang {language}`, the placeholder the SKILL.md
 explains, and every command must still run as written: an option that does
 not exist, or `--lang` with the wrong value, is a usage error (exit 2) here.
 
-The values offered in `templates/voice.md`, the README and CLAUDE.md come from
+The values offered in `templates/voice.*.md`, the README and CLAUDE.md come from
 `LANGS` in the scripts, so a language added to the code without the docs, or
 the other way round, fails here.
 """
@@ -181,11 +181,16 @@ class EveryCommandPassesTheLanguage(unittest.TestCase):
 
 class TemplateAndDocs(unittest.TestCase):
     def test_template_offers_exactly_the_languages(self):
-        text = read("templates", "voice.md")
-        m = re.search(r"^- \*\*Language:\*\* \(([^.)]*)\.", text, re.M)  # the options, up to the first stop
-        self.assertTrue(m, "templates/voice.md has no **Language:** line")
-        offered = re.findall(r"`([^`]+)`", m.group(1))
-        self.assertEqual(sorted(offered), sorted(langs()))
+        paths = glob.glob(os.path.join(ROOT, "templates", "voice.*.md"))
+        self.assertEqual(len(paths), 2)
+        for path in paths:
+            with open(path, encoding="utf-8") as fh:
+                text = fh.read()
+            with self.subTest(template=os.path.basename(path)):
+                m = re.search(r"^- \*\*Language:\*\* \(([^.)]*)\.", text, re.M)  # the options, up to the first stop
+                self.assertTrue(m, "no **Language:** line")
+                offered = re.findall(r"`([^`]+)`", m.group(1))
+                self.assertEqual(sorted(offered), sorted(langs()))
 
     def test_readme_and_claude_md_document_the_flag(self):
         for name in ("README.md", "CLAUDE.md"):

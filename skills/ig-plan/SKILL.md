@@ -17,7 +17,27 @@ executed. Run it once a week, on the same day.
 If `~/.claude/instagram/voice.md`, `swipe.md` and `log.md` exist, read them.
 The swipe file is the user's own evidence from `/ig-viral` about which formulas
 are landing in their niche right now, and it outranks anything in this file.
-The log stops the plan repeating a theme from the last fortnight.
+The log stops the plan repeating a theme from the last fortnight: read the
+`first line` of the last 14 days of lines.
+
+<!-- shared:log-schema -->
+One line per item, oldest at the top, newest at the bottom:
+
+```text
+- YYYY-MM-DD | type | formula | first line | account
+```
+
+- `type`: `reel`, `carousel`, `story` or `comment`.
+- `formula`: the hook formula as `#n` from `ig-reel/hooks.json`, or `-` when
+  none was used.
+- `first line`: the hook or opening line as the user approved it, with any `|`
+  written as `/`.
+- `account`: the handle it went out on; for a comment, the account commented
+  on.
+
+Read a line by splitting on ` | `. Lines that do not have this shape are older
+notes: keep them, do not rewrite them.
+<!-- /shared:log-schema -->
 
 If they do not exist, ask for four things and write them down:
 

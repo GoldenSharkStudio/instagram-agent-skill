@@ -25,7 +25,26 @@ Ask for whichever the user has:
 - Or just the posts and their view counts, which is enough for a first pass.
 
 Also read `~/.claude/instagram/log.md` if it exists, since it records which
-hook formula each post used.
+hook formula each post used. Match a post to its line by date and first line.
+
+<!-- shared:log-schema -->
+One line per item, oldest at the top, newest at the bottom:
+
+```text
+- YYYY-MM-DD | type | formula | first line | account
+```
+
+- `type`: `reel`, `carousel`, `story` or `comment`.
+- `formula`: the hook formula as `#n` from `ig-reel/hooks.json`, or `-` when
+  none was used.
+- `first line`: the hook or opening line as the user approved it, with any `|`
+  written as `/`.
+- `account`: the handle it went out on; for a comment, the account commented
+  on.
+
+Read a line by splitting on ` | `. Lines that do not have this shape are older
+notes: keep them, do not rewrite them.
+<!-- /shared:log-schema -->
 
 ## What to actually measure
 

@@ -46,11 +46,11 @@ Project-local instead of global: copy the same folders into your repo's
 of a chat and it runs as a mode. You lose the five Python tools, which is most
 of the point of `/ig-reel` and `/ig-human`, but the rest works.
 
-Then spend ten minutes on `templates/voice.md`. Copy it to
-`~/.claude/instagram/voice.md` and fill it in, or send Claude three of your own
-reels and say "write my voice.md from these". Every skill reads that file. It
-matters more here than on other platforms, because you have to say the words
-out loud.
+Then spend ten minutes on `templates/voice.en.md` (or `templates/voice.pt-BR.md`
+if you post in Portuguese). Copy it to `~/.claude/instagram/voice.md` and fill
+it in, or send Claude three of your own reels and say "write my voice.md from
+these". Every skill reads that file. It matters more here than on other
+platforms, because you have to say the words out loud.
 
 ## The thirteen
 
@@ -373,7 +373,9 @@ skills/ig-viral/lang/en.json       every sentence swipe prints and writes to swi
 skills/ig-viral/lang/pt-BR.json    the same in Portuguese
 skills/ig-viral/swipe.py           outlier ranking and formula classification
 skills/ig-profile/rubric.json      the 100-point profile score
-templates/voice.md                 your voice profile. Fill this in first.
+templates/voice.en.md              your voice profile. Fill this in first.
+templates/voice.pt-BR.md           the same form in Portuguese
+templates/log.md                   the line the skills append to log.md, and read back
 ```
 
 ## Credit

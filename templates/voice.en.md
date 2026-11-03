@@ -1,8 +1,9 @@
-# voice.md
+# voice.md (English)
 
-Copy this to `~/.claude/instagram/voice.md` and fill it in. Every skill in the
-pack reads it. Ten minutes here is the difference between scripts you shoot and
-scripts you rewrite.
+Copy this to `~/.claude/instagram/voice.md` and fill it in. Posting in
+Portuguese? Use `voice.pt-BR.md` instead. Every skill in the pack reads it. Ten
+minutes here is the difference between scripts you shoot and scripts you
+rewrite.
 
 If you would rather not fill it in by hand, send Claude three of your own reels
 or captions and say "write my voice.md from these". That works better than

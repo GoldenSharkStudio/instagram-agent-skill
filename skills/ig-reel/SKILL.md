@@ -99,8 +99,27 @@ Reply "yes" to log it, or tell me what to change.
 ```
 
 **7. Never publish.** This skill produces a script. The user shoots it and
-posts it. On "yes", append to `~/.claude/instagram/log.md` with the date, the
-hook formula used and the first line, so `/ig-audit` has a history later.
+posts it. On "yes", append one line to `~/.claude/instagram/log.md` (create it
+if it is missing), type `reel`, so `/ig-audit` has a history later:
+
+<!-- shared:log-schema -->
+One line per item, oldest at the top, newest at the bottom:
+
+```text
+- YYYY-MM-DD | type | formula | first line | account
+```
+
+- `type`: `reel`, `carousel`, `story` or `comment`.
+- `formula`: the hook formula as `#n` from `ig-reel/hooks.json`, or `-` when
+  none was used.
+- `first line`: the hook or opening line as the user approved it, with any `|`
+  written as `/`.
+- `account`: the handle it went out on; for a comment, the account commented
+  on.
+
+Read a line by splitting on ` | `. Lines that do not have this shape are older
+notes: keep them, do not rewrite them.
+<!-- /shared:log-schema -->
 
 ## On-screen text is a separate script
 

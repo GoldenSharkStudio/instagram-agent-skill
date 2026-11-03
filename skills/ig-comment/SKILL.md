@@ -82,9 +82,30 @@ Post the first. It concedes something and it has a number in it.
 
 For an engagement round, ask for the 5 to 10 posts as pasted text in one
 message, return one comment each in a single block, and keep a running note in
-`~/.claude/instagram/log.md` of who has been commented on this week.
-Commenting on the same three accounts every day is visible and it looks like
-exactly what it is.
+`~/.claude/instagram/log.md` of who has been commented on this week: once the
+user says which ones they posted, append one line per comment, type `comment`,
+and before the next round read the log back and skip an account already
+commented on this week. Commenting on the same three accounts every day is
+visible and it looks like exactly what it is.
+
+<!-- shared:log-schema -->
+One line per item, oldest at the top, newest at the bottom:
+
+```text
+- YYYY-MM-DD | type | formula | first line | account
+```
+
+- `type`: `reel`, `carousel`, `story` or `comment`.
+- `formula`: the hook formula as `#n` from `ig-reel/hooks.json`, or `-` when
+  none was used.
+- `first line`: the hook or opening line as the user approved it, with any `|`
+  written as `/`.
+- `account`: the handle it went out on; for a comment, the account commented
+  on.
+
+Read a line by splitting on ` | `. Lines that do not have this shape are older
+notes: keep them, do not rewrite them.
+<!-- /shared:log-schema -->
 
 ## Never
 
