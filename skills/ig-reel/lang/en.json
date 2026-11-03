@@ -211,7 +211,36 @@
         "regex": "(?i)^\\s*(?:hey|hi|hello|what'?s up|welcome)\\b",
         "message": "Greeting. Nobody came to the feed to be greeted."
       }
-    ]
+    ],
+    "messages": {
+      "length_detail": "{n} words, {chars} chars, ~{secs:.1f}s spoken (want 5-12 words)",
+      "specificity_found": "{hits} concrete marker(s): {found}",
+      "specificity_none": "{hits} concrete marker(s) - no number, no name, nothing checkable",
+      "a_price": "a price",
+      "stakes_found": "{n} tension marker(s): {markers}",
+      "stakes_none": "{n} tension marker(s) - nothing is at stake in this line",
+      "frontload_empty": "empty",
+      "payload_none": "no payload word anywhere in the line",
+      "payload_early": "payload at word {position}",
+      "payload_mid": "payload at word {position}, could move forward",
+      "payload_late": "payload at word {position}, too late",
+      "weak_opener": "; weak opener \"{opener}\"",
+      "address_viewer": "speaks to the viewer",
+      "address_imperative": "imperative opener (\"{opener}\")",
+      "address_first_person": "first person, no viewer named",
+      "address_third_person": "third person, nobody in the room",
+      "dealbreaker_hashtag": "Hashtag in the hook. Hashtags belong at the bottom of the caption, if anywhere.",
+      "dealbreaker_emoji": "Emoji in the hook. On-screen text at hook size has room for words or for an emoji, not both.",
+      "title": "\nHOOK SCORE",
+      "overall_label": "HOOK SCORE",
+      "dealbreaker_line": "\n  DEALBREAKER  {flag}",
+      "weakest_property": "\n  Weakest property: {weakest}. Fix that one and re-run.",
+      "ranking_title": "\nHOOK RANKING\n",
+      "ranking_weakest": "        weakest: {weakest} ({score:.0f})",
+      "ranking_dealbreaker": "        dealbreaker: {flag}",
+      "ranking_footer": "\nShoot the top one. If the top one is under {pass_score}, none of these are the hook.\n",
+      "nothing_to_score": "nothing to score"
+    }
   },
   "beats": {
     "stopwords": [
@@ -269,7 +298,23 @@
       "with",
       "you",
       "your"
-    ]
+    ],
+    "messages": {
+      "head": "BEAT SHEET  ·  {words} words  ·  ~{secs:.1f}s at {wpm} wpm",
+      "head_target": "  ·  target {target}s",
+      "hook_flag": "hook runs {secs:.1f}s, past the {window:.0f}s mark",
+      "hook_note": "Beat 1 takes {secs:.1f}s to say. Cut it to {words} words or fewer, or the hook lands after the decision has been made.",
+      "hook_abstract_note": "Beat 1 has no number and no name in it. Hooks without something checkable are the ones that get scrolled.",
+      "long_beat_flag": "{secs:.1f}s on one beat",
+      "long_beats_note": "Beat(s) {beats} run past {limit:.0f}s. Either split the line or change what is on screen inside it. A static frame is where people leave.",
+      "abstract_run_note": "Beats {first}-{last} have nothing concrete in them. Put a number, a name or a price in one of them.",
+      "loop_note": "Loops: the last beat repeats \"{words}\" from the hook. Second watches are free reach.",
+      "no_loop_note": "No loop. The last beat shares no word with the hook, so the video ends flat. Echoing one word from beat 1 is the cheapest replay you get.",
+      "on_target_note": "Length is on target ({secs:.1f}s against {target}s).",
+      "over_target_note": "{secs:.1f}s over target. Cut about {words} words.",
+      "under_target_note": "{secs:.1f}s under target. Either add {words} words or shoot it short. Short is usually right.",
+      "empty_script": "empty script"
+    }
   },
   "auto": {
     "note": "Function words --lang auto counts to guess the language of a text. Same list in every en file.",

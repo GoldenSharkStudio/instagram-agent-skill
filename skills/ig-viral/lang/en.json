@@ -1,0 +1,29 @@
+{
+  "lang": "en",
+  "note": "Messages for swipe.py: every sentence it prints and writes to swipe.md, as str.format templates.",
+  "swipe": {
+    "messages": {
+      "no_rows": "no usable rows. Need a tab-separated file with at least views and hook.",
+      "note_no_formulas": "note: hooks.json not found, formulas not named. Pass --hooks.",
+      "note_no_hookscore": "note: hookscore.py not importable, hook scores skipped.",
+      "note_hookscore_lang": "note: hookscore.py not importable for {lang} ({reason}), hook scores skipped.",
+      "wrote": "wrote {path}",
+      "head": "SWIPE FILE  ·  {n} reels  ·  {accounts} accounts  ·  baseline: {baseline}",
+      "reel_line": "  {mult:>7}  hook {score:>3}  {fid} {formula:<22} {account:<16} {views:>9,}",
+      "working_title": "WHAT IS WORKING IN THIS BATCH",
+      "formula_count": "{name} x{count}",
+      "top_formulas": "  top third by outlier:  {formulas}",
+      "median_score": "  median hook score:     top {top:.0f}  vs bottom {bottom:.0f}",
+      "median_length": "  median hook length:    top {top} words  vs bottom {bottom} words",
+      "unclassified_line": "  unclassified:          {count} of {n}. Read those by hand, they are where a formula you do not have yet is hiding.",
+      "caveat": "\n  A hand-collected batch is evidence, not proof. Twelve reels shows you nothing;\n  forty across six accounts shows you something. Collect more before you believe it.\n",
+      "md_title": "# Swipe file",
+      "md_summary": "{n} reels across {accounts} accounts. Ranked by multiple over {baseline}.",
+      "md_reel": "## {mult}  {formula}  ({account})",
+      "md_views": "- views: {views:,}  baseline: {baseline:,}",
+      "md_score": "- hook score: {score}  words: {words}",
+      "md_hook": "- hook: \"{hook}\"",
+      "unclassified": "unclassified"
+    }
+  }
+}

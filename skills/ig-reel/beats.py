@@ -47,15 +47,24 @@ class LangError(Exception):
 _LOADED = {}                                      # code -> loaded dict, filled on success only
 
 
+def say(M, key, **kw):
+    """One sentence from the language file's messages, with its values filled in."""
+    return M[key].format(**kw)
+
+
 def load_lang(code="en"):
-    """stopwords: words too common to count as the hook coming back at the end."""
+    """stopwords: words too common to count as the hook coming back at the end.
+    messages: every sentence the script prints, str.format templates."""
     if code in _LOADED:
         return _LOADED[code]
     path = os.path.join(LANG_DIR, f"{code}.json")
     try:
         with open(path, encoding="utf-8") as fh:
             d = json.load(fh)["beats"]
-        loaded = {"STOPWORDS": set(d["stopwords"])}
+        messages = d["messages"]
+        if not (isinstance(messages, dict) and all(isinstance(v, str) for v in messages.values())):
+            raise TypeError(messages)
+        loaded = {"STOPWORDS": set(d["stopwords"]), "MESSAGES": messages}
     except (OSError, ValueError, KeyError, TypeError) as err:
         raise LangError(f"{path}: {type(err).__name__}: {err}") from None
     _LOADED[code] = loaded
@@ -147,7 +156,8 @@ def num(x):
 def analyse(raw, wpm=165, target=None, lang="en"):
     # Decomposed accents (NFD, macOS paste) split words in `re`: compose them.
     raw = unicodedata.normalize("NFC", raw)
-    stopwords = load_lang(lang)["STOPWORDS"]
+    L = load_lang(lang)
+    stopwords, M = L["STOPWORDS"], L["MESSAGES"]
     wps = wpm / 60.0
     beats = split_beats(raw, wps)
     if not beats:
@@ -182,22 +192,18 @@ def analyse(raw, wpm=165, target=None, lang="en"):
 
     notes = []
     if rows[0]["dur"] > HOOK_WINDOW:
-        rows[0]["flags"].append(f"hook runs {rows[0]['dur']:.1f}s, past the {HOOK_WINDOW:.0f}s mark")
-        notes.append(f"Beat 1 takes {rows[0]['dur']:.1f}s to say. Cut it to "
-                     f"{int(HOOK_WINDOW * wps)} words or fewer, or the hook lands after "
-                     "the decision has been made.")
+        rows[0]["flags"].append(say(M, "hook_flag", secs=rows[0]["dur"], window=HOOK_WINDOW))
+        notes.append(say(M, "hook_note", secs=rows[0]["dur"], words=int(HOOK_WINDOW * wps)))
     if rows[0]["concrete"] == 0:
-        notes.append("Beat 1 has no number and no name in it. Hooks without something "
-                     "checkable are the ones that get scrolled.")
+        notes.append(say(M, "hook_abstract_note"))
 
     for r in rows:
         if r["dur"] > MAX_BEAT:
-            r["flags"].append(f"{r['dur']:.1f}s on one beat")
+            r["flags"].append(say(M, "long_beat_flag", secs=r["dur"]))
     long_beats = [r["n"] for r in rows if r["dur"] > MAX_BEAT]
     if long_beats:
-        notes.append(f"Beat(s) {', '.join(map(str, long_beats))} run past {MAX_BEAT:.0f}s. "
-                     "Either split the line or change what is on screen inside it. "
-                     "A static frame is where people leave.")
+        notes.append(say(M, "long_beats_note", beats=", ".join(map(str, long_beats)),
+                         limit=MAX_BEAT))
 
     run, start = 0, None
     for r in rows:
@@ -205,8 +211,7 @@ def analyse(raw, wpm=165, target=None, lang="en"):
             run += 1
             start = start if start is not None else r["n"]
             if run == ABSTRACT_RUN:
-                notes.append(f"Beats {start}-{r['n']} have nothing concrete in them. "
-                             "Put a number, a name or a price in one of them.")
+                notes.append(say(M, "abstract_run_note", first=start, last=r["n"]))
         else:
             run, start = 0, None
 
@@ -215,21 +220,18 @@ def analyse(raw, wpm=165, target=None, lang="en"):
     last = {w.lower() for w in words(rows[-1]["text"]) if w.lower() not in stopwords}
     loop = sorted(pretty(w) for w in first & last)
     if loop:
-        notes.append(f"Loops: the last beat repeats \"{', '.join(loop[:3])}\" from the hook. "
-                     "Second watches are free reach.")
+        notes.append(say(M, "loop_note", words=", ".join(loop[:3])))
     else:
-        notes.append("No loop. The last beat shares no word with the hook, so the video "
-                     "ends flat. Echoing one word from beat 1 is the cheapest replay you get.")
+        notes.append(say(M, "no_loop_note"))
 
     if target:
         delta = total - target
         if abs(delta) <= target * 0.1:
-            notes.append(f"Length is on target ({total:.1f}s against {num(target)}s).")
+            notes.append(say(M, "on_target_note", secs=total, target=num(target)))
         elif delta > 0:
-            notes.append(f"{delta:.1f}s over target. Cut about {int(delta * wps)} words.")
+            notes.append(say(M, "over_target_note", secs=delta, words=int(delta * wps)))
         else:
-            notes.append(f"{-delta:.1f}s under target. Either add {int(-delta * wps)} words "
-                         "or shoot it short. Short is usually right.")
+            notes.append(say(M, "under_target_note", secs=-delta, words=int(-delta * wps)))
 
     return {
         "wpm": wpm, "target": target,
@@ -240,9 +242,11 @@ def analyse(raw, wpm=165, target=None, lang="en"):
     }
 
 
-def render(a, out=sys.stdout):
-    head = (f"BEAT SHEET  ·  {a['total_words']} words  ·  ~{a['total_seconds']:.1f}s "
-            f"at {num(a['wpm'])} wpm" + (f"  ·  target {num(a['target'])}s" if a["target"] else ""))
+def render(a, out=sys.stdout, lang="en"):
+    M = load_lang(lang)["MESSAGES"]
+    head = say(M, "head", words=a["total_words"], secs=a["total_seconds"], wpm=num(a["wpm"]))
+    if a["target"]:
+        head += say(M, "head_target", target=num(a["target"]))
     print("\n" + head, file=out)
     print("=" * max(len(head), 72), file=out)
     # The label column fits the widest label plus a space ("HOOK/CTA" is 8).
@@ -287,12 +291,12 @@ def main():
         print(f"beats.py: cannot load language data, {err}", file=sys.stderr)
         sys.exit(2)
     if not a:
-        print("empty script", file=sys.stderr)
+        print(say(load_lang(lang)["MESSAGES"], "empty_script"), file=sys.stderr)
         sys.exit(2)
     if args.json:
         print(json.dumps(a, indent=2, ensure_ascii=False))
     else:
-        render(a)
+        render(a, lang=lang)
     sys.exit(0)
 
 

@@ -43,6 +43,35 @@ class LexiconError(Exception):
     """The lexicon is missing, unreadable or incomplete."""
 
 
+class MessagesError(Exception):
+    """The messages file is missing, unreadable or incomplete."""
+
+
+def say(M, key, **kw):
+    """One sentence from the language file's messages, with its values filled in."""
+    return M[key].format(**kw)
+
+
+_MESSAGES = {}                                    # code -> messages, filled on success only
+
+
+def load_messages(lang="en"):
+    """Every sentence this script prints: lang/<lang>.json, section "humanize".
+    Always follows --lang; --lexicon swaps the lexicon and nothing else."""
+    if lang in _MESSAGES:
+        return _MESSAGES[lang]
+    path = os.path.join(HERE, "lang", lang + ".json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            messages = json.load(fh)["humanize"]["messages"]
+        if not (isinstance(messages, dict) and all(isinstance(v, str) for v in messages.values())):
+            raise TypeError(messages)
+    except (OSError, ValueError, KeyError, TypeError) as err:
+        raise MessagesError(f"{path}: {type(err).__name__}: {err}") from None
+    _MESSAGES[lang] = messages
+    return messages
+
+
 def load_lexicon(path=None, lang="en"):
     """slop.<lang>.json. `connectives` are the words that, after an em dash
     turned into a comma, leave a splice worth promoting to a full stop.
@@ -50,7 +79,7 @@ def load_lexicon(path=None, lang="en"):
     `dependents` open a clause that hangs on the phrase before it, so that
     phrase is kept and flagged instead of deleted; `complementizers` ("that")
     go with a deleted opener and leave the clause after them standing."""
-    path = path or os.path.join(HERE, f"slop.{lang}.json")
+    path = path or os.path.join(HERE, "slop." + lang + ".json")
     try:
         with open(path, encoding="utf-8") as fh:
             lex = json.load(fh)
@@ -88,7 +117,7 @@ def auto_candidates():
     found = {}
     for code in (c for c in LANGS if c != "auto"):
         try:
-            with open(os.path.join(HERE, f"slop.{code}.json"), encoding="utf-8") as fh:
+            with open(os.path.join(HERE, "slop." + code + ".json"), encoding="utf-8") as fh:
                 found[code] = set(json.load(fh)["auto"]["stopwords"])
         except (OSError, ValueError, KeyError, TypeError):
             continue                              # skipped for auto; the normal load reports it
@@ -120,8 +149,9 @@ def restore_urls(text, found):
     return text
 
 
-def pass_invisible(text, lex):
+def pass_invisible(text, lex, lang="en"):
     """Delete or space-normalise invisible characters. Returns (text, hits)."""
+    M = load_messages(lang)
     hits = []
     for entry in lex["invisible"]:
         cp = _cp(entry["cp"])
@@ -137,20 +167,21 @@ def pass_invisible(text, lex):
     # Any remaining Cf (format) character is invisible by definition.
     stray = [c for c in text if unicodedata.category(c) == "Cf"]
     if stray:
-        hits.append({"name": "other invisible format chars", "count": len(stray),
+        hits.append({"name": say(M, "invisible_other"), "count": len(stray),
                      "action": "delete"})
         text = "".join(c for c in text if unicodedata.category(c) != "Cf")
     return text, hits
 
 
-def pass_typographic(text, lex):
+def pass_typographic(text, lex, lang="en"):
+    M = load_messages(lang)
     hits = []
     for entry in lex["typographic"]:
         ch = entry["from"]
         n = text.count(ch)
         if not n:
             continue
-        hits.append({"name": f"{ch} {entry['name']}", "count": n, "to": entry["to"].strip() or "(space)"})
+        hits.append({"name": f"{ch} {entry['name']}", "count": n, "to": entry["to"].strip() or say(M, "space")})
         if ch == "—":
             # " word — word " and "word—word" both collapse to a comma + space.
             text = re.sub(r"\s*—\s*", ", ", text)
@@ -209,10 +240,11 @@ DELETED = "\x00DEL\x00"   # marks where an entry was deleted, until cleanup
 KEPT = "\x00KEEP{}\x00"   # a deletion held back, out of reach of the next entries
 
 
-def pass_lexical(text, lex):
+def pass_lexical(text, lex, lang="en"):
     """Replace slop words and phrases. Longest first so phrases win.
     Returns (text, hits, held): `held` are the deletions not made because the
     sentence would be left hanging; they go to the report for a rewrite."""
+    M = load_messages(lang)
     hits, held, kept = [], [], []
     entries = sorted(lex["phrases"] + lex["words"],
                      key=lambda e: len(e["find"]), reverse=True)
@@ -237,7 +269,7 @@ def pass_lexical(text, lex):
             return DELETED
         text = pattern.sub(delete, text)
         if counts["deleted"]:
-            hits.append({"find": find, "replace": "(deleted)",
+            hits.append({"find": find, "replace": say(M, "deleted"),
                          "count": counts["deleted"], "family": entry["family"]})
         if counts["held"]:
             held.append({"find": find, "count": counts["held"], "family": entry["family"]})
@@ -283,15 +315,16 @@ def pass_lexical(text, lex):
     return text, hits, held
 
 
-def hanging_flags(held):
+def hanging_flags(held, lang="en"):
     """Held deletions, in the shape of a structural flag: a person rewrites them."""
-    return [{"name": f'Deleting "{h["find"]}" would leave the sentence hanging',
+    M = load_messages(lang)
+    return [{"name": say(M, "hanging_name", find=h["find"]),
              "count": h["count"],
-             "fix": "Rewrite the sentence without the phrase. Deleting it alone "
-                    "leaves a fragment (\"If you love design.\")."} for h in held]
+             "fix": say(M, "hanging_fix")} for h in held]
 
 
-def scan_structures(text, lex):
+def scan_structures(text, lex, lang="en"):
+    M = load_messages(lang)
     flags = []
     for s in lex["structures"]:
         try:
@@ -309,9 +342,9 @@ def scan_structures(text, lex):
         cv = (var ** 0.5) / mean if mean else 0
         if cv < 0.35:
             flags.append({
-                "name": f"Uniform sentence length (variation {cv:.2f})",
+                "name": say(M, "uniform_name", variation=cv),
                 "count": len(lens),
-                "fix": "Break one sentence in half. Let another run long. Machines write even.",
+                "fix": say(M, "uniform_fix"),
             })
     return flags
 
@@ -330,56 +363,57 @@ def restore_capitals(original, text):
                   lambda m: m.group(0)[:-1] + m.group(1).upper(), text)
 
 
-def humanize(text, lex):
+def humanize(text, lex, lang="en"):
     # Decomposed accents (NFD, macOS paste) split words in `re`: compose them.
     # Canonically equivalent, so the reader sees the same text.
     text = unicodedata.normalize("NFC", text)
     raw_for_case = text
     text, urls = protect_urls(text)
-    text, inv = pass_invisible(text, lex)
-    text, typo = pass_typographic(text, lex)
-    text, lexi, held = pass_lexical(text, lex)
+    text, inv = pass_invisible(text, lex, lang)
+    text, typo = pass_typographic(text, lex, lang)
+    text, lexi, held = pass_lexical(text, lex, lang)
     text = restore_capitals(raw_for_case, text)
     text = restore_urls(text, urls)
     return text.strip() + "\n", {
         "invisible": inv,
         "typographic": typo,
         "lexical": lexi,
-        "structures": hanging_flags(held) + scan_structures(text, lex),
+        "structures": hanging_flags(held, lang) + scan_structures(text, lex, lang),
     }
 
 
-def render_report(report, out=sys.stderr):
+def render_report(report, out=sys.stderr, lang="en"):
+    M = load_messages(lang)
+
     def head(title):
-        print(f"\n{title}\n" + "-" * len(title), file=out)
+        print("\n" + title, file=out)         # the underline is part of the message
 
     total = sum(h["count"] for h in report["invisible"]) \
         + sum(h["count"] for h in report["typographic"]) \
         + sum(h["count"] for h in report["lexical"])
 
-    head("HUMANIZE REPORT")
-    print(f"{total} machine artefacts removed, "
-          f"{len(report['structures'])} structural tells flagged for rewrite", file=out)
+    head(say(M, "report_title"))
+    print(say(M, "report_summary", total=total, tells=len(report["structures"])), file=out)
 
     if report["invisible"]:
-        head("1. INVISIBLE CHARACTERS")
+        head(say(M, "section_invisible"))
         for h in report["invisible"]:
             print(f"  {h['count']:>3}x  {h['name']}  -> {h['action']}", file=out)
     if report["typographic"]:
-        head("2. TYPOGRAPHY")
+        head(say(M, "section_typography"))
         for h in report["typographic"]:
             print(f"  {h['count']:>3}x  {h['name']}  -> {h['to']}", file=out)
     if report["lexical"]:
-        head("3. SLOP LEXICON")
+        head(say(M, "section_lexicon"))
         for h in report["lexical"]:
             print(f"  {h['count']:>3}x  {h['find']}  -> {h['replace']}   [{h['family']}]", file=out)
     if report["structures"]:
-        head("4. STRUCTURAL TELLS  (not auto-fixed - rewrite these yourself)")
+        head(say(M, "section_structural"))
         for h in report["structures"]:
             print(f"  {h['count']:>3}x  {h['name']}\n        {h['fix']}", file=out)
     if not any(report.values()):
-        head("CLEAN")
-        print("  Nothing to strip.", file=out)
+        head(say(M, "section_clean"))
+        print(say(M, "nothing_to_strip"), file=out)
     print("", file=out)
 
 
@@ -408,12 +442,18 @@ def main():
     if lang == "auto" and not args.lexicon:
         lang, note = pick_lang(raw, auto_candidates())
         print(note, file=sys.stderr)
+    code = "en" if lang == "auto" else lang
     try:
-        lex = load_lexicon(args.lexicon, "en" if lang == "auto" else lang)
+        lex = load_lexicon(args.lexicon, code)
     except LexiconError as err:
         print(f"humanize.py: cannot load the lexicon, {err}", file=sys.stderr)
         sys.exit(2)
-    clean, report = humanize(raw, lex)
+    try:
+        M = load_messages(code)
+    except MessagesError as err:
+        print(f"humanize.py: cannot load the messages, {err}", file=sys.stderr)
+        sys.exit(2)
+    clean, report = humanize(raw, lex, code)
 
     if args.json:
         print(json.dumps({"text": clean, "report": report}, indent=2, ensure_ascii=False))
@@ -421,11 +461,11 @@ def main():
     if args.out:
         with open(args.out, "w", encoding="utf-8") as fh:
             fh.write(clean)
-        print(f"wrote {args.out}", file=sys.stderr)
+        print(say(M, "wrote", path=args.out), file=sys.stderr)
     else:
         sys.stdout.write(clean)
     if args.report:
-        render_report(report)
+        render_report(report, lang=code)
 
 
 if __name__ == "__main__":

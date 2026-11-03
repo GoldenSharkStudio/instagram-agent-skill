@@ -45,10 +45,39 @@ class LexiconError(Exception):
     """The lexicon is missing, unreadable, incomplete or has a bad regex."""
 
 
+class MessagesError(Exception):
+    """The messages file is missing, unreadable or incomplete."""
+
+
+def say(M, key, **kw):
+    """One sentence from the language file's messages, with its values filled in."""
+    return M[key].format(**kw)
+
+
+_MESSAGES = {}                                    # code -> messages, filled on success only
+
+
+def load_messages(lang="en"):
+    """Every sentence this script prints: lang/<lang>.json, section "detect".
+    Always follows --lang; --lexicon swaps the lexicon and nothing else."""
+    if lang in _MESSAGES:
+        return _MESSAGES[lang]
+    path = os.path.join(HERE, "lang", lang + ".json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            messages = json.load(fh)["detect"]["messages"]
+        if not (isinstance(messages, dict) and all(isinstance(v, str) for v in messages.values())):
+            raise TypeError(messages)
+    except (OSError, ValueError, KeyError, TypeError) as err:
+        raise MessagesError(f"{path}: {type(err).__name__}: {err}") from None
+    _MESSAGES[lang] = messages
+    return messages
+
+
 def load_lexicon(path=None, lang="en"):
     """slop.<lang>.json. `voice` holds the two voice regexes: contractions
     and personal pronouns, the words that put a person in the text."""
-    path = path or os.path.join(HERE, f"slop.{lang}.json")
+    path = path or os.path.join(HERE, "slop." + lang + ".json")
     try:
         with open(path, encoding="utf-8") as fh:
             lex = json.load(fh)
@@ -87,7 +116,7 @@ def auto_candidates():
     found = {}
     for code in (c for c in LANGS if c != "auto"):
         try:
-            with open(os.path.join(HERE, f"slop.{code}.json"), encoding="utf-8") as fh:
+            with open(os.path.join(HERE, "slop." + code + ".json"), encoding="utf-8") as fh:
                 found[code] = set(json.load(fh)["auto"]["stopwords"])
         except (OSError, ValueError, KeyError, TypeError):
             continue                              # skipped for auto; the normal load reports it
@@ -113,27 +142,29 @@ def words(text):
     return WORD_RE.findall(text)
 
 
-def check_burstiness(text):
+def check_burstiness(text, lang="en"):
     """Humans vary sentence length hard. Models write even."""
+    M = load_messages(lang)
     lens = [len(s.split()) for s in sentences(text)]
     if len(lens) < 4:
-        return 50.0, "too short to judge"
+        return 50.0, say(M, "too_short")
     mean = statistics.mean(lens)
     cv = statistics.pstdev(lens) / mean if mean else 0
     score = scale(cv, human=0.70, machine=0.22)
-    return score, f"variation {cv:.2f} across {len(lens)} sentences (want 0.55+)"
+    return score, say(M, "burstiness_detail", variation=cv, count=len(lens))
 
 
-def check_specificity(text):
+def check_specificity(text, lang="en"):
     """Numbers, names and concrete nouns. Slop is abstract."""
+    M = load_messages(lang)
     w = words(text)
     if len(w) < 25:
-        return 50.0, "too short to judge"
+        return 50.0, say(M, "too_short")
     per100 = 100 / len(w)
     hits = len(NUMBERS.findall(text)) + len(set(PROPER.findall(text)))
     density = hits * per100
     score = scale(density, human=6.0, machine=0.5)
-    return score, f"{hits} concrete markers, {density:.1f} per 100 words (want 4+)"
+    return score, say(M, "specificity_detail", hits=hits, density=density)
 
 
 def term_re(find):
@@ -146,11 +177,12 @@ def term_re(find):
     return re.compile(lead + re.escape(find).replace(r"\ ", r"\s+") + trail, re.IGNORECASE)
 
 
-def check_slop(text, lex):
+def check_slop(text, lex, lang="en"):
     """Stock vocabulary density against the lexicon."""
+    M = load_messages(lang)
     w = words(text)
     if not w:
-        return 50.0, "empty"
+        return 50.0, say(M, "empty")
     hits, found = 0, []
     # Longest first, and a match is blanked out once counted, so "delve into"
     # is one stock term and not also a "delve". Same order humanize.py uses.
@@ -165,14 +197,19 @@ def check_slop(text, lex):
             rest = pattern.sub(lambda m: " " * len(m.group(0)), rest)
     density = hits * 100 / len(w)
     score = scale(density, human=0.0, machine=4.0)
-    detail = f"{hits} stock terms, {density:.1f} per 100 words"
+    detail = say(M, "slop_detail", hits=hits, density=density)
     if found:
-        detail += " (" + ", ".join(sorted(found)[:4]) + (", ..." if len(found) > 4 else "") + ")"
+        terms = ", ".join(sorted(found)[:4])
+        if len(found) > 4:
+            detail += say(M, "slop_terms_more", terms=terms)
+        else:
+            detail += say(M, "slop_terms", terms=terms)
     return score, detail
 
 
-def check_fingerprint(text):
+def check_fingerprint(text, lang="en"):
     """Characters a phone keyboard does not produce."""
+    M = load_messages(lang)
     invisible = sum(1 for c in text if unicodedata.category(c) == "Cf")
     em = text.count("—")
     curly = sum(text.count(c) for c in "‘’“”")
@@ -181,8 +218,8 @@ def check_fingerprint(text):
     total = invisible * 4 + em * 2 + curly + ellip + nbsp
     per1k = total * 1000 / max(len(text), 1)
     score = scale(per1k, human=0.0, machine=12.0)
-    detail = (f"{invisible} invisible, {em} em dash, {curly} curly quote, "
-              f"{ellip} ellipsis, {nbsp} hard space")
+    detail = say(M, "fingerprint_detail", invisible=invisible, em=em, curly=curly,
+                 ellipsis=ellip, nbsp=nbsp)
     return score, detail
 
 
@@ -242,11 +279,12 @@ def count_tells(text, lex):
     return tells, names
 
 
-def check_voice(text, lex):
+def check_voice(text, lex, lang="en"):
     """Contractions, person, and the shapes models default to."""
+    M = load_messages(lang)
     w = words(text)
     if len(w) < 25:
-        return 50.0, "too short to judge"
+        return 50.0, say(M, "too_short")
     per100 = 100 / len(w)
     voice = lex["voice"]
     contractions = len(re.findall(voice["contractions"], text)) * per100
@@ -260,10 +298,9 @@ def check_voice(text, lex):
     if uniform:
         score -= 12
         names.append("uniform-bullets")
-    detail = (f"{contractions:.1f} contractions, {person:.1f} personal pronouns "
-              f"per 100 words, {tells} structural tell(s)")
+    detail = say(M, "voice_detail", contractions=contractions, person=person, tells=tells)
     if names:
-        detail += " [" + ", ".join(names[:4]) + "]"
+        detail += say(M, "voice_ids", ids=", ".join(names[:4]))
     return clamp(score), detail
 
 
@@ -276,18 +313,18 @@ def scores_pass(results, overall):
     return overall >= PASS_SCORE and min(r[0] for r in results.values()) >= CHECK_FLOOR
 
 
-def run(text, lex):
+def run(text, lex, lang="en"):
     # Decomposed accents (NFD, macOS paste) split words in `re`: compose them.
     text = unicodedata.normalize("NFC", text)
     # FINGERPRINT reads the raw text: curly quotes are one of its tells.
     # Every other check matches words, so it reads the straightened copy.
     match = text.translate(APOSTROPHES)
     results = {}
-    results["BURSTINESS"] = check_burstiness(match)
-    results["SPECIFICITY"] = check_specificity(match)
-    results["SLOP DENSITY"] = check_slop(match, lex)
-    results["FINGERPRINT"] = check_fingerprint(text)
-    results["VOICE"] = check_voice(match, lex)
+    results["BURSTINESS"] = check_burstiness(match, lang)
+    results["SPECIFICITY"] = check_specificity(match, lang)
+    results["SLOP DENSITY"] = check_slop(match, lex, lang)
+    results["FINGERPRINT"] = check_fingerprint(text, lang)
+    results["VOICE"] = check_voice(match, lex, lang)
     scores = [results[c][0] for c in CHECKS]
     # The weakest check drags the verdict: a detector only needs one signal.
     overall = statistics.mean(scores) * 0.6 + min(scores) * 0.4
@@ -305,8 +342,9 @@ def bar(score, width=24):
     return "#" * filled + "." * (width - filled)
 
 
-def render(results, overall, verdict, label=None, out=sys.stdout, tells=0):
-    title = "AI DETECTION PANEL" + (f"  -  {label}" if label else "")
+def render(results, overall, verdict, label=None, out=sys.stdout, tells=0, lang="en"):
+    M = load_messages(lang)
+    title = say(M, "panel_title_labelled", label=label) if label else say(M, "panel_title")
     print("\n" + title, file=out)
     print("=" * max(len(title), 62), file=out)
     for name in CHECKS:
@@ -314,13 +352,12 @@ def render(results, overall, verdict, label=None, out=sys.stdout, tells=0):
         print(f"  {name:<13} {bar(score)} {score:5.1f}", file=out)
         print(f"  {'':<13} {detail}", file=out)
     print("-" * 62, file=out)
-    print(f"  {'HUMAN SCORE':<13} {bar(overall)} {overall:5.1f}   {verdict}", file=out)
+    print(f"  {say(M, 'human_score_label'):<13} {bar(overall)} {overall:5.1f}   {verdict}", file=out)
     if verdict == "REVIEW" and scores_pass(results, overall):
-        print(f"\n  Held at REVIEW: {tells} structural tell(s) left. Rewrite them by "
-              "hand; humanize.py --report lists them.", file=out)
+        print(say(M, "held_at_review", tells=tells), file=out)
     elif verdict != "PASS":
         weakest = min(CHECKS, key=lambda c: results[c][0])
-        print(f"\n  Weakest signal: {weakest}. Fix that first.", file=out)
+        print(say(M, "weakest_signal", weakest=weakest), file=out)
     print("", file=out)
 
 
@@ -351,15 +388,21 @@ def main():
     if lang == "auto" and not args.lexicon:
         lang, note = pick_lang(targets[0][1], auto_candidates())
         print(note, file=sys.stderr)
+    code = "en" if lang == "auto" else lang
     try:
-        lex = load_lexicon(args.lexicon, "en" if lang == "auto" else lang)
+        lex = load_lexicon(args.lexicon, code)
     except LexiconError as err:
         print(f"detect.py: cannot load the lexicon, {err}", file=sys.stderr)
+        sys.exit(2)
+    try:
+        load_messages(code)
+    except MessagesError as err:
+        print(f"detect.py: cannot load the messages, {err}", file=sys.stderr)
         sys.exit(2)
 
     payload = []
     for name, text in targets:
-        results, overall, verdict = run(text, lex)
+        results, overall, verdict = run(text, lex, code)
         payload.append({
             "source": name,
             "checks": {k: {"score": round(v[0], 1), "detail": v[1]} for k, v in results.items()},
@@ -369,13 +412,13 @@ def main():
         })
 
     if args.json:
-        print(json.dumps(payload if args.compare else payload[0], indent=2))
+        print(json.dumps(payload if args.compare else payload[0], indent=2, ensure_ascii=False))
     else:
         for (name, text), p in zip(targets, payload):
-            results, overall, verdict = run(text, lex)
+            results, overall, verdict = run(text, lex, code)
             render(results, overall, verdict,
                    label=os.path.basename(name) if args.compare else None,
-                   tells=p["structural_tells"])
+                   tells=p["structural_tells"], lang=code)
         if args.compare:
             a, b = payload
             delta = b["human_score"] - a["human_score"]

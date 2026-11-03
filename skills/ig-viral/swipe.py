@@ -51,6 +51,35 @@ except Exception:                                 # ig-viral copied on its own
 LANGS = ("en", "pt-BR", "auto")
 
 
+class MessagesError(Exception):
+    """The messages file is missing, unreadable or incomplete."""
+
+
+def say(M, key, **kw):
+    """One sentence from the language file's messages, with its values filled in."""
+    return M[key].format(**kw)
+
+
+_MESSAGES = {}                                    # code -> messages, filled on success only
+
+
+def load_messages(lang="en"):
+    """Every sentence this script prints: lang/<lang>.json, section "swipe".
+    Always follows --lang; --lexicon swaps the lexicon and nothing else."""
+    if lang in _MESSAGES:
+        return _MESSAGES[lang]
+    path = os.path.join(HERE, "lang", lang + ".json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            messages = json.load(fh)["swipe"]["messages"]
+        if not (isinstance(messages, dict) and all(isinstance(v, str) for v in messages.values())):
+            raise TypeError(messages)
+    except (OSError, ValueError, KeyError, TypeError) as err:
+        raise MessagesError(f"{path}: {type(err).__name__}: {err}") from None
+    _MESSAGES[lang] = messages
+    return messages
+
+
 def hook_lang_error(lang):
     """Why hookscore cannot score in this language, or None if it can."""
     if score_hook is None:
@@ -74,15 +103,15 @@ def load_formulas(path):
              re.compile(by_id[i]["match"], re.IGNORECASE)) for i in order if i in by_id]
 
 
-def classify(hook, formulas):
+def classify(hook, formulas, lang="en"):
     if not formulas:
-        return None, "unclassified"
+        return None, say(load_messages(lang), "unclassified")
     # Decomposed accents (NFD, macOS paste) split words in `re`: compose them.
     hook = unicodedata.normalize("NFC", hook).translate(APOSTROPHES)
     for fid, name, pattern in formulas:
         if pattern.search(hook):
             return fid, name
-    return None, "unclassified"
+    return None, say(load_messages(lang), "unclassified")
 
 
 def read_text(path):
@@ -128,7 +157,7 @@ def analyse(rows, formulas, lang="en"):
         base = r.get("median") or r.get("followers") or 0
         r["baseline"] = base
         r["outlier"] = round(r["views"] / base, 2) if base else None
-        r["formula_id"], r["formula"] = classify(r["hook"], formulas)
+        r["formula_id"], r["formula"] = classify(r["hook"], formulas, lang)
         r["words"] = len(WORD_RE.findall(r["hook"]))
         if scoring:
             _, overall, verdict, _ = score_hook(r["hook"], lang=lang)
@@ -156,49 +185,45 @@ def analyse(rows, formulas, lang="en"):
         "bottom_hook_score": med(bottom, "hook_score"),
         "top_words": med(top, "words"),
         "bottom_words": med(bottom, "words"),
-        "unclassified": sum(1 for r in ranked if r["formula"] == "unclassified"),
+        "unclassified": sum(1 for r in ranked if r["formula_id"] is None),
     }
 
 
-def render(a, out=sys.stdout):
-    head = (f"SWIPE FILE  ·  {a['n']} reels  ·  {a['accounts']} accounts  ·  "
-            f"baseline: {a['baseline']}")
+def render(a, out=sys.stdout, lang="en"):
+    M = load_messages(lang)
+    head = say(M, "head", n=a["n"], accounts=a["accounts"], baseline=a["baseline"])
     print("\n" + head, file=out)
     print("=" * max(len(head), 78), file=out)
     for r in a["reels"]:
         mult = f"{r['outlier']:.1f}x" if r["outlier"] else "   ?"
         score = f"{r['hook_score']:.0f}" if r["hook_score"] is not None else " -"
         fid = f"#{r['formula_id']:<2}" if r["formula_id"] else "-  "
-        print(f"  {mult:>7}  hook {score:>3}  {fid} {r['formula'][:22]:<22} "
-              f"{r.get('account', '')[:16]:<16} {r['views']:>9,}", file=out)
+        print(say(M, "reel_line", mult=mult, score=score, fid=fid, formula=r["formula"][:22],
+                  account=r.get("account", "")[:16], views=r["views"]), file=out)
         print(f"           \"{r['hook'][:96]}\"", file=out)
     print("-" * max(len(head), 78), file=out)
-    print("WHAT IS WORKING IN THIS BATCH", file=out)
+    print(say(M, "working_title"), file=out)
     if a["top_formulas"]:
-        print("  top third by outlier:  "
-              + ", ".join(f"{n} x{c}" for n, c in a["top_formulas"][:4]), file=out)
+        top = ", ".join(say(M, "formula_count", name=n, count=c) for n, c in a["top_formulas"][:4])
+        print(say(M, "top_formulas", formulas=top), file=out)
     if a["top_hook_score"] is not None:
-        print(f"  median hook score:     top {a['top_hook_score']:.0f}  "
-              f"vs bottom {a['bottom_hook_score']:.0f}", file=out)
-    print(f"  median hook length:    top {a['top_words']} words  "
-          f"vs bottom {a['bottom_words']} words", file=out)
-    print(f"  unclassified:          {a['unclassified']} of {a['n']}. Read those by hand, "
-          "they are where a formula you do not have yet is hiding.", file=out)
-    print("\n  A hand-collected batch is evidence, not proof. Twelve reels shows you "
-          "nothing;\n  forty across six accounts shows you something. Collect more before "
-          "you believe it.\n", file=out)
+        print(say(M, "median_score", top=a["top_hook_score"], bottom=a["bottom_hook_score"]),
+              file=out)
+    print(say(M, "median_length", top=a["top_words"], bottom=a["bottom_words"]), file=out)
+    print(say(M, "unclassified_line", count=a["unclassified"], n=a["n"]), file=out)
+    print(say(M, "caveat"), file=out)
 
 
-def to_markdown(a):
-    lines = ["# Swipe file", "",
-             f"{a['n']} reels across {a['accounts']} accounts. "
-             f"Ranked by multiple over {a['baseline']}.", ""]
+def to_markdown(a, lang="en"):
+    M = load_messages(lang)
+    lines = [say(M, "md_title"), "",
+             say(M, "md_summary", n=a["n"], accounts=a["accounts"], baseline=a["baseline"]), ""]
     for r in a["reels"]:
         mult = f"{r['outlier']:.1f}x" if r["outlier"] else "?"
-        lines += [f"## {mult}  {r['formula']}  ({r.get('account', '')})",
-                  f"- views: {r['views']:,}  baseline: {r['baseline']:,}",
-                  f"- hook score: {r['hook_score']}  words: {r['words']}",
-                  f"- hook: \"{r['hook']}\"", ""]
+        lines += [say(M, "md_reel", mult=mult, formula=r["formula"], account=r.get("account", "")),
+                  say(M, "md_views", views=r["views"], baseline=r["baseline"]),
+                  say(M, "md_score", score=r["hook_score"], words=r["words"]),
+                  say(M, "md_hook", hook=r["hook"]), ""]
     return "\n".join(lines) + "\n"
 
 
@@ -224,34 +249,40 @@ def main():
     args = ap.parse_args()
 
     rows = read_rows(args.input)
+    lang = args.lang
+    if lang == "auto" and not rows:
+        lang = "en"                      # nothing to pick from: auto is en
+    elif lang == "auto":
+        lang = pick_swipe_lang(rows)
+    try:
+        M = load_messages(lang)
+    except MessagesError as err:
+        print(f"swipe.py: cannot load the messages, {err}", file=sys.stderr)
+        sys.exit(2)
     if not rows:
-        print("no usable rows. Need a tab-separated file with at least views and hook.",
-              file=sys.stderr)
+        print(say(M, "no_rows"), file=sys.stderr)
         sys.exit(2)
     formulas = load_formulas(args.hooks)
-    lang = args.lang
-    if lang == "auto":
-        lang = pick_swipe_lang(rows)
     a = analyse(rows, formulas, lang)
     if not formulas:
-        print("note: hooks.json not found, formulas not named. Pass --hooks.", file=sys.stderr)
+        print(say(M, "note_no_formulas"), file=sys.stderr)
     if score_hook is None:
-        print("note: hookscore.py not importable, hook scores skipped.", file=sys.stderr)
+        print(say(M, "note_no_hookscore"), file=sys.stderr)
     elif hook_lang_error(lang):
-        print(f"note: hookscore.py not importable for {lang} ({hook_lang_error(lang)}), "
-              "hook scores skipped.", file=sys.stderr)
+        print(say(M, "note_hookscore_lang", lang=lang, reason=hook_lang_error(lang)),
+              file=sys.stderr)
 
     if args.json:
         print(json.dumps(a, indent=2, ensure_ascii=False))
     else:
-        render(a)
+        render(a, lang=lang)
     if args.out:
         path = os.path.expanduser(args.out)
         if os.path.dirname(path):        # a bare "swipe.md" has no folder to make
             os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", encoding="utf-8") as fh:
-            fh.write(to_markdown(a))
-        print(f"wrote {path}", file=sys.stderr)
+            fh.write(to_markdown(a, lang))
+        print(say(M, "wrote", path=path), file=sys.stderr)
 
 
 if __name__ == "__main__":

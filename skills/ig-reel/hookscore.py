@@ -69,6 +69,11 @@ class LangError(Exception):
 _LOADED = {}                                      # code -> loaded dict, filled on success only
 
 
+def say(M, key, **kw):
+    """One sentence from the language file's messages, with its values filled in."""
+    return M[key].format(**kw)
+
+
 def load_lang(code="en"):
     """Every word this script knows comes from lang/<code>.json.
 
@@ -80,7 +85,9 @@ def load_lang(code="en"):
     weak_openers: openers that spend the first second saying nothing. Order
       matters, the first match is reported.
     imperatives: verbs that earn the front position.
-    dealbreakers: language-bound ones only; hashtag and emoji live in code.
+    dealbreakers: the language's own; hashtag and emoji are added after them,
+      their sentences coming from messages.
+    messages: every sentence the script prints, str.format templates.
     """
     if code in _LOADED:
         return _LOADED[code]
@@ -88,7 +95,11 @@ def load_lang(code="en"):
     try:
         with open(path, encoding="utf-8") as fh:
             d = json.load(fh)["hookscore"]
+        messages = d["messages"]
+        if not (isinstance(messages, dict) and all(isinstance(v, str) for v in messages.values())):
+            raise TypeError(messages)
         loaded = {
+            "MESSAGES": messages,
             "NUMBER_RE": re.compile(
                 r"\$\s?\d[\d,]*(?:\.\d+)?"           # money, whole
                 r"|\b\d[\d,]*(?:\.\d+)?\s?"          # a figure, with or without a unit
@@ -103,10 +114,8 @@ def load_lang(code="en"):
             "ADDRESS_ME": re.compile(d["address_me"]),
             # The language's own first, then the two that live in code.
             "DEALBREAKERS": [(re.compile(x["regex"]), x["message"]) for x in d["dealbreakers"]] + [
-                (HASHTAG_RE,
-                 "Hashtag in the hook. Hashtags belong at the bottom of the caption, if anywhere."),
-                (EMOJI_RE,
-                 "Emoji in the hook. On-screen text at hook size has room for words or for an emoji, not both."),
+                (HASHTAG_RE, say(messages, "dealbreaker_hashtag")),
+                (EMOJI_RE, say(messages, "dealbreaker_emoji")),
             ],
         }
     except (OSError, ValueError, KeyError, TypeError, re.error) as err:
@@ -156,8 +165,9 @@ def words(text):
     return WORD_RE.findall(re.sub(r"(?<=\d),(?=\d)", "", text))
 
 
-def check_length(text):
+def check_length(text, L=None):
     """A hook has to land before the thumb moves. Roughly two seconds."""
+    M = (L or load_lang())["MESSAGES"]
     w = words(text)
     n = len(w)
     secs = n / 2.75                      # ~165 words per minute, spoken
@@ -170,7 +180,7 @@ def check_length(text):
         score = clamp(100 - (n - 12) * 11)
     if chars > 60:                       # two lines of big on-screen text
         score -= 12
-    return clamp(score), f"{n} words, {chars} chars, ~{secs:.1f}s spoken (want 5-12 words)"
+    return clamp(score), say(M, "length_detail", n=n, chars=chars, secs=secs)
 
 
 def check_specificity(text, L):
@@ -182,8 +192,9 @@ def check_specificity(text, L):
     hits = len(nums) + len(propers) + len(spoken)
     score = 15.0 if hits == 0 else clamp(45 + hits * 30)
     found = ", ".join(nums[:2] + sorted(propers)[:2] + spoken[:2])
-    return score, (f"{hits} concrete marker(s)" + (f": {found}" if found else
-                   " - no number, no name, nothing checkable"))
+    if found:
+        return score, say(L["MESSAGES"], "specificity_found", hits=hits, found=found)
+    return score, say(L["MESSAGES"], "specificity_none", hits=hits)
 
 
 def check_stakes(text, L):
@@ -192,19 +203,22 @@ def check_stakes(text, L):
     hits = [x for x in w if x in L["STAKES"]]
     markers = sorted(set(hits))
     if re.search(r"\$\s?\d", text):
-        markers.append("a price")
+        markers.append(say(L["MESSAGES"], "a_price"))
     n = len(markers)
     score = {0: 20.0, 1: 70.0}.get(n, 100.0)
-    detail = f"{n} tension marker(s)" + (f": {', '.join(markers[:4])}" if markers else
-                                         " - nothing is at stake in this line")
+    if markers:
+        detail = say(L["MESSAGES"], "stakes_found", n=n, markers=", ".join(markers[:4]))
+    else:
+        detail = say(L["MESSAGES"], "stakes_none", n=n)
     return clamp(score), detail
 
 
 def check_frontload(text, L):
     """The interesting word cannot be in position nine."""
+    M = L["MESSAGES"]
     w = words(text)
     if not w:
-        return 0.0, "empty"
+        return 0.0, say(M, "frontload_empty")
     low = [x.lower().strip("'’") for x in w]
     opener = " ".join(low[:2])
     penalty = 0
@@ -221,31 +235,32 @@ def check_frontload(text, L):
             break
     if payload is None:
         base = 30.0
-        where = "no payload word anywhere in the line"
+        where = say(M, "payload_none")
     elif payload <= 3:
         base = 100.0
-        where = f"payload at word {payload + 1}"
+        where = say(M, "payload_early", position=payload + 1)
     elif payload <= 6:
         base = 70.0
-        where = f"payload at word {payload + 1}, could move forward"
+        where = say(M, "payload_mid", position=payload + 1)
     else:
         base = 40.0
-        where = f"payload at word {payload + 1}, too late"
-    detail = where + (f"; weak opener \"{hit_opener}\"" if hit_opener else "")
+        where = say(M, "payload_late", position=payload + 1)
+    detail = where + (say(M, "weak_opener", opener=hit_opener) if hit_opener else "")
     return clamp(base - penalty), detail
 
 
 def check_address(text, L):
     """Aimed at one viewer, or floating in the air."""
+    M = L["MESSAGES"]
     low = text.lower()
     w = [x.lower().strip("'’") for x in words(text)]
     if L["ADDRESS_YOU"].search(low):
-        return 100.0, "speaks to the viewer"
+        return 100.0, say(M, "address_viewer")
     if w and w[0] in L["IMPERATIVES"]:
-        return 90.0, f"imperative opener (\"{w[0]}\")"
+        return 90.0, say(M, "address_imperative", opener=w[0])
     if L["ADDRESS_ME"].search(low):
-        return 70.0, "first person, no viewer named"
-    return 35.0, "third person, nobody in the room"
+        return 70.0, say(M, "address_first_person")
+    return 35.0, say(M, "address_third_person")
 
 
 CHECKS = ["LENGTH", "SPECIFICITY", "STAKES", "FRONTLOAD", "ADDRESS"]
@@ -259,7 +274,7 @@ def run(text, lang="en"):
     text = unicodedata.normalize("NFC", text).translate(APOSTROPHES)
     L = load_lang(lang)
     results = {
-        "LENGTH": check_length(text),
+        "LENGTH": check_length(text, L),
         "SPECIFICITY": check_specificity(text, L),
         "STAKES": check_stakes(text, L),
         "FRONTLOAD": check_frontload(text, L),
@@ -281,8 +296,9 @@ def bar(score, width=24):
     return "#" * filled + "." * (width - filled)
 
 
-def render_one(text, results, overall, verdict, flags, out=sys.stdout):
-    print("\nHOOK SCORE", file=out)
+def render_one(text, results, overall, verdict, flags, out=sys.stdout, lang="en"):
+    M = load_lang(lang)["MESSAGES"]
+    print(say(M, "title"), file=out)
     print("=" * 62, file=out)
     print(f"  \"{text.strip()}\"\n", file=out)
     for name in CHECKS:
@@ -290,26 +306,27 @@ def render_one(text, results, overall, verdict, flags, out=sys.stdout):
         print(f"  {name:<13} {bar(score)} {score:5.1f}", file=out)
         print(f"  {'':<13} {detail}", file=out)
     print("-" * 62, file=out)
-    print(f"  {'HOOK SCORE':<13} {bar(overall)} {overall:5.1f}   {verdict}", file=out)
+    print(f"  {say(M, 'overall_label'):<13} {bar(overall)} {overall:5.1f}   {verdict}", file=out)
     for f in flags:
-        print(f"\n  DEALBREAKER  {f}", file=out)
+        print(say(M, "dealbreaker_line", flag=f), file=out)
     if verdict != "STRONG":
         weakest = min(CHECKS, key=lambda c: results[c][0])
-        print(f"\n  Weakest property: {weakest}. Fix that one and re-run.", file=out)
+        print(say(M, "weakest_property", weakest=weakest), file=out)
     print("", file=out)
 
 
-def render_table(rows, out=sys.stdout):
-    print("\nHOOK RANKING\n" + "=" * 78, file=out)
+def render_table(rows, out=sys.stdout, lang="en"):
+    M = load_lang(lang)["MESSAGES"]
+    print(say(M, "ranking_title") + "=" * 78, file=out)
     for i, r in enumerate(rows, 1):
         mark = "->" if i == 1 else "  "
         hook = r["hook"] if len(r["hook"]) <= 62 else r["hook"][:59] + "..."
         print(f"{mark} {r['score']:5.1f} {r['verdict']:<7} {hook}", file=out)
-        print(f"        weakest: {r['weakest']} ({r['checks'][r['weakest']]['score']:.0f})", file=out)
+        print(say(M, "ranking_weakest", weakest=r["weakest"],
+                  score=r["checks"][r["weakest"]]["score"]), file=out)
         for f in r["flags"]:
-            print(f"        dealbreaker: {f}", file=out)
-    print(f"\nShoot the top one. If the top one is under {PASS_SCORE}, none of these are the hook.\n",
-          file=out)
+            print(say(M, "ranking_dealbreaker", flag=f), file=out)
+    print(say(M, "ranking_footer", pass_score=PASS_SCORE), file=out)
 
 
 def read_text(path):
@@ -336,18 +353,19 @@ def main():
         lines = [l.strip() for l in raw.splitlines() if l.strip()]
     # Composed once here too: the ranking cuts long hooks by character count.
     lines = [unicodedata.normalize("NFC", l) for l in lines]
-    if not lines:
-        print("nothing to score", file=sys.stderr)
-        sys.exit(2)
 
-    lang = args.lang
+    lang, note = args.lang, None
     if lang == "auto":
         lang, note = pick_lang("\n".join(lines), auto_candidates())
+    if note and lines:
         print(note, file=sys.stderr)
     try:
-        load_lang(lang)
+        L = load_lang(lang)
     except LangError as err:
         print(f"hookscore.py: cannot load language data, {err}", file=sys.stderr)
+        sys.exit(2)
+    if not lines:
+        print(say(L["MESSAGES"], "nothing_to_score"), file=sys.stderr)
         sys.exit(2)
 
     payload = []
@@ -366,9 +384,9 @@ def main():
         print(json.dumps(payload if len(payload) > 1 else payload[0], indent=2, ensure_ascii=False))
     elif len(payload) == 1:
         results, overall, verdict, flags = run(lines[0], lang)
-        render_one(lines[0], results, overall, verdict, flags)
+        render_one(lines[0], results, overall, verdict, flags, lang=lang)
     else:
-        render_table(sorted(payload, key=lambda r: -r["score"]))
+        render_table(sorted(payload, key=lambda r: -r["score"]), lang=lang)
 
     sys.exit(0 if max(p["score"] for p in payload) >= PASS_SCORE else 1)
 

@@ -34,6 +34,8 @@ LANG_DIR = os.path.join(HERE, "lang")
 
 LIMIT = 2200             # Instagram's hard caption limit.
 TRUNCATE = 125           # Roughly where the feed cuts to "... more".
+FEED_WIDTH = 52          # Columns of the feed box. The two bottom-border messages
+                         # (feed_more, feed_whole) are drawn for this width.
 HASHTAG_LIMIT = 5        # Instagram's cap per post or reel since 18 Dec 2025,
                          # down from 30. Announced by the @Creators account:
                          # "using fewer (up to 5) more targeted hashtags,
@@ -71,16 +73,26 @@ class LangError(Exception):
 _LOADED = {}                                      # code -> loaded dict, filled on success only
 
 
+def say(M, key, **kw):
+    """One sentence from the language file's messages, with its values filled in."""
+    return M[key].format(**kw)
+
+
 def load_lang(code="en"):
     """asks: the calls to action ONE ASK counts, each a regex and a name.
-    filler_tags: hashtags so generic they describe nothing."""
+    filler_tags: hashtags so generic they describe nothing.
+    messages: every sentence the script prints, str.format templates."""
     if code in _LOADED:
         return _LOADED[code]
     path = os.path.join(LANG_DIR, f"{code}.json")
     try:
         with open(path, encoding="utf-8") as fh:
             d = json.load(fh)["caption"]
+        messages = d["messages"]
+        if not (isinstance(messages, dict) and all(isinstance(v, str) for v in messages.values())):
+            raise TypeError(messages)
         loaded = {
+            "MESSAGES": messages,
             "ASKS": [(re.compile(x["regex"]), x["name"]) for x in d["asks"]],
             "FILLER_TAGS": {t.lower() for t in d["filler_tags"]},
         }
@@ -128,22 +140,24 @@ def visible_window(text, cut):
     return flat if len(flat) <= cut else flat[:cut]
 
 
-def render_box(window, truncated, out=sys.stdout, width=52):
-    print("\n  WHAT THE FEED SHOWS", file=out)
+def render_box(window, truncated, out=sys.stdout, lang="en"):
+    M = load_lang(lang)["MESSAGES"]
+    width = FEED_WIDTH
+    print(say(M, "feed_title"), file=out)
     print("  +" + "-" * (width + 2) + "+", file=out)
     lines = []
     for raw in window.split("\n"):
         lines.extend(textwrap.wrap(raw, width) or [""])
     for line in lines[:8]:
         print(f"  | {line:<{width}} |", file=out)
-    tail = "... more" if truncated else "(whole caption fits)"
-    print("  +" + "-" * (width + 2 - len(tail) - 2) + f" {tail} " + "+", file=out)
+    print(say(M, "feed_more") if truncated else say(M, "feed_whole"), file=out)
 
 
 def analyse(text, cut=TRUNCATE, keywords=None, lang="en"):
     # Decomposed accents (NFD, macOS paste) split words in `re` and count twice
     # as characters: compose them, the way a reader sees the caption.
     L = load_lang(lang)
+    M = L["MESSAGES"]
     text = unicodedata.normalize("NFC", text).rstrip()
     stripped = text.strip()
     chars = len(stripped)
@@ -165,62 +179,63 @@ def analyse(text, cut=TRUNCATE, keywords=None, lang="en"):
     def add(name, status, detail):
         checks.append({"check": name, "status": status, "detail": detail})
 
-    add("LENGTH", "FAIL" if chars > LIMIT else "PASS",
-        f"{chars} / {LIMIT} characters" + (f", {chars - LIMIT} over the limit"
-                                           if chars > LIMIT else ""))
+    if chars > LIMIT:
+        add("LENGTH", "FAIL", say(M, "length_over", chars=chars, limit=LIMIT, over=chars - LIMIT))
+    else:
+        add("LENGTH", "PASS", say(M, "length_ok", chars=chars, limit=LIMIT))
 
     if not first_line:
-        add("FIRST LINE", "FAIL", "the caption opens on a blank line")
+        add("FIRST LINE", "FAIL", say(M, "first_line_blank"))
     elif first_line.startswith("#") or first_line.startswith("@"):
-        add("FIRST LINE", "FAIL",
-            "opens on a hashtag or a mention, which is the one position worth a sentence")
+        add("FIRST LINE", "FAIL", say(M, "first_line_tag"))
     elif len(first_line) > cut:
-        add("FIRST LINE", "WARN",
-            f"{len(first_line)} characters, so it gets cut at {cut} mid-thought. "
-            "Fine if the cut is a cliffhanger, bad if it is a subordinate clause")
+        add("FIRST LINE", "WARN", say(M, "first_line_cut", chars=len(first_line), cut=cut))
     else:
-        add("FIRST LINE", "PASS", f"{len(first_line)} characters, lands whole")
+        add("FIRST LINE", "PASS", say(M, "first_line_whole", chars=len(first_line)))
 
-    add("HOOK IS CONCRETE", "PASS" if CONCRETE_RE.search(window) else "WARN",
-        f"{len(CONCRETE_RE.findall(window))} number(s) or name(s) in the visible window"
-        + ("" if CONCRETE_RE.search(window) else " - nothing checkable before the tap"))
+    concrete = len(CONCRETE_RE.findall(window))
+    if CONCRETE_RE.search(window):
+        add("HOOK IS CONCRETE", "PASS", say(M, "hook_concrete", count=concrete))
+    else:
+        add("HOOK IS CONCRETE", "WARN", say(M, "hook_abstract", count=concrete))
 
     if len(tags) > HASHTAG_LIMIT:
-        add("HASHTAGS", "FAIL", f"{len(tags)} tags, over Instagram's cap of {HASHTAG_LIMIT}. "
-                                "Tags past the fifth do not count and the block reads as old")
+        add("HASHTAGS", "FAIL", say(M, "hashtags_over", count=len(tags), limit=HASHTAG_LIMIT))
     elif len(tags) == HASHTAG_LIMIT and filler:
-        add("HASHTAGS", "WARN", f"{len(tags)} tags, at the cap, and "
-                                f"{len(filler)} of them generic. Spend the five on topics")
+        add("HASHTAGS", "WARN", say(M, "hashtags_cap_generic", count=len(tags),
+                                    generic=len(filler)))
     elif filler:
-        add("HASHTAGS", "WARN", f"{len(tags)} tags, {len(filler)} of them generic "
-                                f"({', '.join(filler[:3])}). Those describe nothing")
+        add("HASHTAGS", "WARN", say(M, "hashtags_generic", count=len(tags),
+                                    generic=len(filler), examples=", ".join(filler[:3])))
+    elif tags:
+        add("HASHTAGS", "PASS", say(M, "hashtags_listed", count=len(tags), tags=" ".join(tags)))
     else:
-        add("HASHTAGS", "PASS", f"{len(tags)} tag(s)" + (f": {' '.join(tags)}" if tags else ""))
+        add("HASHTAGS", "PASS", say(M, "hashtags_none", count=len(tags)))
 
     if not tags:
-        add("TAG PLACEMENT", "PASS", "no tags to place")
+        add("TAG PLACEMENT", "PASS", say(M, "placement_none"))
     elif any(re.search(r"(?:^|\s)" + re.escape(t) + r"\b", window) for t in tags):
-        add("TAG PLACEMENT", "WARN", "a hashtag is inside the visible window, "
-                                     "spending feed space on a label")
+        add("TAG PLACEMENT", "WARN", say(M, "placement_window"))
     else:
-        add("TAG PLACEMENT", "PASS", "tags are below the fold")
+        add("TAG PLACEMENT", "PASS", say(M, "placement_below"))
 
-    add("LINKS", "WARN" if links else "PASS",
-        f"{len(links)} link(s) in the caption, and captions are not clickable. "
-        f"Move it to the bio or the DM" if links else "no dead links in the body")
+    if links:
+        add("LINKS", "WARN", say(M, "links_found", count=len(links)))
+    else:
+        add("LINKS", "PASS", say(M, "links_none"))
 
     if len(asks) == 1:
-        add("ONE ASK", "PASS", f"one call to action: {asks[0]}")
+        add("ONE ASK", "PASS", say(M, "ask_one", ask=asks[0]))
     elif not asks:
-        add("ONE ASK", "WARN", "no call to action. Decide what this post is for")
+        add("ONE ASK", "WARN", say(M, "ask_none"))
     else:
-        add("ONE ASK", "WARN", f"{len(asks)} asks ({', '.join(asks)}). "
-                               "Two asks is the same as none")
+        add("ONE ASK", "WARN", say(M, "ask_many", count=len(asks), asks=", ".join(asks)))
 
     density = len(emoji) * 100 / max(chars, 1)
-    add("EMOJI", "WARN" if density > 4 else "PASS",
-        f"{len(emoji)} emoji, {density:.1f} per 100 characters"
-        + (" - reads as decoration" if density > 4 else ""))
+    if density > 4:
+        add("EMOJI", "WARN", say(M, "emoji_decoration", count=len(emoji), density=density))
+    else:
+        add("EMOJI", "PASS", say(M, "emoji_plain", count=len(emoji), density=density))
 
     if keywords:
         low = match.lower()
@@ -231,9 +246,9 @@ def analyse(text, cut=TRUNCATE, keywords=None, lang="en"):
         in_window = [k for k in found if key(k) in win]
         status = "PASS" if not missing else ("WARN" if found else "FAIL")
         add("SEARCH TERMS", status,
-            f"{len(found)}/{len(keywords)} present"
-            + (f", {len(in_window)} in the visible window" if found else "")
-            + (f". Missing: {', '.join(missing)}" if missing else ""))
+            say(M, "terms_present", found=len(found), total=len(keywords))
+            + (say(M, "terms_in_window", count=len(in_window)) if found else "")
+            + (say(M, "terms_missing", missing=", ".join(missing)) if missing else ""))
 
     fails = sum(1 for c in checks if c["status"] == "FAIL")
     warns = sum(1 for c in checks if c["status"] == "WARN")
@@ -249,17 +264,18 @@ def analyse(text, cut=TRUNCATE, keywords=None, lang="en"):
     }
 
 
-def render(a, out=sys.stdout):
-    head = (f"CAPTION LINT  ·  {a['characters']} / {a['limit']} chars  ·  "
-            f"{len(a['hashtags'])} hashtags  ·  {len(a['asks'])} ask(s)")
+def render(a, out=sys.stdout, lang="en"):
+    M = load_lang(lang)["MESSAGES"]
+    head = say(M, "head", chars=a["characters"], limit=a["limit"],
+               tags=len(a["hashtags"]), asks=len(a["asks"]))
     print("\n" + head, file=out)
     print("=" * max(len(head), 62), file=out)
-    render_box(a["visible"], a["truncated"], out=out)
+    render_box(a["visible"], a["truncated"], out=out, lang=lang)
     print("", file=out)
     for c in a["checks"]:
         print(f"  {c['status']:<5} {c['check']:<17} {c['detail']}", file=out)
     print("-" * max(len(head), 62), file=out)
-    print(f"  VERDICT  {a['verdict']}\n", file=out)
+    print(say(M, "verdict_line", verdict=a["verdict"]), file=out)
 
 
 def read_text(path):
@@ -294,7 +310,7 @@ def main():
     if args.json:
         print(json.dumps(a, indent=2, ensure_ascii=False))
     else:
-        render(a)
+        render(a, lang=lang)
     sys.exit(0 if a["verdict"] == "READY" else 1)
 
 

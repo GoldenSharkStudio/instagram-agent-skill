@@ -1,0 +1,43 @@
+{
+  "lang": "en",
+  "note": "Messages for humanize.py and detect.py: every sentence they print, as str.format templates. Not the lexicon (slop.en.json), so --lexicon never swaps them.",
+  "humanize": {
+    "messages": {
+      "invisible_other": "other invisible format chars",
+      "space": "(space)",
+      "deleted": "(deleted)",
+      "hanging_name": "Deleting \"{find}\" would leave the sentence hanging",
+      "hanging_fix": "Rewrite the sentence without the phrase. Deleting it alone leaves a fragment (\"If you love design.\").",
+      "uniform_name": "Uniform sentence length (variation {variation:.2f})",
+      "uniform_fix": "Break one sentence in half. Let another run long. Machines write even.",
+      "report_title": "HUMANIZE REPORT\n---------------",
+      "report_summary": "{total} machine artefacts removed, {tells} structural tells flagged for rewrite",
+      "section_invisible": "1. INVISIBLE CHARACTERS\n-----------------------",
+      "section_typography": "2. TYPOGRAPHY\n-------------",
+      "section_lexicon": "3. SLOP LEXICON\n---------------",
+      "section_structural": "4. STRUCTURAL TELLS  (not auto-fixed - rewrite these yourself)\n--------------------------------------------------------------",
+      "section_clean": "CLEAN\n-----",
+      "nothing_to_strip": "  Nothing to strip.",
+      "wrote": "wrote {path}"
+    }
+  },
+  "detect": {
+    "messages": {
+      "too_short": "too short to judge",
+      "burstiness_detail": "variation {variation:.2f} across {count} sentences (want 0.55+)",
+      "specificity_detail": "{hits} concrete markers, {density:.1f} per 100 words (want 4+)",
+      "empty": "empty",
+      "slop_detail": "{hits} stock terms, {density:.1f} per 100 words",
+      "slop_terms": " ({terms})",
+      "slop_terms_more": " ({terms}, ...)",
+      "fingerprint_detail": "{invisible} invisible, {em} em dash, {curly} curly quote, {ellipsis} ellipsis, {nbsp} hard space",
+      "voice_detail": "{contractions:.1f} contractions, {person:.1f} personal pronouns per 100 words, {tells} structural tell(s)",
+      "voice_ids": " [{ids}]",
+      "panel_title": "AI DETECTION PANEL",
+      "panel_title_labelled": "AI DETECTION PANEL  -  {label}",
+      "human_score_label": "HUMAN SCORE",
+      "held_at_review": "\n  Held at REVIEW: {tells} structural tell(s) left. Rewrite them by hand; humanize.py --report lists them.",
+      "weakest_signal": "\n  Weakest signal: {weakest}. Fix that first."
+    }
+  }
+}

@@ -33,6 +33,14 @@ SOURCE = {
 METADATA = {"lang", "note", "version"}
 # Read only by --lang auto; AutoPicks covers it.
 AUTO_KEY = "auto"
+# The sentences each tool prints: covered by tests/test_messages.py, which
+# also plants a marked pt-BR file. Not a language key the witness can move.
+MESSAGES_KEY = "messages"
+
+# Tools whose messages sit in their own folder's lang/ (the language file the
+# net plants is slop.<code>.json, or ig-reel's). A planted pt-BR needs the
+# messages beside it; a copy of en says the same sentences.
+MESSAGES_FOLDERS = ("ig-human", "ig-viral")
 
 # Keys a tool does not read, with the reason. Checked: blanking one must leave
 # the output as it was.
@@ -91,7 +99,7 @@ def key_paths(tool):
     prefix = (section,) if section else ()
     out = []
     for k, v in base.items():
-        if k in METADATA or k == AUTO_KEY:
+        if k in METADATA or k in (AUTO_KEY, MESSAGES_KEY):
             continue
         if isinstance(v, dict):
             out += [prefix + (k, sub) for sub in v]
@@ -115,6 +123,16 @@ def lone(d, *folders):
     for f in folders:
         shutil.copytree(os.path.join(SKILLS, f), os.path.join(d, f),
                         ignore=shutil.ignore_patterns("__pycache__"))
+
+
+def plant_messages(d, folder):
+    """pt-BR messages for the folders that keep them apart from the language
+    data: the en file, copied. Folders where messages ride in the language
+    file need nothing: the test plants that file whole."""
+    if folder not in MESSAGES_FOLDERS:
+        return
+    lang = os.path.join(d, folder, "lang")
+    shutil.copy(os.path.join(lang, "en.json"), os.path.join(lang, "pt-BR.json"))
 
 
 def data_path(d, tool, code):
@@ -148,6 +166,7 @@ class EveryKeyFollowsTheFlag(unittest.TestCase):
             data = read_json(en)
             blank_at(data, path)
             write_json(data_path(d, tool, "pt-BR"), data)
+            plant_messages(d, folder_of(tool))
             planted = run_in(d, tool, "--lang", "pt-BR")
             # The plain en run again, now that pt-BR sits beside it.
             again = run_in(d, tool, "--lang", "en")
@@ -225,6 +244,7 @@ class MissingLanguageFailsClosed(unittest.TestCase):
             with self.subTest(tool=tool), tempfile.TemporaryDirectory() as d:
                 lone(d, folder_of(tool))
                 en = data_path(d, tool, "en")
+                plant_messages(d, folder_of(tool))
                 plain = run_in(d, tool)
                 both = run_in(d, tool, "--lang", "pt-BR", "--lexicon", en)
                 self.assertEqual(both.returncode, plain.returncode, both.stderr)
@@ -244,6 +264,7 @@ class AutoPicks(unittest.TestCase):
         data = read_json(data_path(d, tool, "en"))
         data["auto"] = {"stopwords": PT_STOPWORDS}
         write_json(data_path(d, tool, "pt-BR"), data)
+        plant_messages(d, folder_of(tool))
 
     def run_text(self, d, tool, text, *flags):
         script = os.path.join(d, folder_of(tool), os.path.basename(TOOLS[tool]))
@@ -272,6 +293,7 @@ class AutoPicks(unittest.TestCase):
                 # Only the accented stopwords, so a split word cannot score.
                 data["auto"] = {"stopwords": ["você", "não", "é"]}
                 write_json(data_path(d, tool, "pt-BR"), data)
+                plant_messages(d, folder_of(tool))
                 auto = self.run_text(d, tool, nfd, "--lang", "auto")
                 self.assertIn("lang: auto -> pt-BR", auto.stderr)
 
@@ -337,6 +359,7 @@ class InProcess(unittest.TestCase):
         for path in key_paths(tool):
             blank_at(data, path)
         write_json(data_path(d, tool, "pt-BR"), data)
+        plant_messages(d, folder_of(tool))
         import importlib.util
         path = os.path.join(d, folder_of(tool), os.path.basename(TOOLS[tool]))
         spec = importlib.util.spec_from_file_location(f"lf_{tool}", path)
@@ -375,7 +398,7 @@ class InProcess(unittest.TestCase):
 
 # Names bound at module level from language data. After passo 3 there are none:
 # the data travels as an argument.
-LANG_SOURCES = {"_LANG", "load_lang", "load_lexicon"}
+LANG_SOURCES = {"_LANG", "load_lang", "load_lexicon", "load_messages"}
 
 
 class NoLanguageInModuleState(unittest.TestCase):
@@ -404,6 +427,7 @@ class SwipeForwards(unittest.TestCase):
     def setUp(self):
         self.d = tempfile.mkdtemp()
         lone(self.d, "ig-viral", "ig-reel")
+        plant_messages(self.d, "ig-viral")
         self.script = os.path.join(self.d, "ig-viral", "swipe.py")
 
     def tearDown(self):

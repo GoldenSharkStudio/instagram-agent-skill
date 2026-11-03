@@ -339,14 +339,19 @@ doing when you read it, Instagram is right.
 ```
 skills/ig-reel/hooks.json          26 hook formulas: template, example, on-screen line,
                                    what it is for, how it gets ruined, and a match regex
-skills/ig-reel/lang/en.json        the words hookscore and beats know: stakes, openers, numbers
+skills/ig-reel/lang/en.json        the words hookscore and beats know (stakes, openers, numbers)
+                                   and every sentence they print
 skills/ig-reel/hookscore.py        the five-property hook panel
 skills/ig-reel/beats.py            script to timed beat sheet
-skills/ig-caption/lang/en.json     the calls to action and the generic hashtags it knows
+skills/ig-caption/lang/en.json     the calls to action and the generic hashtags it knows,
+                                   and every sentence it prints
 skills/ig-caption/caption.py       the truncation preview and the caption linter
 skills/ig-human/slop.en.json       the lexicon: 154 terms, 18 invisible classes, 16 tells
+skills/ig-human/lang/en.json       every sentence humanize and detect print (not the lexicon, so
+                                   --lexicon never swaps them)
 skills/ig-human/humanize.py        the three cleaning passes
 skills/ig-human/detect.py          the five-check panel
+skills/ig-viral/lang/en.json       every sentence swipe prints and writes to swipe.md
 skills/ig-viral/swipe.py           outlier ranking and formula classification
 skills/ig-profile/rubric.json      the 100-point profile score
 templates/voice.md                 your voice profile. Fill this in first.

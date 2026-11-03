@@ -254,6 +254,25 @@ class MissingDataFailsClosed(unittest.TestCase):
             j["hookscore"]["dealbreakers"][0]["regex"] = "(unclosed"
         self.check("hookscore", lambda p: edit_json(p, bad))
 
+    def test_missing_messages_key(self):
+        # Every sentence a tool prints comes from "messages" in its language
+        # file: without the key there is no language to say it in.
+        for tool, section in (("hookscore", "hookscore"), ("beats", "beats"),
+                              ("caption", "caption")):
+            with self.subTest(tool=tool):
+                self.check(tool, lambda p, s=section: edit_json(p, lambda j: j[s].pop("messages")))
+
+    def test_messages_that_are_not_strings(self):
+        def number(section):
+            def change(j):
+                key = next(iter(j[section]["messages"]))
+                j[section]["messages"][key] = 7
+            return change
+        for tool, section in (("hookscore", "hookscore"), ("beats", "beats"),
+                              ("caption", "caption")):
+            with self.subTest(tool=tool):
+                self.check(tool, lambda p, c=number(section): edit_json(p, c))
+
     def test_swipe_degrades_when_hookscore_cannot_load(self):
         with tempfile.TemporaryDirectory() as d:
             for folder in ("ig-viral", "ig-reel"):
@@ -265,6 +284,59 @@ class MissingDataFailsClosed(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn("hookscore.py not importable", proc.stderr)
         self.assertTrue(all(r["hook_score"] is None for r in json.loads(proc.stdout)["reels"]))
+
+
+# Where the messages of the tools that keep them apart from their lexicon live.
+MESSAGES_FILE = {
+    "humanize": ("lang/en.json", "humanize"),
+    "detect": ("lang/en.json", "detect"),
+    "swipe": ("lang/en.json", "swipe"),
+}
+MESSAGES_INPUT = dict(INPUT, swipe=(fixture("captured.tsv"), None))
+
+
+class MissingMessagesFailClosed(unittest.TestCase):
+    """ig-human and ig-viral read their sentences from their own lang/en.json,
+    never from the lexicon: a lost file is exit 2 naming it, not a traceback."""
+
+    def check(self, tool, breaker):
+        arg, stdin = MESSAGES_INPUT[tool]
+        with tempfile.TemporaryDirectory() as d:
+            script, _ = lone_copy(d, tool)
+            path = os.path.join(os.path.dirname(script), MESSAGES_FILE[tool][0])
+            breaker(path)
+            proc = run_tool(script, arg, stdin=stdin)
+        self.assertEqual(proc.returncode, 2, proc.stderr)
+        self.assertNotIn("Traceback", proc.stderr)
+        self.assertIn(path, proc.stderr)
+
+    def test_missing_file(self):
+        for tool in MESSAGES_FILE:
+            with self.subTest(tool=tool):
+                self.check(tool, os.remove)
+
+    def test_broken_json(self):
+        def corrupt(p):
+            with open(p, "w", encoding="utf-8") as fh:
+                fh.write("{ not json")
+        for tool in MESSAGES_FILE:
+            with self.subTest(tool=tool):
+                self.check(tool, corrupt)
+
+    def test_missing_messages_key(self):
+        for tool, (_, section) in MESSAGES_FILE.items():
+            with self.subTest(tool=tool):
+                self.check(tool, lambda p, s=section: edit_json(p, lambda j: j[s].pop("messages")))
+
+    def test_message_that_is_not_a_string(self):
+        def number(section):
+            def change(j):
+                key = next(iter(j[section]["messages"]))
+                j[section]["messages"][key] = 7
+            return change
+        for tool, (_, section) in MESSAGES_FILE.items():
+            with self.subTest(tool=tool):
+                self.check(tool, lambda p, c=number(section): edit_json(p, c))
 
 
 if __name__ == "__main__":
