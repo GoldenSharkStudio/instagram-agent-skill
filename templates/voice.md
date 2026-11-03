@@ -21,6 +21,10 @@ the words out loud. A line you would never say is not a draft, it is a retake.
 - **Who I am talking to:** (be specific: "photographers charging under $2,000",
   not "creatives")
 - **What I sell:**
+- **Language:** (`en` / `pt-BR` / `auto`. The language I post in. The skills
+  pass it to every script as `--lang`, so the word lists and the checks match
+  the language. Leave it out and they use `en`. `auto` guesses from the text
+  each time and says what it picked.)
 
 ## What I sound like
 

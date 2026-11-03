@@ -13,9 +13,15 @@ description: >-
 One tool lives in this folder and it runs:
 
 ```bash
-python3 caption.py caption.txt
-python3 caption.py caption.txt --keywords "client proposals,agency pricing"
+python3 caption.py caption.txt --lang {language}
+python3 caption.py caption.txt --keywords "client proposals,agency pricing" --lang {language}
 ```
+
+`{language}` is the **Language:** line of `~/.claude/instagram/voice.md`:
+`en`, `pt-BR` or `auto`. With no voice.md, or no Language line in it, use `en`.
+A language whose data is not in this folder yet is refused with exit 2 and the
+name of the missing file. Tell the user, and run with `--lang en` only if they
+agree, saying the checks are tuned for English.
 
 It prints the caption the way the feed prints it: the first 125 characters in a
 box, everything else behind the tap. Read that box before you read anything
@@ -78,7 +84,7 @@ that reads normally. "Client proposals" as words in line three, not
 Ask for two or three of those terms, then pass them to the linter:
 
 ```bash
-python3 caption.py draft.txt --keywords "client proposals,agency pricing"
+python3 caption.py draft.txt --keywords "client proposals,agency pricing" --lang {language}
 ```
 
 ## Rules

@@ -17,10 +17,16 @@ Two tools live in this folder and they both actually run. Use them. Do not
 eyeball the hook and do not guess at the length.
 
 ```bash
-python3 hookscore.py hooks.txt              # rank your hook options
-python3 hookscore.py --hook "one line"      # score a single one
-python3 beats.py script.txt --target 30     # timed beat sheet before you shoot
+python3 hookscore.py hooks.txt --lang {language}               # rank your hook options
+python3 hookscore.py --hook "one line" --lang {language}       # score a single one
+python3 beats.py script.txt --target 30 --lang {language}      # timed beat sheet
 ```
+
+`{language}` is the **Language:** line of `~/.claude/instagram/voice.md`:
+`en`, `pt-BR` or `auto`. With no voice.md, or no Language line in it, use `en`.
+A language whose data is not in this folder yet is refused with exit 2 and the
+name of the missing file. Tell the user, and run with `--lang en` only if they
+agree, saying the checks are tuned for English.
 
 ## Before you write
 
@@ -71,9 +77,9 @@ not have the hook yet and no amount of editing fixes that.
 user actually talks. Contractions. Short lines. No sentence they would have to
 rehearse.
 
-**4. Time it.** Run `beats.py script.txt --target {length}`. Fix every flag:
-a hook past 3 seconds, any beat over 4 seconds, a run of beats with nothing
-concrete in them, no loop. Re-run until it is clean.
+**4. Time it.** Run `beats.py script.txt --target {length} --lang {language}`.
+Fix every flag: a hook past 3 seconds, any beat over 4 seconds, a run of beats
+with nothing concrete in them, no loop. Re-run until it is clean.
 
 **5. Humanize it.** Run the script through `/ig-human` before showing it. A
 written-sounding line is obvious the moment someone says it out loud.

@@ -18,8 +18,14 @@ looks. Run it monthly, not daily. Formulas last a season.
 One tool lives in this folder and it runs:
 
 ```bash
-python3 swipe.py captured.tsv --out ~/.claude/instagram/swipe.md
+python3 swipe.py captured.tsv --out ~/.claude/instagram/swipe.md --lang {language}
 ```
+
+`{language}` is the **Language:** line of `~/.claude/instagram/voice.md`:
+`en`, `pt-BR` or `auto`. With no voice.md, or no Language line in it, use `en`.
+A language whose data is not in this folder yet is refused with exit 2 and the
+name of the missing file. Tell the user, and run with `--lang en` only if they
+agree, saying the checks are tuned for English.
 
 ## The one idea that makes this worth doing
 
@@ -95,6 +101,7 @@ python3 -m yt_dlp --flat-playlist --playlist-end 40 -J \
   "https://www.youtube.com/@HANDLE/shorts" > channel.json
 
 # the spoken first line of one short, from its auto-captions
+# (a Portuguese-speaking niche: --sub-langs "pt.*")
 python3 -m yt_dlp --skip-download --write-auto-subs --sub-langs "en.*" \
   --sub-format json3 -o hook "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
@@ -112,7 +119,7 @@ account	followers	median	views	hook
 ```
 
 ```bash
-python3 swipe.py captured.tsv --out ~/.claude/instagram/swipe.md
+python3 swipe.py captured.tsv --out ~/.claude/instagram/swipe.md --lang {language}
 ```
 
 It computes the outlier multiple, names the hook formula using the same 26

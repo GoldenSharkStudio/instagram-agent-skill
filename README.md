@@ -75,6 +75,12 @@ out loud.
 No dependencies, no network, nothing uploaded. They run on your machine, on
 your text.
 
+Every tool takes `--lang`: `en` (the default), `pt-BR` or `auto`, which guesses
+from the text and says on stderr what it picked. The skills pass the
+**Language:** line of your `voice.md`. Only `en` ships today; a language whose
+files are not there yet is refused with exit 2 and the missing file's name,
+never a silent fall back to English.
+
 ### Hooks
 
 ```bash

@@ -15,10 +15,17 @@ Two tools live in this folder and they both actually run. Use them. Do not
 eyeball this.
 
 ```bash
-python3 humanize.py draft.txt --report        # clean it, show what changed
-python3 detect.py draft.txt                    # score it, five checks
-python3 detect.py before.txt after.txt         # prove the delta
+python3 humanize.py draft.txt --report --lang {language}   # clean it, show what changed
+python3 detect.py draft.txt --lang {language}              # score it, five checks
+python3 detect.py before.txt after.txt --lang {language}   # prove the delta
 ```
+
+`{language}` is the **Language:** line of `~/.claude/instagram/voice.md`:
+`en`, `pt-BR` or `auto`. With no voice.md, or no Language line in it, use `en`.
+A language whose data is not in this folder yet is refused with exit 2 and the
+name of the missing file. Tell the user, and run with `--lang en` only if they
+agree, saying the checks are tuned for English. `--lexicon` wins over `--lang`
+when both are given.
 
 Both read `slop.en.json`: 154 stock words and phrases with plain-English
 replacements, 18 invisible character classes, 11 typographic substitutions and
@@ -110,9 +117,9 @@ do not tell a user their text is undetectable.
 
 ## Order of operations
 
-1. `humanize.py draft.txt -o clean.txt --report`
+1. `humanize.py draft.txt -o clean.txt --report --lang {language}`
 2. Read the structural flags, held deletions included. Rewrite those lines yourself.
-3. `detect.py draft.txt clean.txt` to show the before and after.
+3. `detect.py draft.txt clean.txt --lang {language}` to show the before and after.
 4. If the verdict is not PASS, fix what the output names (the structural tells
    still left, or else the weakest check) and go again. Two rounds is normal.
    Five means the draft was written by formula, and the fix is a different
