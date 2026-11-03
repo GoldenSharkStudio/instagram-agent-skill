@@ -397,7 +397,7 @@ class Detect(unittest.TestCase):
         self.assertEqual(verdict, "FLAGGED")
         self.assertEqual(round(overall, 1), 29.3)
         self.assertEqual(results["SLOP DENSITY"][0], 0.0)
-        self.assertIn("16 stock terms", results["SLOP DENSITY"][1])
+        self.assertIn("17 stock terms", results["SLOP DENSITY"][1])
         self.assertIn("2 em dash", results["FINGERPRINT"][1])
 
     def test_good_draft_passes(self):

@@ -157,9 +157,45 @@
       "family": "verbs"
     },
     {
+      "find": "delves into",
+      "replace": "looks at",
+      "family": "verbs",
+      "of": "delve into"
+    },
+    {
+      "find": "delved into",
+      "replace": "looked at",
+      "family": "verbs",
+      "of": "delve into"
+    },
+    {
+      "find": "delving into",
+      "replace": "looking at",
+      "family": "verbs",
+      "of": "delve into"
+    },
+    {
       "find": "delve",
       "replace": "look",
       "family": "verbs"
+    },
+    {
+      "find": "delves",
+      "replace": "looks",
+      "family": "verbs",
+      "of": "delve"
+    },
+    {
+      "find": "delved",
+      "replace": "looked",
+      "family": "verbs",
+      "of": "delve"
+    },
+    {
+      "find": "delving",
+      "replace": "looking",
+      "family": "verbs",
+      "of": "delve"
     },
     {
       "find": "dive deep into",
@@ -167,9 +203,33 @@
       "family": "verbs"
     },
     {
+      "find": "dives deep into",
+      "replace": "gets into",
+      "family": "verbs",
+      "of": "dive deep into"
+    },
+    {
+      "find": "dived deep into",
+      "replace": "got into",
+      "family": "verbs",
+      "of": "dive deep into"
+    },
+    {
+      "find": "diving deep into",
+      "replace": "getting into",
+      "family": "verbs",
+      "of": "dive deep into"
+    },
+    {
       "find": "deep dive",
       "replace": "breakdown",
       "family": "nouns"
+    },
+    {
+      "find": "deep dives",
+      "replace": "breakdowns",
+      "family": "nouns",
+      "of": "deep dive"
     },
     {
       "find": "leverage",
@@ -177,9 +237,22 @@
       "family": "verbs"
     },
     {
+      "find": "leverages",
+      "replace": "uses",
+      "family": "verbs",
+      "of": "leverage"
+    },
+    {
+      "find": "leveraged",
+      "replace": "used",
+      "family": "verbs",
+      "of": "leverage"
+    },
+    {
       "find": "leveraging",
       "replace": "using",
-      "family": "verbs"
+      "family": "verbs",
+      "of": "leverage"
     },
     {
       "find": "utilize",
@@ -187,9 +260,22 @@
       "family": "verbs"
     },
     {
+      "find": "utilizes",
+      "replace": "uses",
+      "family": "verbs",
+      "of": "utilize"
+    },
+    {
+      "find": "utilized",
+      "replace": "used",
+      "family": "verbs",
+      "of": "utilize"
+    },
+    {
       "find": "utilizing",
       "replace": "using",
-      "family": "verbs"
+      "family": "verbs",
+      "of": "utilize"
     },
     {
       "find": "harness",
@@ -197,9 +283,45 @@
       "family": "verbs"
     },
     {
+      "find": "harnesses",
+      "replace": "uses",
+      "family": "verbs",
+      "of": "harness"
+    },
+    {
+      "find": "harnessed",
+      "replace": "used",
+      "family": "verbs",
+      "of": "harness"
+    },
+    {
+      "find": "harnessing",
+      "replace": "using",
+      "family": "verbs",
+      "of": "harness"
+    },
+    {
       "find": "embark on",
       "replace": "start",
       "family": "verbs"
+    },
+    {
+      "find": "embarks on",
+      "replace": "starts",
+      "family": "verbs",
+      "of": "embark on"
+    },
+    {
+      "find": "embarked on",
+      "replace": "started",
+      "family": "verbs",
+      "of": "embark on"
+    },
+    {
+      "find": "embarking on",
+      "replace": "starting",
+      "family": "verbs",
+      "of": "embark on"
     },
     {
       "find": "foster",
@@ -207,9 +329,45 @@
       "family": "verbs"
     },
     {
+      "find": "fosters",
+      "replace": "builds",
+      "family": "verbs",
+      "of": "foster"
+    },
+    {
+      "find": "fostered",
+      "replace": "built",
+      "family": "verbs",
+      "of": "foster"
+    },
+    {
+      "find": "fostering",
+      "replace": "building",
+      "family": "verbs",
+      "of": "foster"
+    },
+    {
       "find": "facilitate",
       "replace": "help",
       "family": "verbs"
+    },
+    {
+      "find": "facilitates",
+      "replace": "helps",
+      "family": "verbs",
+      "of": "facilitate"
+    },
+    {
+      "find": "facilitated",
+      "replace": "helped",
+      "family": "verbs",
+      "of": "facilitate"
+    },
+    {
+      "find": "facilitating",
+      "replace": "helping",
+      "family": "verbs",
+      "of": "facilitate"
     },
     {
       "find": "showcase",
@@ -217,9 +375,45 @@
       "family": "verbs"
     },
     {
+      "find": "showcases",
+      "replace": "shows",
+      "family": "verbs",
+      "of": "showcase"
+    },
+    {
+      "find": "showcased",
+      "replace": "showed",
+      "family": "verbs",
+      "of": "showcase"
+    },
+    {
+      "find": "showcasing",
+      "replace": "showing",
+      "family": "verbs",
+      "of": "showcase"
+    },
+    {
       "find": "unlock",
       "replace": "get",
       "family": "verbs"
+    },
+    {
+      "find": "unlocks",
+      "replace": "gets",
+      "family": "verbs",
+      "of": "unlock"
+    },
+    {
+      "find": "unlocked",
+      "replace": "got",
+      "family": "verbs",
+      "of": "unlock"
+    },
+    {
+      "find": "unlocking",
+      "replace": "getting",
+      "family": "verbs",
+      "of": "unlock"
     },
     {
       "find": "elevate",
@@ -227,14 +421,68 @@
       "family": "verbs"
     },
     {
+      "find": "elevates",
+      "replace": "improves",
+      "family": "verbs",
+      "of": "elevate"
+    },
+    {
+      "find": "elevated",
+      "replace": "improved",
+      "family": "verbs",
+      "of": "elevate"
+    },
+    {
+      "find": "elevating",
+      "replace": "improving",
+      "family": "verbs",
+      "of": "elevate"
+    },
+    {
       "find": "streamline",
       "replace": "simplify",
       "family": "verbs"
     },
     {
+      "find": "streamlines",
+      "replace": "simplifies",
+      "family": "verbs",
+      "of": "streamline"
+    },
+    {
+      "find": "streamlined",
+      "replace": "simplified",
+      "family": "verbs",
+      "of": "streamline"
+    },
+    {
+      "find": "streamlining",
+      "replace": "simplifying",
+      "family": "verbs",
+      "of": "streamline"
+    },
+    {
       "find": "spearhead",
       "replace": "lead",
       "family": "verbs"
+    },
+    {
+      "find": "spearheads",
+      "replace": "leads",
+      "family": "verbs",
+      "of": "spearhead"
+    },
+    {
+      "find": "spearheaded",
+      "replace": "led",
+      "family": "verbs",
+      "of": "spearhead"
+    },
+    {
+      "find": "spearheading",
+      "replace": "leading",
+      "family": "verbs",
+      "of": "spearhead"
     },
     {
       "find": "underscore",
@@ -244,7 +492,20 @@
     {
       "find": "underscores",
       "replace": "shows",
-      "family": "verbs"
+      "family": "verbs",
+      "of": "underscore"
+    },
+    {
+      "find": "underscored",
+      "replace": "showed",
+      "family": "verbs",
+      "of": "underscore"
+    },
+    {
+      "find": "underscoring",
+      "replace": "showing",
+      "family": "verbs",
+      "of": "underscore"
     },
     {
       "find": "cultivate",
@@ -252,9 +513,45 @@
       "family": "verbs"
     },
     {
+      "find": "cultivates",
+      "replace": "builds",
+      "family": "verbs",
+      "of": "cultivate"
+    },
+    {
+      "find": "cultivated",
+      "replace": "built",
+      "family": "verbs",
+      "of": "cultivate"
+    },
+    {
+      "find": "cultivating",
+      "replace": "building",
+      "family": "verbs",
+      "of": "cultivate"
+    },
+    {
       "find": "amplify",
       "replace": "boost",
       "family": "verbs"
+    },
+    {
+      "find": "amplifies",
+      "replace": "boosts",
+      "family": "verbs",
+      "of": "amplify"
+    },
+    {
+      "find": "amplified",
+      "replace": "boosted",
+      "family": "verbs",
+      "of": "amplify"
+    },
+    {
+      "find": "amplifying",
+      "replace": "boosting",
+      "family": "verbs",
+      "of": "amplify"
     },
     {
       "find": "curate",
@@ -262,9 +559,22 @@
       "family": "verbs"
     },
     {
+      "find": "curates",
+      "replace": "picks",
+      "family": "verbs",
+      "of": "curate"
+    },
+    {
       "find": "curated",
       "replace": "picked",
-      "family": "verbs"
+      "family": "verbs",
+      "of": "curate"
+    },
+    {
+      "find": "curating",
+      "replace": "picking",
+      "family": "verbs",
+      "of": "curate"
     },
     {
       "find": "empower",
@@ -272,9 +582,45 @@
       "family": "verbs"
     },
     {
+      "find": "empowers",
+      "replace": "lets",
+      "family": "verbs",
+      "of": "empower"
+    },
+    {
+      "find": "empowered",
+      "replace": "let",
+      "family": "verbs",
+      "of": "empower"
+    },
+    {
+      "find": "empowering",
+      "replace": "letting",
+      "family": "verbs",
+      "of": "empower"
+    },
+    {
       "find": "revolutionize",
       "replace": "change",
       "family": "verbs"
+    },
+    {
+      "find": "revolutionizes",
+      "replace": "changes",
+      "family": "verbs",
+      "of": "revolutionize"
+    },
+    {
+      "find": "revolutionized",
+      "replace": "changed",
+      "family": "verbs",
+      "of": "revolutionize"
+    },
+    {
+      "find": "revolutionizing",
+      "replace": "changing",
+      "family": "verbs",
+      "of": "revolutionize"
     },
     {
       "find": "transformative",
@@ -330,6 +676,12 @@
       "find": "game-changer",
       "replace": "big deal",
       "family": "nouns"
+    },
+    {
+      "find": "game-changers",
+      "replace": "big deals",
+      "family": "nouns",
+      "of": "game-changer"
     },
     {
       "find": "groundbreaking",
@@ -407,9 +759,21 @@
       "family": "nouns"
     },
     {
+      "find": "tapestries",
+      "replace": "mixes",
+      "family": "nouns",
+      "of": "tapestry"
+    },
+    {
       "find": "realm",
       "replace": "world",
       "family": "nouns"
+    },
+    {
+      "find": "realms",
+      "replace": "worlds",
+      "family": "nouns",
+      "of": "realm"
     },
     {
       "find": "landscape",
@@ -417,9 +781,21 @@
       "family": "nouns"
     },
     {
+      "find": "landscapes",
+      "replace": "markets",
+      "family": "nouns",
+      "of": "landscape"
+    },
+    {
       "find": "journey",
       "replace": "process",
       "family": "nouns"
+    },
+    {
+      "find": "journeys",
+      "replace": "processes",
+      "family": "nouns",
+      "of": "journey"
     },
     {
       "find": "testament to",
@@ -432,9 +808,21 @@
       "family": "nouns"
     },
     {
+      "find": "cornerstones",
+      "replace": "bases",
+      "family": "nouns",
+      "of": "cornerstone"
+    },
+    {
       "find": "beacon",
       "replace": "signal",
       "family": "nouns"
+    },
+    {
+      "find": "beacons",
+      "replace": "signals",
+      "family": "nouns",
+      "of": "beacon"
     },
     {
       "find": "paradigm",
@@ -442,9 +830,21 @@
       "family": "nouns"
     },
     {
+      "find": "paradigms",
+      "replace": "models",
+      "family": "nouns",
+      "of": "paradigm"
+    },
+    {
       "find": "synergy",
       "replace": "overlap",
       "family": "nouns"
+    },
+    {
+      "find": "synergies",
+      "replace": "overlaps",
+      "family": "nouns",
+      "of": "synergy"
     },
     {
       "find": "ecosystem",
@@ -452,9 +852,21 @@
       "family": "nouns"
     },
     {
+      "find": "ecosystems",
+      "replace": "systems",
+      "family": "nouns",
+      "of": "ecosystem"
+    },
+    {
       "find": "treasure trove",
       "replace": "pile",
       "family": "nouns"
+    },
+    {
+      "find": "treasure troves",
+      "replace": "piles",
+      "family": "nouns",
+      "of": "treasure trove"
     },
     {
       "find": "plethora of",
@@ -472,9 +884,21 @@
       "family": "nouns"
     },
     {
+      "find": "arsenals",
+      "replace": "sets",
+      "family": "nouns",
+      "of": "arsenal"
+    },
+    {
       "find": "north star",
       "replace": "goal",
       "family": "nouns"
+    },
+    {
+      "find": "north stars",
+      "replace": "goals",
+      "family": "nouns",
+      "of": "north star"
     },
     {
       "find": "moreover",
@@ -562,14 +986,68 @@
       "family": "verbs"
     },
     {
+      "find": "supercharges",
+      "replace": "speeds up",
+      "family": "verbs",
+      "of": "supercharge"
+    },
+    {
+      "find": "supercharged",
+      "replace": "sped up",
+      "family": "verbs",
+      "of": "supercharge"
+    },
+    {
+      "find": "supercharging",
+      "replace": "speeding up",
+      "family": "verbs",
+      "of": "supercharge"
+    },
+    {
       "find": "skyrocket",
       "replace": "raise",
       "family": "verbs"
     },
     {
+      "find": "skyrockets",
+      "replace": "raises",
+      "family": "verbs",
+      "of": "skyrocket"
+    },
+    {
+      "find": "skyrocketed",
+      "replace": "raised",
+      "family": "verbs",
+      "of": "skyrocket"
+    },
+    {
+      "find": "skyrocketing",
+      "replace": "raising",
+      "family": "verbs",
+      "of": "skyrocket"
+    },
+    {
       "find": "unleash",
       "replace": "release",
       "family": "verbs"
+    },
+    {
+      "find": "unleashes",
+      "replace": "releases",
+      "family": "verbs",
+      "of": "unleash"
+    },
+    {
+      "find": "unleashed",
+      "replace": "released",
+      "family": "verbs",
+      "of": "unleash"
+    },
+    {
+      "find": "unleashing",
+      "replace": "releasing",
+      "family": "verbs",
+      "of": "unleash"
     },
     {
       "find": "effortlessly",
@@ -607,9 +1085,21 @@
       "family": "nouns"
     },
     {
+      "find": "no-brainers",
+      "replace": "obvious",
+      "family": "nouns",
+      "of": "no-brainer"
+    },
+    {
       "find": "hidden gem",
       "replace": "good one",
       "family": "nouns"
+    },
+    {
+      "find": "hidden gems",
+      "replace": "good ones",
+      "family": "nouns",
+      "of": "hidden gem"
     },
     {
       "find": "secret sauce",
@@ -622,14 +1112,44 @@
       "family": "nouns"
     },
     {
+      "find": "ultimate guides",
+      "replace": "guides",
+      "family": "nouns",
+      "of": "ultimate guide"
+    },
+    {
       "find": "level up",
       "replace": "improve",
       "family": "verbs"
     },
     {
+      "find": "levels up",
+      "replace": "improves",
+      "family": "verbs",
+      "of": "level up"
+    },
+    {
+      "find": "leveled up",
+      "replace": "improved",
+      "family": "verbs",
+      "of": "level up"
+    },
+    {
+      "find": "leveling up",
+      "replace": "improving",
+      "family": "verbs",
+      "of": "level up"
+    },
+    {
       "find": "hack",
       "replace": "trick",
       "family": "nouns"
+    },
+    {
+      "find": "hacks",
+      "replace": "tricks",
+      "family": "nouns",
+      "of": "hack"
     }
   ],
   "phrases": [
@@ -1066,6 +1586,99 @@
   "complementizers": [
     "that"
   ],
+  "inflection": {
+    "note": "How a lexicon entry inflects. Every inflected form is its own entry, with its own replacement, so humanize keeps the sentence grammatical ('elevates' -> 'improves', not 'improve'), and it names its base in `of`. The test suite derives the forms each base should have from these rules and fails on a form missing from the lexicon. A base that does not inflect in use goes in `exempt`, with the reason. Suffix rules are tried in order, the first whose pattern matches the inflected word wins.",
+    "families": {
+      "verbs": {
+        "word": "first",
+        "forms": [
+          "s",
+          "ed",
+          "ing"
+        ]
+      },
+      "nouns": {
+        "word": "last",
+        "forms": [
+          "s"
+        ]
+      }
+    },
+    "suffixes": {
+      "s": [
+        {
+          "pattern": "([^aeiou])y$",
+          "to": "\\1ies"
+        },
+        {
+          "pattern": "(s|sh|ch|x|z)$",
+          "to": "\\1es"
+        },
+        {
+          "pattern": "$",
+          "to": "s"
+        }
+      ],
+      "ed": [
+        {
+          "pattern": "([^aeiou])y$",
+          "to": "\\1ied"
+        },
+        {
+          "pattern": "e$",
+          "to": "ed"
+        },
+        {
+          "pattern": "$",
+          "to": "ed"
+        }
+      ],
+      "ing": [
+        {
+          "pattern": "([^e])e$",
+          "to": "\\1ing"
+        },
+        {
+          "pattern": "$",
+          "to": "ing"
+        }
+      ]
+    },
+    "exempt": [
+      {
+        "base": "testament to",
+        "why": "only singular in use ('a testament to')"
+      },
+      {
+        "base": "a testament to",
+        "why": "the article fixes it singular"
+      },
+      {
+        "base": "plethora of",
+        "why": "only singular in use ('a plethora of')"
+      },
+      {
+        "base": "plethora",
+        "why": "only singular in use"
+      },
+      {
+        "base": "secret sauce",
+        "why": "mass noun"
+      },
+      {
+        "base": "the algorithm loves",
+        "why": "a clause, not a noun"
+      },
+      {
+        "base": "beat the algorithm",
+        "why": "a closing phrase, said as an imperative"
+      },
+      {
+        "base": "go viral overnight",
+        "why": "a closing phrase, said as an imperative"
+      }
+    ]
+  },
   "auto": {
     "note": "Function words --lang auto counts to guess the language of a text. Same list in every en file.",
     "stopwords": [

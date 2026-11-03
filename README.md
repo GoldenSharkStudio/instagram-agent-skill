@@ -177,7 +177,7 @@ python3 detect.py before.txt after.txt       # prove the delta
   survive copy-paste and they are invisible in every editor you own.
 - **Typography.** Em dash to comma, en dash to hyphen, curly quotes to
   straight, ellipsis to three dots, and the orphaned punctuation that leaves.
-- **The lexicon.** 154 stock words and phrases with plain-English replacements.
+- **The lexicon.** 240 stock words and phrases with plain-English replacements.
   The last block of it is Instagram-specific: "stop scrolling", "in today's
   video", "follow for more", "tag someone who needs this", "the algorithm
   loves", "run don't walk". It lives in
@@ -197,7 +197,7 @@ Run against a caption written to be as bad as possible
 ```
   BURSTINESS    #######################.  95.7    variation 0.68 across 10 sentences
   SPECIFICITY   ###########.............  47.7    3.1 concrete markers per 100 words
-  SLOP DENSITY  ........................   0.0    16 stock terms, 16.7 per 100 words
+  SLOP DENSITY  ........................   0.0    17 stock terms, 17.7 per 100 words
   FINGERPRINT   ############............  49.7    2 em dash
   VOICE         ############............  50.8    13 structural tells
   ------------------------------------------------------------
@@ -352,7 +352,7 @@ skills/ig-reel/beats.py            script to timed beat sheet
 skills/ig-caption/lang/en.json     the calls to action and the generic hashtags it knows,
                                    and every sentence it prints
 skills/ig-caption/caption.py       the truncation preview and the caption linter
-skills/ig-human/slop.en.json       the lexicon: 154 terms, 18 invisible classes, 16 tells
+skills/ig-human/slop.en.json       the lexicon: 240 terms, 18 invisible classes, 16 tells
 skills/ig-human/lang/en.json       every sentence humanize and detect print (not the lexicon, so
                                    --lexicon never swaps them)
 skills/ig-human/humanize.py        the three cleaning passes

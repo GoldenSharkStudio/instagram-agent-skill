@@ -43,6 +43,8 @@ DISPLAY_KEYS = {
     "hashtags_over": "caption.py message, printed (tests/test_messages.py owns the messages)",
     "common_fail": "rubric.json, read by the model, not by code",
     "full_marks": "rubric.json, read by the model, not by code",
+    "note": "comment for the person editing the JSON, read by no tool",
+    "why": "reason an inflection is exempt, read by the test suite only",
 }
 
 # Sentences a person would type. The coverage guard below fails, naming the

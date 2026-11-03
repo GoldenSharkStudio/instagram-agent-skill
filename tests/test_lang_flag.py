@@ -51,9 +51,11 @@ NOT_READ = {
         "connectives": "the splice tell is flagged by humanize's scan only",
         "conjunctions": "orphan conjunctions come from a deletion, and detect deletes nothing",
         "complementizers": "same: the 'that' left by a deleted opener",
+        "inflection": "rules the test suite checks the lexicon with; the forms are entries",
     },
     "humanize": {
         "voice": "voice is scored by detect; humanize does not rewrite pronouns",
+        "inflection": "rules the test suite checks the lexicon with; the forms are entries",
     },
 }
 
@@ -80,9 +82,11 @@ WITNESS = {
 
 
 def blank(value):
-    """The emptiest value of the same shape: a list empties, a regex never matches."""
+    """The emptiest value of the same shape: a list or a dict empties, a regex never matches."""
     if isinstance(value, list):
         return []
+    if isinstance(value, dict):
+        return {}
     if isinstance(value, str):
         return "(?!)"
     raise TypeError(type(value))

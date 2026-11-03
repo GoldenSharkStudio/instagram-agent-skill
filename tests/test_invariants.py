@@ -140,7 +140,9 @@ class SlopJson(unittest.TestCase):
         finds = []
         for e in SLOP["words"] + SLOP["phrases"]:
             with self.subTest(find=e.get("find")):
-                self.assertEqual(set(e), {"find", "replace", "family"})
+                # `of` names the base of an inflected form (tests/test_inflection.py)
+                self.assertIn(set(e), ({"find", "replace", "family"},
+                                       {"find", "replace", "family", "of"}))
                 self.assertTrue(e["find"].strip())
             finds.append(e["find"].lower())
         dupes = sorted({f for f in finds if finds.count(f) > 1})
@@ -271,7 +273,7 @@ class EmojiCount(unittest.TestCase):
 # string under any other key fails RegexDataNet.test_every_regex_key_is_known,
 # so a new regex field cannot dodge the net below.
 REGEX_KEYS = {"regex", "match", "contractions", "pronouns", "address_me",
-              "address_you", "number_units"}
+              "address_you", "number_units", "pattern"}
 REGEX_HINTS = ("\\b", "(?", "\\s", "\\d", "[^")
 
 

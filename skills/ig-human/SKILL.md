@@ -27,7 +27,7 @@ name of the missing file. Tell the user, and run with `--lang en` only if they
 agree, saying the checks are tuned for English. `--lexicon` wins over `--lang`
 when both are given.
 
-Both read `slop.en.json`: 154 stock words and phrases with plain-English
+Both read `slop.en.json`: 240 stock words and phrases with plain-English
 replacements, 18 invisible character classes, 11 typographic substitutions and
 16 structural tells. The last block of each list is Instagram-specific, the
 vocabulary that only shows up in captions and voiceovers. It is meant to be
