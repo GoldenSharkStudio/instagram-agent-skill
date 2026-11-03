@@ -8,6 +8,8 @@
       "note_no_hookscore": "note: hookscore.py not importable, hook scores skipped.",
       "note_hookscore_lang": "note: hookscore.py not importable for {lang} ({reason}), hook scores skipped.",
       "wrote": "wrote {path}",
+      "cannot_write": "swipe.py: cannot write {path}: {reason}",
+      "cannot_load_hooks": "swipe.py: cannot load --hooks {path}: {reason}",
       "head": "SWIPE FILE  ·  {n} reels  ·  {accounts} accounts  ·  baseline: {baseline}",
       "reel_line": "  {mult:>7}  hook {score:>3}  {fid} {formula:<22} {account:<16} {views:>9,}",
       "working_title": "WHAT IS WORKING IN THIS BATCH",

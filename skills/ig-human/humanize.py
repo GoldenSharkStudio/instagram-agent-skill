@@ -418,11 +418,18 @@ def render_report(report, out=sys.stderr, lang="en"):
 
 
 def read_text(path):
-    """The input file, or stdin for "-". The file is closed before returning."""
-    if path == "-":
-        return sys.stdin.read()
-    with open(path, encoding="utf-8") as fh:
-        return fh.read()
+    """The input file, or stdin for "-". The file is closed before returning.
+    A file that cannot be read is exit 2 naming it: exit 1 is a verdict."""
+    try:
+        if path == "-":
+            return sys.stdin.read()
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+    except (OSError, UnicodeDecodeError) as err:
+        why = err.strerror if isinstance(err, OSError) and err.strerror else str(err)
+        shown = "stdin" if path == "-" else path
+        print(f"{os.path.basename(__file__)}: cannot read {shown}: {why}", file=sys.stderr)
+        sys.exit(2)
 
 
 def main():
@@ -459,8 +466,13 @@ def main():
         print(json.dumps({"text": clean, "report": report}, indent=2, ensure_ascii=False))
         return
     if args.out:
-        with open(args.out, "w", encoding="utf-8") as fh:
-            fh.write(clean)
+        try:
+            with open(args.out, "w", encoding="utf-8") as fh:
+                fh.write(clean)
+        except OSError as err:                   # exit 1 is a verdict; a bad path is 2
+            print(say(M, "cannot_write", path=args.out, reason=err.strerror or err),
+                  file=sys.stderr)
+            sys.exit(2)
         print(say(M, "wrote", path=args.out), file=sys.stderr)
     else:
         sys.stdout.write(clean)

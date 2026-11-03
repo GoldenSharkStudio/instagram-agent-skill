@@ -91,16 +91,22 @@ def hook_lang_error(lang):
     return None
 
 
+class HooksError(Exception):
+    pass
+
+
 def load_formulas(path):
+    """hooks.json as (id, name, compiled match), in classify order. A file that
+    cannot be read, or whose schema is broken, raises HooksError naming why."""
     try:
         with open(path, encoding="utf-8") as fh:
             d = json.load(fh)
-    except Exception:
-        return None
-    by_id = {h["id"]: h for h in d["hooks"]}
-    order = d.get("classify_order") or sorted(by_id)
-    return [(by_id[i]["id"], by_id[i]["name"],
-             re.compile(by_id[i]["match"], re.IGNORECASE)) for i in order if i in by_id]
+        by_id = {h["id"]: h for h in d["hooks"]}
+        order = d.get("classify_order") or sorted(by_id)
+        return [(by_id[i]["id"], by_id[i]["name"],
+                 re.compile(by_id[i]["match"], re.IGNORECASE)) for i in order if i in by_id]
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, re.error) as err:
+        raise HooksError(f"{type(err).__name__}: {getattr(err, 'strerror', None) or err}") from None
 
 
 def classify(hook, formulas, lang="en"):
@@ -115,11 +121,18 @@ def classify(hook, formulas, lang="en"):
 
 
 def read_text(path):
-    """The input file, or stdin for "-". The file is closed before returning."""
-    if path == "-":
-        return sys.stdin.read()
-    with open(path, encoding="utf-8") as fh:
-        return fh.read()
+    """The input file, or stdin for "-". The file is closed before returning.
+    A file that cannot be read is exit 2 naming it: exit 1 is a verdict."""
+    try:
+        if path == "-":
+            return sys.stdin.read()
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+    except (OSError, UnicodeDecodeError) as err:
+        why = err.strerror if isinstance(err, OSError) and err.strerror else str(err)
+        shown = "stdin" if path == "-" else path
+        print(f"{os.path.basename(__file__)}: cannot read {shown}: {why}", file=sys.stderr)
+        sys.exit(2)
 
 
 def read_rows(path):
@@ -241,7 +254,8 @@ def pick_swipe_lang(rows):
 def main():
     ap = argparse.ArgumentParser(description="Rank collected reels by outlier multiple.")
     ap.add_argument("input", nargs="?", default="-", help="TSV file, or - for stdin")
-    ap.add_argument("--hooks", default=HOOKS, help="path to ig-reel/hooks.json")
+    ap.add_argument("--hooks", default=None,
+                    help="path to ig-reel/hooks.json (default: the copy next to this folder)")
     ap.add_argument("--out", help="also write the swipe file as markdown here")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--lang", choices=LANGS, default="en",
@@ -262,7 +276,13 @@ def main():
     if not rows:
         print(say(M, "no_rows"), file=sys.stderr)
         sys.exit(2)
-    formulas = load_formulas(args.hooks)
+    try:
+        formulas = load_formulas(args.hooks or HOOKS)
+    except HooksError as err:
+        if args.hooks:                   # asked for by name: a bad path is exit 2, not a result
+            print(say(M, "cannot_load_hooks", path=args.hooks, reason=err), file=sys.stderr)
+            sys.exit(2)
+        formulas = None                  # the default copy: ig-viral alone degrades
     a = analyse(rows, formulas, lang)
     if not formulas:
         print(say(M, "note_no_formulas"), file=sys.stderr)
@@ -278,10 +298,14 @@ def main():
         render(a, lang=lang)
     if args.out:
         path = os.path.expanduser(args.out)
-        if os.path.dirname(path):        # a bare "swipe.md" has no folder to make
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w", encoding="utf-8") as fh:
-            fh.write(to_markdown(a, lang))
+        try:
+            if os.path.dirname(path):    # a bare "swipe.md" has no folder to make
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(to_markdown(a, lang))
+        except OSError as err:           # exit 1 is a verdict; a bad path is 2
+            print(say(M, "cannot_write", path=path, reason=err.strerror or err), file=sys.stderr)
+            sys.exit(2)
         print(say(M, "wrote", path=path), file=sys.stderr)
 
 

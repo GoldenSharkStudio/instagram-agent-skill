@@ -18,6 +18,7 @@
       "section_structural": "4. STRUCTURAL TELLS  (not auto-fixed - rewrite these yourself)\n--------------------------------------------------------------",
       "section_clean": "CLEAN\n-----",
       "nothing_to_strip": "  Nothing to strip.",
+      "cannot_write": "humanize.py: cannot write {path}: {reason}",
       "wrote": "wrote {path}"
     }
   },

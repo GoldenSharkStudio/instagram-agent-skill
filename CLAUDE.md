@@ -21,7 +21,7 @@ python3 skills/ig-human/detect.py draft.txt [after.txt]  # second arg = before/a
 python3 skills/ig-viral/swipe.py captured.tsv [--out swipe.md] [--hooks path/to/hooks.json]
 ```
 
-Exit codes are meaningful (skills use them as verdicts): `hookscore` exits 1 if the best hook scores < 70; `caption` exits 1 unless verdict is `READY`; `detect` exits 1 unless the last result is `PASS`; `2` means bad input. The exit code is the same with `--json`. `humanize --report` writes the report to stderr and the cleaned text to stdout.
+Exit codes are meaningful (skills use them as verdicts): `hookscore` exits 1 if the best hook scores < 70; `caption` exits 1 unless verdict is `READY`; `detect` exits 1 unless the last result is `PASS`; `2` means bad input: a file that cannot be read or written (missing, a folder, not UTF-8, an explicit `--hooks` or `--lexicon` that does not load) is exit 2 naming the path, never a traceback (`tests/test_input_errors.py` derives the path arguments from each argparse). Only swipe's default `../ig-reel/hooks.json` degrades instead, so `ig-viral` still runs alone. The exit code is the same with `--json`. `humanize --report` writes the report to stderr and the cleaned text to stdout.
 
 ## Tests
 

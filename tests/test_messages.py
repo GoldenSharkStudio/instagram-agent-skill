@@ -49,6 +49,7 @@ EXEMPT_TEXT = {
 EXEMPT_FUNCS = {
     "pick_lang": "the --lang auto diagnostic is about the choice itself, before a language is loaded",
     "pick_swipe_lang": "same diagnostic, swipe's copy",
+    "read_text": "the input fails to read before any language is chosen (--lang auto needs the text)",
 }
 # Code tokens that are neither phrases nor emitted contract, each with its reason.
 CODE_TOKENS = {
