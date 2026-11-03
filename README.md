@@ -77,9 +77,12 @@ your text.
 
 Every tool takes `--lang`: `en` (the default), `pt-BR` or `auto`, which guesses
 from the text and says on stderr what it picked. The skills pass the
-**Language:** line of your `voice.md`. Only `en` ships today; a language whose
-files are not there yet is refused with exit 2 and the missing file's name,
-never a silent fall back to English.
+**Language:** line of your `voice.md`. `en` ships for every tool. `pt-BR` ships
+for `hookscore`, `beats`, `caption` and `swipe`, with two gaps: `swipe` names no
+formula in pt-BR yet (every hook comes out unclassified, and it says so), and
+the humanizer has no pt-BR files. A language whose files are not there is
+refused with exit 2 and the missing file's name, never a silent fall back to
+English.
 
 ### Hooks
 
@@ -348,10 +351,12 @@ skills/ig-reel/hooks.json          26 hook formulas: template, example, on-scree
                                    per language (an empty one never matches)
 skills/ig-reel/lang/en.json        the words hookscore and beats know (stakes, openers, numbers)
                                    and every sentence they print
+skills/ig-reel/lang/pt-BR.json     the same in Portuguese
 skills/ig-reel/hookscore.py        the five-property hook panel
 skills/ig-reel/beats.py            script to timed beat sheet
 skills/ig-caption/lang/en.json     the calls to action and the generic hashtags it knows,
                                    and every sentence it prints
+skills/ig-caption/lang/pt-BR.json  the same in Portuguese
 skills/ig-caption/caption.py       the truncation preview and the caption linter
 skills/ig-human/slop.en.json       the lexicon: 240 terms, 18 invisible classes, 16 tells
 skills/ig-human/lang/en.json       every sentence humanize and detect print (not the lexicon, so
@@ -359,6 +364,7 @@ skills/ig-human/lang/en.json       every sentence humanize and detect print (not
 skills/ig-human/humanize.py        the three cleaning passes
 skills/ig-human/detect.py          the five-check panel
 skills/ig-viral/lang/en.json       every sentence swipe prints and writes to swipe.md
+skills/ig-viral/lang/pt-BR.json    the same in Portuguese
 skills/ig-viral/swipe.py           outlier ranking and formula classification
 skills/ig-profile/rubric.json      the 100-point profile score
 templates/voice.md                 your voice profile. Fill this in first.

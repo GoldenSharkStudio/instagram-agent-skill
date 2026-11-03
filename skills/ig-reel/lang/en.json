@@ -299,6 +299,7 @@
       "you",
       "your"
     ],
+    "thousands_separator": ",",
     "messages": {
       "head": "BEAT SHEET  ·  {words} words  ·  ~{secs:.1f}s at {wpm} wpm",
       "head_target": "  ·  target {target}s",

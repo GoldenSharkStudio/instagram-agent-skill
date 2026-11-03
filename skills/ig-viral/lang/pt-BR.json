@@ -1,0 +1,32 @@
+{
+  "lang": "pt-BR",
+  "note": "Mensagens do swipe.py: toda frase que ele imprime e escreve no swipe.md, como templates de str.format.",
+  "swipe": {
+    "messages": {
+      "no_rows": "nenhuma linha utilizável. É preciso um arquivo separado por tabulação com pelo menos views e hook.",
+      "note_no_formulas": "aviso: hooks.json não encontrado, fórmulas sem nome. Passe --hooks.",
+      "note_no_formulas_lang": "aviso: hooks.json ainda não tem `match` para {lang}, fórmulas sem nome. Leia os ganchos você mesmo.",
+      "note_no_hookscore": "aviso: hookscore.py não pôde ser importado, notas dos ganchos puladas.",
+      "note_hookscore_lang": "aviso: hookscore.py não pôde ser importado para {lang} ({reason}), notas dos ganchos puladas.",
+      "wrote": "gravado {path}",
+      "cannot_write": "swipe.py: não foi possível gravar {path}: {reason}",
+      "cannot_load_hooks": "swipe.py: não foi possível carregar --hooks {path}: {reason}",
+      "head": "SWIPE FILE  ·  {n} reels  ·  {accounts} contas  ·  base: {baseline}",
+      "reel_line": "  {mult:>7}  gancho {score:>3}  {fid} {formula:<22} {account:<16} {views:>9,}",
+      "working_title": "O QUE ESTÁ FUNCIONANDO NESTE LOTE",
+      "formula_count": "{name} x{count}",
+      "top_formulas": "  terço de cima (outlier): {formulas}",
+      "median_score": "  nota mediana do gancho: cima {top:.0f}  vs baixo {bottom:.0f}",
+      "median_length": "  tamanho mediano:        cima {top} palavras  vs baixo {bottom} palavras",
+      "unclassified_line": "  sem fórmula:            {count} de {n}. Leia esses você mesmo: é ali que se esconde uma fórmula que você ainda não tem.",
+      "caveat": "\n  Um lote coletado à mão é indício, não prova. Doze reels não mostram nada;\n  quarenta de seis contas mostram alguma coisa. Colete mais antes de acreditar.\n",
+      "md_title": "# Swipe file",
+      "md_summary": "{n} reels de {accounts} contas. Ordenados pelo múltiplo sobre {baseline}.",
+      "md_reel": "## {mult}  {formula}  ({account})",
+      "md_views": "- views: {views:,}  base: {baseline:,}",
+      "md_score": "- nota do gancho: {score}  palavras: {words}",
+      "md_hook": "- gancho: \"{hook}\"",
+      "unclassified": "sem fórmula"
+    }
+  }
+}

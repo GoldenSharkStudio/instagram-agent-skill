@@ -54,6 +54,7 @@ def say(M, key, **kw):
 
 def load_lang(code="en"):
     """stopwords: words too common to count as the hook coming back at the end.
+    thousands_separator: put back into a figure when the loop word is shown.
     messages: every sentence the script prints, str.format templates."""
     if code in _LOADED:
         return _LOADED[code]
@@ -64,7 +65,10 @@ def load_lang(code="en"):
         messages = d["messages"]
         if not (isinstance(messages, dict) and all(isinstance(v, str) for v in messages.values())):
             raise TypeError(messages)
-        loaded = {"STOPWORDS": set(d["stopwords"]), "MESSAGES": messages}
+        if not isinstance(d["thousands_separator"], str):
+            raise TypeError(d["thousands_separator"])
+        loaded = {"STOPWORDS": set(d["stopwords"]), "THOUSANDS": d["thousands_separator"],
+                  "MESSAGES": messages}
     except (OSError, ValueError, KeyError, TypeError) as err:
         raise LangError(f"{path}: {type(err).__name__}: {err}") from None
     _LOADED[code] = loaded
@@ -109,13 +113,13 @@ ABSTRACT_RUN = 3         # beats in a row with nothing checkable in them.
 
 
 def words(text):
-    # "$18,000" is one word when it is spoken, so it is one word here too.
-    return WORD_RE.findall(re.sub(r"(?<=\d),(?=\d)", "", text.translate(APOSTROPHES)))
+    # "$18,000" (and pt-BR "18.000", "3,5") is one word when spoken, so one word here.
+    return WORD_RE.findall(re.sub(r"(?<=\d)[,.](?=\d)", "", text.translate(APOSTROPHES)))
 
 
-def pretty(token):
-    """Put the thousands separator back for display."""
-    return re.sub(r"(\d)(?=(\d{3})+$)", r"\1,", token)
+def pretty(token, sep):
+    """Put the language's thousands separator back for display."""
+    return re.sub(r"(\d)(?=(\d{3})+$)", lambda m: m.group(1) + sep, token)
 
 
 def tc(seconds):
@@ -218,7 +222,7 @@ def analyse(raw, wpm=165, target=None, lang="en"):
     # Does the last line hand you back to the first one?
     first = {w.lower() for w in words(rows[0]["text"]) if w.lower() not in stopwords}
     last = {w.lower() for w in words(rows[-1]["text"]) if w.lower() not in stopwords}
-    loop = sorted(pretty(w) for w in first & last)
+    loop = sorted(pretty(w, L["THOUSANDS"]) for w in first & last)
     if loop:
         notes.append(say(M, "loop_note", words=", ".join(loop[:3])))
     else:

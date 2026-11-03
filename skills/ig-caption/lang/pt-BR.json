@@ -1,0 +1,127 @@
+{
+  "lang": "pt-BR",
+  "note": "Dados de idioma do caption.py. Regex em sintaxe Python, flags inline.",
+  "caption": {
+    "asks": [
+      {
+        "regex": "(?i)\\bcoment[ea] (?:a palavra |\\\")?[^\\W_]{2,}\\b",
+        "name": "comentar uma palavra"
+      },
+      {
+        "regex": "(?i)\\bme (?:chama|chame|manda (?:uma )?mensagem|mande (?:uma )?mensagem)\\b|\\b(?:chama|chame|manda|mande)(?: no| na)? (?:dm|direct|direto|inbox|privado)\\b",
+        "name": "chamar no direct"
+      },
+      {
+        "regex": "(?i)\\bsalv[ae] (?:esse|este|isso|isto|o post|pra|para)\\b",
+        "name": "salvar"
+      },
+      {
+        "regex": "(?i)\\bcompartilh[ae] (?:esse|este|isso|isto|com)\\b|\\bmand[ae] (?:esse post |este post |isso )?(?:pra|para) (?:alguém|quem|um amigo|uma amiga)\\b",
+        "name": "compartilhar"
+      },
+      {
+        "regex": "(?i)\\bme sig[ae]\\b|\\bsig[ae] (?:o perfil|a página|a gente|pra|para)\\b",
+        "name": "seguir"
+      },
+      {
+        "regex": "(?i)\\blink (?:na|da) (?:minha )?bio\\b",
+        "name": "link na bio"
+      },
+      {
+        "regex": "(?i)\\b(?:arrast[ae]|desliz[ae]|toque|toca) (?:pr[oa]|para|até)\\b",
+        "name": "arrastar ou tocar"
+      },
+      {
+        "regex": "(?i)\\bme (?:conta|conte|diz|diga|fala)\\b|\\bo que voc[êe] (?:faria|acha)\\b|\\bqual (?:deles|delas|dos dois|das duas)\\b",
+        "name": "responder uma pergunta"
+      }
+    ],
+    "filler_tags": [
+      "#amor",
+      "#brasil",
+      "#curtir",
+      "#explorar",
+      "#explore",
+      "#explorepage",
+      "#follow",
+      "#foryou",
+      "#foryoupage",
+      "#fyp",
+      "#instabrasil",
+      "#instadaily",
+      "#instagood",
+      "#like4like",
+      "#love",
+      "#paravoce",
+      "#paravocê",
+      "#reels",
+      "#reelsinstagram",
+      "#sdv",
+      "#seguidores",
+      "#sigam",
+      "#sigamesigo",
+      "#trending",
+      "#viral",
+      "#viralizar",
+      "#viralreels"
+    ],
+    "messages": {
+      "feed_title": "\n  O QUE O FEED MOSTRA",
+      "feed_more": "  +-------------------------------------------- ... mais +",
+      "feed_whole": "  +------------------------------ (a legenda cabe toda) +",
+      "length_ok": "{chars} / {limit} caracteres",
+      "length_over": "{chars} / {limit} caracteres, {over} acima do limite",
+      "first_line_blank": "a legenda abre numa linha em branco",
+      "first_line_tag": "abre numa hashtag ou numa menção, justo na única posição que vale uma frase",
+      "first_line_cut": "{chars} caracteres, então é cortada em {cut} no meio do raciocínio. Tudo bem se o corte é um gancho, ruim se é uma oração subordinada",
+      "first_line_whole": "{chars} caracteres, aparece inteira",
+      "hook_concrete": "{count} número(s) ou nome(s) na parte visível",
+      "hook_abstract": "{count} número(s) ou nome(s) na parte visível - nada que dê para conferir antes do toque",
+      "hashtags_over": "{count} tags, acima do limite de {limit} do Instagram. Tags depois da quinta não contam e o bloco parece antigo",
+      "hashtags_cap_generic": "{count} tags, no limite, e {generic} delas genéricas. Gaste as cinco em temas",
+      "hashtags_generic": "{count} tags, {generic} delas genéricas ({examples}). Essas não descrevem nada",
+      "hashtags_listed": "{count} tag(s): {tags}",
+      "hashtags_none": "{count} tag(s)",
+      "placement_none": "nenhuma tag para posicionar",
+      "placement_window": "tem hashtag na parte visível, gastando espaço do feed com um rótulo",
+      "placement_below": "as tags estão abaixo da dobra",
+      "links_found": "{count} link(s) na legenda, e legenda não é clicável. Leve para a bio ou para o direct",
+      "links_none": "nenhum link morto no corpo",
+      "ask_one": "uma chamada para ação: {ask}",
+      "ask_none": "nenhuma chamada para ação. Decida para que serve este post",
+      "ask_many": "{count} pedidos ({asks}). Dois pedidos é o mesmo que nenhum",
+      "emoji_plain": "{count} emoji, {density:.1f} a cada 100 caracteres",
+      "emoji_decoration": "{count} emoji, {density:.1f} a cada 100 caracteres - parece enfeite",
+      "terms_present": "{found}/{total} presentes",
+      "terms_in_window": ", {count} na parte visível",
+      "terms_missing": ". Faltando: {missing}",
+      "head": "REVISÃO DA LEGENDA  ·  {chars} / {limit} caracteres  ·  {tags} hashtags  ·  {asks} pedido(s)",
+      "verdict_line": "  VEREDITO  {verdict}\n"
+    }
+  },
+  "auto": {
+    "note": "Palavras funcionais que o --lang auto conta para adivinhar o idioma. Mesma lista em todo arquivo pt-BR.",
+    "stopwords": [
+      "o",
+      "de",
+      "que",
+      "e",
+      "é",
+      "não",
+      "um",
+      "uma",
+      "para",
+      "com",
+      "da",
+      "em",
+      "você",
+      "mas",
+      "isso",
+      "os",
+      "se",
+      "na",
+      "por",
+      "pra"
+    ]
+  }
+}

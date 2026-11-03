@@ -124,9 +124,12 @@ def folder_of(tool):
 
 
 def lone(d, *folders):
+    """A lone copy with en only: the net plants the other language files it
+    tests, so a shipped pt-BR never stands in for one (or for its absence).
+    The shipped pt-BR files are checked in tests/test_pt_br.py."""
     for f in folders:
         shutil.copytree(os.path.join(SKILLS, f), os.path.join(d, f),
-                        ignore=shutil.ignore_patterns("__pycache__"))
+                        ignore=shutil.ignore_patterns("__pycache__", "*pt-BR.json"))
 
 
 def plant_messages(d, folder):

@@ -161,8 +161,8 @@ def clamp(n):
 
 
 def words(text):
-    # "$18,000" is one word when it is spoken, so it is one word here too.
-    return WORD_RE.findall(re.sub(r"(?<=\d),(?=\d)", "", text))
+    # "$18,000" (and pt-BR "18.000", "3,5") is one word when spoken, so one word here.
+    return WORD_RE.findall(re.sub(r"(?<=\d)[,.](?=\d)", "", text))
 
 
 def check_length(text, L=None):
