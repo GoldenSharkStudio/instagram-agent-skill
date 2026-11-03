@@ -299,6 +299,9 @@ def restore_capitals(original, text):
 
 
 def humanize(text, lex):
+    # Decomposed accents (NFD, macOS paste) split words in `re`: compose them.
+    # Canonically equivalent, so the reader sees the same text.
+    text = unicodedata.normalize("NFC", text)
     raw_for_case = text
     text, urls = protect_urls(text)
     text, inv = pass_invisible(text, lex)
@@ -348,6 +351,14 @@ def render_report(report, out=sys.stderr):
     print("", file=out)
 
 
+def read_text(path):
+    """The input file, or stdin for "-". The file is closed before returning."""
+    if path == "-":
+        return sys.stdin.read()
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
 def main():
     ap = argparse.ArgumentParser(description="Strip the machine fingerprint out of a draft.")
     ap.add_argument("input", nargs="?", default="-", help="file, or - for stdin")
@@ -357,7 +368,7 @@ def main():
     ap.add_argument("--lexicon", default=LEX, help="path to slop.<lang>.json")
     args = ap.parse_args()
 
-    raw = sys.stdin.read() if args.input == "-" else open(args.input, encoding="utf-8").read()
+    raw = read_text(args.input)
     try:
         lex = load_lexicon(args.lexicon)
     except LexiconError as err:

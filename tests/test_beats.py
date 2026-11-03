@@ -38,7 +38,7 @@ class GoldenReadme(unittest.TestCase):
 
     def test_render_header(self):
         out = run_tool("beats", fixture("script.txt"), "--target", "30").stdout
-        self.assertIn("BEAT SHEET  ·  73 words  ·  ~26.6s at 165 wpm  ·  target 30.0s", out)
+        self.assertIn("BEAT SHEET  ·  73 words  ·  ~26.6s at 165 wpm  ·  target 30s", out)
 
 
 class Flags(unittest.TestCase):
@@ -100,6 +100,52 @@ class Contract(unittest.TestCase):
         a = run_tool("beats", fixture("script.txt")).stdout
         b = run_tool("beats", "-", stdin=read_fixture("script.txt")).stdout
         self.assertEqual(a, b)
+
+
+class HumanText(unittest.TestCase):
+    """Numbers the user typed come back the way they typed them, and every
+    label, however long, keeps a space before the line it names."""
+
+    def test_whole_numbers_print_whole(self):
+        out = run_tool("beats", fixture("script.txt"), "--wpm", "150", "--target", "30").stdout
+        self.assertIn("at 150 wpm  ·  target 30s", out)
+        self.assertNotIn(".0 wpm", out)
+        self.assertNotIn("30.0s", out)
+
+    def test_fractions_survive(self):
+        out = run_tool("beats", fixture("script.txt"), "--wpm", "172.5", "--target", "27.5").stdout
+        self.assertIn("at 172.5 wpm  ·  target 27.5s", out)
+
+    def test_on_target_note(self):
+        a = bt.analyse(read_fixture("script.txt"), wpm=165, target=27.0)
+        self.assertIn("against 27s)", " ".join(a["notes"]))
+
+    def test_json_keeps_the_number(self):
+        # --json is a contract: the number, not its printed form.
+        _, a = run_json("beats", fixture("script.txt"), "--wpm", "150", "--target", "30")
+        self.assertEqual((a["wpm"], a["target"]), (150, 30))
+
+    def test_every_label_is_followed_by_a_space(self):
+        labels = set()
+        for script in ("Just one line with 10 people.\n",
+                       "Two short lines.\nAnd a second one.\n",
+                       read_fixture("script.txt")):
+            a = bt.analyse(script)
+            out = run_tool("beats", "-", stdin=script).stdout
+            for r in a["beats"]:
+                labels.add(r["label"])
+                if r["label"]:
+                    self.assertNotIn(r["label"] + r["text"], out)
+                    self.assertIn(r["label"] + " ", out)
+        # The net saw every label the tool can print, the widest included.
+        self.assertTrue({"HOOK/CTA", "HOOK", "CTA", "MID"} <= labels, labels)
+
+    def test_flags_line_up_under_the_text(self):
+        script = "Just one line that runs far too long for a hook with 10 people in it.\n"
+        out = run_tool("beats", "-", stdin=script).stdout.splitlines()
+        row = next(l for l in out if "Just one line" in l)
+        flag = next(l for l in out if "^ " in l)
+        self.assertEqual(flag.index("^"), row.index("Just"))
 
 
 if __name__ == "__main__":

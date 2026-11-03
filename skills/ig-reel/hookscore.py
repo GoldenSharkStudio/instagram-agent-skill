@@ -36,6 +36,7 @@ import os
 import re
 import statistics
 import sys
+import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 LANG_DIR = os.path.join(HERE, "lang")
@@ -234,7 +235,8 @@ PASS_SCORE = 70
 
 
 def run(text):
-    text = text.translate(APOSTROPHES)
+    # Decomposed accents (NFD, macOS paste) split words in `re`: compose them.
+    text = unicodedata.normalize("NFC", text).translate(APOSTROPHES)
     results = {
         "LENGTH": check_length(text),
         "SPECIFICITY": check_specificity(text),
@@ -289,6 +291,14 @@ def render_table(rows, out=sys.stdout):
           file=out)
 
 
+def read_text(path):
+    """The input file, or stdin for "-". The file is closed before returning."""
+    if path == "-":
+        return sys.stdin.read()
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
 def main():
     ap = argparse.ArgumentParser(description="Score a Reel hook on five properties.")
     ap.add_argument("input", nargs="?", default="-", help="file with one hook per line, or -")
@@ -299,8 +309,10 @@ def main():
     if args.hook:
         lines = [args.hook]
     else:
-        raw = sys.stdin.read() if args.input == "-" else open(args.input, encoding="utf-8").read()
+        raw = read_text(args.input)
         lines = [l.strip() for l in raw.splitlines() if l.strip()]
+    # Composed once here too: the ranking cuts long hooks by character count.
+    lines = [unicodedata.normalize("NFC", l) for l in lines]
     if not lines:
         print("nothing to score", file=sys.stderr)
         sys.exit(2)

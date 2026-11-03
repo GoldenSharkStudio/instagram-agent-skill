@@ -31,6 +31,7 @@ import os
 import re
 import statistics
 import sys
+import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOOKS = os.path.join(HERE, "..", "ig-reel", "hooks.json")
@@ -49,7 +50,8 @@ except Exception:                                 # ig-viral copied on its own
 
 def load_formulas(path):
     try:
-        d = json.load(open(path, encoding="utf-8"))
+        with open(path, encoding="utf-8") as fh:
+            d = json.load(fh)
     except Exception:
         return None
     by_id = {h["id"]: h for h in d["hooks"]}
@@ -61,15 +63,24 @@ def load_formulas(path):
 def classify(hook, formulas):
     if not formulas:
         return None, "unclassified"
-    hook = hook.translate(APOSTROPHES)
+    # Decomposed accents (NFD, macOS paste) split words in `re`: compose them.
+    hook = unicodedata.normalize("NFC", hook).translate(APOSTROPHES)
     for fid, name, pattern in formulas:
         if pattern.search(hook):
             return fid, name
     return None, "unclassified"
 
 
+def read_text(path):
+    """The input file, or stdin for "-". The file is closed before returning."""
+    if path == "-":
+        return sys.stdin.read()
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
 def read_rows(path):
-    raw = sys.stdin.read() if path == "-" else open(path, encoding="utf-8").read()
+    raw = unicodedata.normalize("NFC", read_text(path))
     lines = [l for l in raw.splitlines() if l.strip() and not l.lstrip().startswith("#")]
     if not lines:
         return []
@@ -204,7 +215,8 @@ def main():
         path = os.path.expanduser(args.out)
         if os.path.dirname(path):        # a bare "swipe.md" has no folder to make
             os.makedirs(os.path.dirname(path), exist_ok=True)
-        open(path, "w", encoding="utf-8").write(to_markdown(a))
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(to_markdown(a))
         print(f"wrote {path}", file=sys.stderr)
 
 

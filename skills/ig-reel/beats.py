@@ -26,6 +26,7 @@ import json
 import os
 import re
 import sys
+import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 LANG_DIR = os.path.join(HERE, "lang")
@@ -109,7 +110,14 @@ def split_beats(raw, wps):
     return beats
 
 
+def num(x):
+    """A number as the user typed it: 150, not 150.0; 172.5 stays 172.5."""
+    return f"{x:g}"
+
+
 def analyse(raw, wpm=165, target=None):
+    # Decomposed accents (NFD, macOS paste) split words in `re`: compose them.
+    raw = unicodedata.normalize("NFC", raw)
     wps = wpm / 60.0
     beats = split_beats(raw, wps)
     if not beats:
@@ -186,7 +194,7 @@ def analyse(raw, wpm=165, target=None):
     if target:
         delta = total - target
         if abs(delta) <= target * 0.1:
-            notes.append(f"Length is on target ({total:.1f}s against {target}s).")
+            notes.append(f"Length is on target ({total:.1f}s against {num(target)}s).")
         elif delta > 0:
             notes.append(f"{delta:.1f}s over target. Cut about {int(delta * wps)} words.")
         else:
@@ -204,18 +212,28 @@ def analyse(raw, wpm=165, target=None):
 
 def render(a, out=sys.stdout):
     head = (f"BEAT SHEET  ·  {a['total_words']} words  ·  ~{a['total_seconds']:.1f}s "
-            f"at {a['wpm']} wpm" + (f"  ·  target {a['target']}s" if a["target"] else ""))
+            f"at {num(a['wpm'])} wpm" + (f"  ·  target {num(a['target'])}s" if a["target"] else ""))
     print("\n" + head, file=out)
     print("=" * max(len(head), 72), file=out)
+    # The label column fits the widest label plus a space ("HOOK/CTA" is 8).
+    width = max([8] + [len(r["label"]) + 1 for r in a["beats"]])
     for r in a["beats"]:
-        label = f"{r['label']:<8}" if r["label"] else " " * 8
+        label = f"{r['label']:<{width}}"
         print(f"  {tc(r['start'])}  {r['dur']:4.1f}s  {label}{r['text']}", file=out)
         for f in r["flags"]:
-            print(f"  {'':>6}  {'':>5}  {'':<8}^ {f}", file=out)
+            print(f"  {'':>6}  {'':>5}  {'':<{width}}^ {f}", file=out)
     print("-" * max(len(head), 72), file=out)
     for n in a["notes"]:
         print(f"  - {n}", file=out)
     print("", file=out)
+
+
+def read_text(path):
+    """The input file, or stdin for "-". The file is closed before returning."""
+    if path == "-":
+        return sys.stdin.read()
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
 
 
 def main():
@@ -226,7 +244,7 @@ def main():
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
-    raw = sys.stdin.read() if args.input == "-" else open(args.input, encoding="utf-8").read()
+    raw = read_text(args.input)
     a = analyse(raw, wpm=args.wpm, target=args.target)
     if not a:
         print("empty script", file=sys.stderr)

@@ -27,6 +27,7 @@ import os
 import re
 import sys
 import textwrap
+import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 LANG_DIR = os.path.join(HERE, "lang")
@@ -113,7 +114,9 @@ def render_box(window, truncated, out=sys.stdout, width=52):
 
 
 def analyse(text, cut=TRUNCATE, keywords=None):
-    text = text.rstrip()
+    # Decomposed accents (NFD, macOS paste) split words in `re` and count twice
+    # as characters: compose them, the way a reader sees the caption.
+    text = unicodedata.normalize("NFC", text).rstrip()
     stripped = text.strip()
     chars = len(stripped)
     lines = [l for l in stripped.split("\n")]
@@ -127,7 +130,7 @@ def analyse(text, cut=TRUNCATE, keywords=None):
     match = stripped.translate(APOSTROPHES)
     asks = [name for pattern, name in ASKS if pattern.search(match)]
     filler = [t for t in tags if t.lower() in FILLER_TAGS]
-    keywords = [k.strip() for k in (keywords or []) if k.strip()]
+    keywords = [unicodedata.normalize("NFC", k.strip()) for k in (keywords or []) if k.strip()]
 
     checks = []
 
@@ -231,6 +234,14 @@ def render(a, out=sys.stdout):
     print(f"  VERDICT  {a['verdict']}\n", file=out)
 
 
+def read_text(path):
+    """The input file, or stdin for "-". The file is closed before returning."""
+    if path == "-":
+        return sys.stdin.read()
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
 def main():
     ap = argparse.ArgumentParser(description="Lint an Instagram caption.")
     ap.add_argument("input", nargs="?", default="-", help="caption file, or - for stdin")
@@ -240,7 +251,7 @@ def main():
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
-    raw = sys.stdin.read() if args.input == "-" else open(args.input, encoding="utf-8").read()
+    raw = read_text(args.input)
     a = analyse(raw, cut=args.truncate, keywords=args.keywords.split(","))
     if args.json:
         print(json.dumps(a, indent=2, ensure_ascii=False))

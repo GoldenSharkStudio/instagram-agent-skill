@@ -191,8 +191,9 @@ def count_hanging(text, lex):
 def count_tells(text, lex):
     """Structural tells: the shapes humanize.py flags for a person to rewrite,
     plus the deletions it holds back ("hanging"). Returns (count, ids).
-    Callable on its own (main() uses it), so it straightens apostrophes itself."""
-    text = text.translate(APOSTROPHES)
+    Callable on its own (main() uses it), so it composes accents and
+    straightens apostrophes itself."""
+    text = unicodedata.normalize("NFC", text).translate(APOSTROPHES)
     tells, names = 0, []
     for s in lex["structures"]:
         try:
@@ -244,6 +245,8 @@ def scores_pass(results, overall):
 
 
 def run(text, lex):
+    # Decomposed accents (NFD, macOS paste) split words in `re`: compose them.
+    text = unicodedata.normalize("NFC", text)
     # FINGERPRINT reads the raw text: curly quotes are one of its tells.
     # Every other check matches words, so it reads the straightened copy.
     match = text.translate(APOSTROPHES)
@@ -289,6 +292,14 @@ def render(results, overall, verdict, label=None, out=sys.stdout, tells=0):
     print("", file=out)
 
 
+def read_text(path):
+    """The input file, or stdin for "-". The file is closed before returning."""
+    if path == "-":
+        return sys.stdin.read()
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
 def main():
     ap = argparse.ArgumentParser(description="Score how machine-written a draft looks.")
     ap.add_argument("input", nargs="?", default="-", help="file, or - for stdin")
@@ -302,11 +313,10 @@ def main():
     except LexiconError as err:
         print(f"detect.py: cannot load the lexicon, {err}", file=sys.stderr)
         sys.exit(2)
-    read = lambda p: sys.stdin.read() if p == "-" else open(p, encoding="utf-8").read()
 
-    targets = [(args.input, read(args.input))]
+    targets = [(args.input, read_text(args.input))]
     if args.compare:
-        targets.append((args.compare, read(args.compare)))
+        targets.append((args.compare, read_text(args.compare)))
 
     payload = []
     for name, text in targets:

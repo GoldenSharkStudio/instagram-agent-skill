@@ -106,7 +106,7 @@ runs past three seconds, a beat long enough for the viewer to leave, a run of
 lines with nothing concrete in them, and no loop back to the first line.
 
 ```
-BEAT SHEET  ·  73 words  ·  ~26.6s at 165 wpm  ·  target 30.0s
+BEAT SHEET  ·  73 words  ·  ~26.6s at 165 wpm  ·  target 30s
 ========================================================================
   0:00.0   2.9s  HOOK    I lost $18,000 because of one missing contract.
   0:02.9  14.6s  MID     Here is the exact clause I now put in every single...
