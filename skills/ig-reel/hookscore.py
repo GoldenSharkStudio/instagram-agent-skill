@@ -220,11 +220,11 @@ def check_frontload(text, L):
     if not w:
         return 0.0, say(M, "frontload_empty")
     low = [x.lower().strip("'’") for x in w]
-    opener = " ".join(low[:2])
     penalty = 0
     hit_opener = None
     for weak in L["WEAK_OPENERS"]:
-        if opener.startswith(weak) or low[0] == weak:
+        # Whole words: "yo" is not the start of "You", "oi" not of "oito".
+        if low[:len(weak.split())] == weak.split():
             penalty, hit_opener = 30, weak
             break
     payload = None

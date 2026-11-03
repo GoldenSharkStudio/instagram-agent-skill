@@ -95,6 +95,26 @@ class Checks(unittest.TestCase):
         self.assertGreater(strong, weak)
         self.assertIn("weak opener", detail)
 
+    def test_weak_openers_match_whole_words(self):
+        # Every entry of every shipped language file: as the first words it is
+        # the weak opener; glued to more letters it is another word ("yo" is
+        # not "You", "oi" is not "oito") and must not be named.
+        import glob
+        import os
+        files = glob.glob(os.path.join(os.path.dirname(hs.__file__), "lang", "*.json"))
+        self.assertTrue(files)
+        for path in files:
+            code = os.path.basename(path)[:-len(".json")]
+            L = hs.load_lang(code)
+            for weak in L["WEAK_OPENERS"]:
+                with self.subTest(lang=code, opener=weak):
+                    n = len(weak.split())
+                    self.assertTrue(1 <= n <= 2, "only the first two words are read")
+                    _, hit = hs.check_frontload(f"{weak} 18 contratos contracts", L)
+                    self.assertIn(f'weak opener "{weak}"', hit, "dead entry")
+                    _, glued = hs.check_frontload(f"{weak}zzq 18 contratos contracts", L)
+                    self.assertNotIn(f'weak opener "{weak}"', glued)
+
     def test_address_ladder(self):
         self.assertEqual(hs.check_address("you are doing it wrong", hs.load_lang())[0], 100.0)
         self.assertEqual(hs.check_address("Steal this contract clause", hs.load_lang())[0], 90.0)
