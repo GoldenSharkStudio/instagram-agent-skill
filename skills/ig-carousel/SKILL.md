@@ -100,4 +100,26 @@ CAROUSEL  ·  8 slides
 Caption: Job B, hook in line 1, one ask, 3 tags.
 ```
 
-Nothing is uploaded. The user posts it.
+Nothing is uploaded. The user posts it. When they approve the copy, append one
+line to `~/.claude/instagram/log.md` (create it if it is missing), type
+`carousel`, with the cover line as `first line`, so `/ig-audit` and `/ig-plan`
+see it:
+
+<!-- shared:log-schema -->
+One line per item, oldest at the top, newest at the bottom:
+
+```text
+- YYYY-MM-DD | type | formula | first line | account
+```
+
+- `type`: `reel`, `carousel`, `story` or `comment`.
+- `formula`: the hook formula as `#n` from `ig-reel/hooks.json`, or `-` when
+  none was used.
+- `first line`: the hook or opening line as the user approved it, with any `|`
+  written as `/`.
+- `account`: the handle it went out on; for a comment, the account commented
+  on.
+
+Read a line by splitting on ` | `. Lines that do not have this shape are older
+notes: keep them, do not rewrite them.
+<!-- /shared:log-schema -->

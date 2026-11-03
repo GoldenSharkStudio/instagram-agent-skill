@@ -94,4 +94,26 @@ STORIES  ·  Tuesday  ·  5 frames
 After: everyone who votes Yes gets a reply. That is the whole funnel.
 ```
 
-Nothing is posted. The user posts it.
+Nothing is posted. The user posts it. When they approve the sequence, append
+one line to `~/.claude/instagram/log.md` (create it if it is missing), type
+`story`, with frame 1's line as `first line` and `-` as `formula`, so
+`/ig-plan` does not repeat the day's theme:
+
+<!-- shared:log-schema -->
+One line per item, oldest at the top, newest at the bottom:
+
+```text
+- YYYY-MM-DD | type | formula | first line | account
+```
+
+- `type`: `reel`, `carousel`, `story` or `comment`.
+- `formula`: the hook formula as `#n` from `ig-reel/hooks.json`, or `-` when
+  none was used.
+- `first line`: the hook or opening line as the user approved it, with any `|`
+  written as `/`.
+- `account`: the handle it went out on; for a comment, the account commented
+  on.
+
+Read a line by splitting on ` | `. Lines that do not have this shape are older
+notes: keep them, do not rewrite them.
+<!-- /shared:log-schema -->

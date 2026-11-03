@@ -95,7 +95,17 @@ class LogSchema(unittest.TestCase):
 
     def test_class_is_read_from_the_files(self):
         names = [os.path.basename(os.path.dirname(p)) for p in skills_using_log()]
-        self.assertEqual(names, ["ig-audit", "ig-comment", "ig-plan", "ig-reel"])
+        self.assertEqual(names, ["ig-audit", "ig-carousel", "ig-comment", "ig-plan", "ig-reel", "ig-story"])
+
+    def test_every_type_has_a_writer(self):
+        """Each `type` the schema offers is written by the skill of that name
+        (`comment` by ig-comment): no type with nobody writing it."""
+        types = re.findall(r"`(\w+)`", re.search(r"^- `type`: (.*)$", self.template_block(), re.M).group(1))
+        self.assertEqual(sorted(types), ["carousel", "comment", "reel", "story"])
+        for t in types:
+            with self.subTest(type=t):
+                text = read("skills", "ig-" + t, "SKILL.md")
+                self.assertRegex(text, r"append\s+one\s+line[\s\S]{0,160}?type\s+`%s`" % t)
 
     def test_every_skill_carries_the_same_schema(self):
         want = self.template_block()
