@@ -50,6 +50,8 @@ EXEMPT_FUNCS = {
     "pick_lang": "the --lang auto diagnostic is about the choice itself, before a language is loaded",
     "pick_swipe_lang": "same diagnostic, swipe's copy",
     "read_text": "the input fails to read before any language is chosen (--lang auto needs the text)",
+    "match_for": "hooks.json schema validation; the reason sits inside the translated "
+                 "cannot_load_hooks sentence, like json's own parse errors",
 }
 # Code tokens that are neither phrases nor emitted contract, each with its reason.
 CODE_TOKENS = {
@@ -354,6 +356,22 @@ def _marked(path, marks):
     return data
 
 
+def _pt_like_en(obj):
+    """Give every per-language value ({"en": ..., "pt-BR": ...}) its en value
+    under pt-BR, in place. True if anything changed."""
+    changed = False
+    if isinstance(obj, dict):
+        if "en" in obj and set(obj) <= {"en", "pt-BR"} and obj.get("pt-BR") != obj["en"]:
+            obj["pt-BR"] = obj["en"]
+            changed = True
+        for v in obj.values():
+            changed |= _pt_like_en(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            changed |= _pt_like_en(v)
+    return changed
+
+
 def plant(d, tool):
     """Lone copy (swipe takes ig-reel along) with pt-BR = en for every
     language file, every pt-BR message wrapped in ⟪ ⟫. Returns the script
@@ -369,6 +387,11 @@ def plant(d, tool):
                 glob.glob(os.path.join(d, f, "lang", "en.json")):
             ens.append(en)
             write_json(en.replace("en.json", "pt-BR.json"), _marked(en, PT_MARK))
+        for path in glob.glob(os.path.join(d, f, "*.json")):
+            with open(path, encoding="utf-8") as fh:
+                data = json.load(fh)
+            if _pt_like_en(data):          # hooks.json `match`: pt-BR = en there too
+                write_json(path, data)
 
     def mark_en():
         for en in ens:

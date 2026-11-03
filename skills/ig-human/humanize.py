@@ -35,7 +35,10 @@ import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-URL_RE = re.compile(r"https?://\S+|www\.\S+|\S+@\S+\.\S+")
+# Bare domain as in caption LINK_RE ("loja.com.br/x"): no pass rewrites inside it.
+URL_RE = re.compile(r"https?://\S+|www\.\S+|\S+@\S+\.\S+"
+                    r"|\b[a-z0-9-]+\.(?:com|co|io|net|org|ai|app)(?:\.[a-z]{2})?/\S*",
+                    re.IGNORECASE)
 SENT_RE = re.compile(r"[^.!?\n]+[.!?]*")
 
 

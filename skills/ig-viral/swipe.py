@@ -95,16 +95,40 @@ class HooksError(Exception):
     pass
 
 
-def load_formulas(path):
-    """hooks.json as (id, name, compiled match), in classify order. A file that
-    cannot be read, or whose schema is broken, raises HooksError naming why."""
+def match_for(match, lang):
+    """The regex of `lang` in a formula's `match`, or "" for none. `match` is
+    {"<lang>": regex}; a plain string is a hooks.json from before the split and
+    is English only. Another language's regex is never borrowed: fail closed."""
+    if isinstance(match, str):
+        match = {"en": match}
+    if not isinstance(match, dict):
+        raise TypeError(f"match must be an object of language -> regex, got {match!r}")
+    for code, rx in match.items():
+        if code not in LANGS or code == "auto":
+            raise ValueError(f"unknown language {code!r} in match")
+        if not isinstance(rx, str):
+            raise TypeError(f"match[{code!r}] must be a string, got {rx!r}")
+        if rx:
+            re.compile(rx, re.IGNORECASE)            # every slot must compile, used or not
+    return match.get(lang, "")
+
+
+def load_formulas(path, lang="en"):
+    """hooks.json as (id, name, compiled match of `lang`), in classify order.
+    A formula with no regex in `lang` is left out, so it never matches. A file
+    that cannot be read, or whose schema is broken, raises HooksError naming why."""
     try:
         with open(path, encoding="utf-8") as fh:
             d = json.load(fh)
         by_id = {h["id"]: h for h in d["hooks"]}
         order = d.get("classify_order") or sorted(by_id)
-        return [(by_id[i]["id"], by_id[i]["name"],
-                 re.compile(by_id[i]["match"], re.IGNORECASE)) for i in order if i in by_id]
+        out = []
+        for i in order:
+            if i in by_id:
+                rx = match_for(by_id[i]["match"], lang)
+                if rx:
+                    out.append((by_id[i]["id"], by_id[i]["name"], re.compile(rx, re.IGNORECASE)))
+        return out
     except (OSError, ValueError, KeyError, TypeError, AttributeError, re.error) as err:
         raise HooksError(f"{type(err).__name__}: {getattr(err, 'strerror', None) or err}") from None
 
@@ -277,15 +301,17 @@ def main():
         print(say(M, "no_rows"), file=sys.stderr)
         sys.exit(2)
     try:
-        formulas = load_formulas(args.hooks or HOOKS)
+        formulas = load_formulas(args.hooks or HOOKS, lang)
     except HooksError as err:
         if args.hooks:                   # asked for by name: a bad path is exit 2, not a result
             print(say(M, "cannot_load_hooks", path=args.hooks, reason=err), file=sys.stderr)
             sys.exit(2)
         formulas = None                  # the default copy: ig-viral alone degrades
     a = analyse(rows, formulas, lang)
-    if not formulas:
+    if formulas is None:
         print(say(M, "note_no_formulas"), file=sys.stderr)
+    elif not formulas:                   # loaded, but nothing written for this language
+        print(say(M, "note_no_formulas_lang", lang=lang), file=sys.stderr)
     if score_hook is None:
         print(say(M, "note_no_hookscore"), file=sys.stderr)
     elif hook_lang_error(lang):

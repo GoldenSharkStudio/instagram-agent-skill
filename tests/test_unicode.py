@@ -91,6 +91,12 @@ EXEMPT = {
     ("skills/ig-caption/caption.py", "[a-z0-9-]"):
         "LINK_RE bare domain: a DNS label as typed in a caption; IDN domains "
         "show up as punycode (xn--, ASCII) or with a scheme, which \\S+ already takes",
+    ("skills/ig-caption/caption.py", "[a-z]"):
+        "LINK_RE country code after .com (\"loja.com.br/x\"): an ISO 3166 code, ASCII by DNS rule",
+    ("skills/ig-human/humanize.py", "[a-z0-9-]"):
+        "URL_RE bare domain, the same DNS label as caption LINK_RE (tests/test_links.py keeps them in step)",
+    ("skills/ig-human/humanize.py", "[a-z]"):
+        "URL_RE country code, same as caption LINK_RE",
 }
 
 
@@ -183,13 +189,13 @@ class AccentedWitnesses(unittest.TestCase):
         # hand-written id, so the witness follows the data.
         with open(os.path.join(SKILLS, "ig-reel", "hooks.json"), encoding="utf-8") as fh:
             hooks = json.load(fh)["hooks"]
-        callout = [f for f in hooks if r"][\w ]{2,28}" in f["match"]]
-        verdict = [f for f in hooks if r"][\w' ]{2,34}" in f["match"]]
+        callout = [f for f in hooks if r"][\w ]{2,28}" in f["match"]["en"]]
+        verdict = [f for f in hooks if r"][\w' ]{2,34}" in f["match"]["en"]]
         self.assertEqual((len(callout), len(verdict)), (1, 1))
         for f, text in ((callout[0], "Ótimos designers: stop doing this"),
                         (verdict[0], "Ágile coaching is overrated")):
             with self.subTest(formula=f["id"]):
-                self.assertTrue(re.compile(f["match"], re.IGNORECASE).search(text))
+                self.assertTrue(re.compile(f["match"]["en"], re.IGNORECASE).search(text))
 
 
 if __name__ == "__main__":

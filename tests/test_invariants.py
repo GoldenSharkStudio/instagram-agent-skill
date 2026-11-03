@@ -109,9 +109,11 @@ class HooksJson(unittest.TestCase):
                     self.assertTrue(str(h.get(f, "")).strip())
 
     def test_every_match_compiles(self):
+        # Per language since 4a.2; tests/test_hooks_lang.py owns the schema.
         for h in HOOKS["hooks"]:
-            with self.subTest(id=h["id"]):
-                re.compile(h["match"], re.IGNORECASE)
+            for code, rx in h["match"].items():
+                with self.subTest(id=h["id"], lang=code):
+                    re.compile(rx, re.IGNORECASE)
 
     def test_examples_never_misfire_into_another_formula(self):
         sw = load("swipe")
@@ -277,14 +279,20 @@ REGEX_KEYS = {"regex", "match", "contractions", "pronouns", "address_me",
 REGEX_HINTS = ("\\b", "(?", "\\s", "\\d", "[^")
 
 
+# A value written once per language ({"en": ..., "pt-BR": ...}, as hooks.json
+# `match`) is still the value of its own key: the language is not the key.
+LANG_CODES = {c for c in load("swipe").LANGS if c != "auto"}
+
+
 def data_strings():
     """(file, key, value) for every string in every JSON under skills/."""
     out = []
 
     def walk(obj, key, path):
         if isinstance(obj, dict):
+            per_lang = bool(obj) and set(obj) <= LANG_CODES
             for k, v in obj.items():
-                walk(v, k, path)
+                walk(v, key if per_lang else k, path)
         elif isinstance(obj, list):
             for v in obj:
                 walk(v, key, path)

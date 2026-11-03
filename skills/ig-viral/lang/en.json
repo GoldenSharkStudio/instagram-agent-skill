@@ -5,6 +5,7 @@
     "messages": {
       "no_rows": "no usable rows. Need a tab-separated file with at least views and hook.",
       "note_no_formulas": "note: hooks.json not found, formulas not named. Pass --hooks.",
+      "note_no_formulas_lang": "note: hooks.json has no `match` for {lang} yet, formulas not named. Read the hooks by hand.",
       "note_no_hookscore": "note: hookscore.py not importable, hook scores skipped.",
       "note_hookscore_lang": "note: hookscore.py not importable for {lang} ({reason}), hook scores skipped.",
       "wrote": "wrote {path}",

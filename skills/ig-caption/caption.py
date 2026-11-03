@@ -48,7 +48,10 @@ HASHTAG_LIMIT = 5        # Instagram's cap per post or reel since 18 Dec 2025,
 APOSTROPHES = str.maketrans("‘’", "''")
 HASHTAG_RE = re.compile(r"(?:^|\s)(#\w+)")
 MENTION_RE = re.compile(r"(?:^|\s)(@[A-Za-z0-9_.]+)")
-LINK_RE = re.compile(r"https?://\S+|\bwww\.\S+|\b[a-z0-9-]+\.(?:com|co|io|net|org|ai|app)/\S*",
+# A bare domain needs a path to count ("Vendas.com" is a word), and may end in
+# a country code ("loja.com.br/x"). Same bare-domain part in humanize URL_RE;
+# tests/test_links.py runs every link regex on the same links.
+LINK_RE = re.compile(r"https?://\S+|\bwww\.\S+|\b[a-z0-9-]+\.(?:com|co|io|net|org|ai|app)(?:\.[a-z]{2})?/\S*",
                      re.IGNORECASE)
 # One emoji as a reader counts it: a flag pair, a keycap, or a pictograph with
 # its skin tone, variation selector and ZWJ-joined parts. Text-style symbols

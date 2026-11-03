@@ -345,6 +345,7 @@ doing when you read it, Instagram is right.
 ```
 skills/ig-reel/hooks.json          26 hook formulas: template, example, on-screen line,
                                    what it is for, how it gets ruined, and a match regex
+                                   per language (an empty one never matches)
 skills/ig-reel/lang/en.json        the words hookscore and beats know (stakes, openers, numbers)
                                    and every sentence they print
 skills/ig-reel/hookscore.py        the five-property hook panel
