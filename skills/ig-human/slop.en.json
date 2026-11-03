@@ -1043,5 +1043,27 @@
     "yet",
     "nor",
     "then"
+  ],
+  "dependents": [
+    "if",
+    "when",
+    "whenever",
+    "what",
+    "how",
+    "who",
+    "why",
+    "whether",
+    "because",
+    "before",
+    "after",
+    "until",
+    "unless",
+    "while",
+    "where",
+    "which",
+    "to"
+  ],
+  "complementizers": [
+    "that"
   ]
 }

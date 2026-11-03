@@ -240,6 +240,15 @@ class MissingDataFailsClosed(unittest.TestCase):
             with self.subTest(tool=tool):
                 self.check(tool, lambda p, c=change: edit_json(p, c))
 
+    def test_missing_hanging_clause_keys(self):
+        # The keys the hanging-deletion rule reads (03/11): without them the
+        # rule cannot run, and silently deleting again would be failing open.
+        drop = (("humanize", "dependents"), ("humanize", "complementizers"),
+                ("detect", "dependents"))
+        for tool, key in drop:
+            with self.subTest(tool=tool, key=key):
+                self.check(tool, lambda p, k=key: edit_json(p, lambda j: j.pop(k)))
+
     def test_bad_regex(self):
         def bad(j):
             j["hookscore"]["dealbreakers"][0]["regex"] = "(unclosed"

@@ -52,7 +52,7 @@ def load_lexicon(path=LEX):
     try:
         with open(path, encoding="utf-8") as fh:
             lex = json.load(fh)
-        for key in ("words", "phrases", "structures"):
+        for key in ("words", "phrases", "structures", "dependents"):
             if not isinstance(lex[key], list):
                 raise TypeError(f"{key} must be a list")
         for key in ("contractions", "pronouns"):
@@ -154,10 +154,44 @@ def check_fingerprint(text):
     return score, detail
 
 
+def hangs(find, text, end, lex):
+    """Would deleting `find`, matched in `text` up to `end`, strand a clause?
+    Yes when the entry ends on a dependent ("double tap if") and words follow,
+    or when a dependent follows it in the same clause ("follow for more if you
+    love design"). Deleting either leaves "If you love design.", a fragment.
+    A stop (. ! ? :) or a line break in between ends the clause and nothing
+    hangs; a comma or a dash does not ("Follow for more, if you love design").
+    Any space but a newline counts as one, so a raw draft (hard spaces, em
+    dashes) reads the same as the cleaned one. Same function in humanize.py
+    and detect.py."""
+    if not re.match(r"\w", find[-1]):
+        return False
+    if find.split()[-1].lower() in lex["dependents"]:
+        return bool(re.match(r"[^\S\n]+\w", text[end:]))
+    deps = "|".join(re.escape(d) for d in lex["dependents"])
+    sep = r"(?:[^\S\n]*[,\u2014\u2013][^\S\n]*|[^\S\n]+)"
+    return bool(re.match(sep + r"(?:" + deps + r")\b", text[end:], re.IGNORECASE))
+
+
+def count_hanging(text, lex):
+    """Deletions humanize.py holds back because the sentence would be left
+    hanging: it keeps them for a person to rewrite, so they count as tells.
+    Same walk as humanize: longest entry first, a match taken out of reach
+    (a NUL run, which no dependent matches) once seen."""
+    n = 0
+    entries = sorted((e for e in lex["phrases"] + lex["words"] if not e["replace"]),
+                     key=lambda e: len(e["find"]), reverse=True)
+    for entry in entries:
+        pattern = term_re(entry["find"])
+        n += sum(1 for m in pattern.finditer(text) if hangs(entry["find"], text, m.end(), lex))
+        text = pattern.sub(lambda m: "\x00" * len(m.group(0)), text)
+    return n
+
+
 def count_tells(text, lex):
-    """Structural tells: the shapes humanize.py flags for a person to rewrite.
-    Returns (count, ids). Callable on its own (main() uses it), so it
-    straightens apostrophes itself."""
+    """Structural tells: the shapes humanize.py flags for a person to rewrite,
+    plus the deletions it holds back ("hanging"). Returns (count, ids).
+    Callable on its own (main() uses it), so it straightens apostrophes itself."""
     text = text.translate(APOSTROPHES)
     tells, names = 0, []
     for s in lex["structures"]:
@@ -168,6 +202,10 @@ def count_tells(text, lex):
         if n:
             tells += n
             names.append(s["id"])
+    hanging = count_hanging(text, lex)
+    if hanging:
+        tells += hanging
+        names.append("hanging")
     return tells, names
 
 

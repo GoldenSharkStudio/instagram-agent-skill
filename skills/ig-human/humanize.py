@@ -47,12 +47,15 @@ class LexiconError(Exception):
 def load_lexicon(path=LEX):
     """slop.<lang>.json. `connectives` are the words that, after an em dash
     turned into a comma, leave a splice worth promoting to a full stop.
-    `conjunctions` are the words that go with a deleted phrase they joined."""
+    `conjunctions` are the words that go with a deleted phrase they joined.
+    `dependents` open a clause that hangs on the phrase before it, so that
+    phrase is kept and flagged instead of deleted; `complementizers` ("that")
+    go with a deleted opener and leave the clause after them standing."""
     try:
         with open(path, encoding="utf-8") as fh:
             lex = json.load(fh)
         for key in ("invisible", "typographic", "words", "phrases", "structures",
-                    "connectives", "conjunctions"):
+                    "connectives", "conjunctions", "dependents", "complementizers"):
             if not isinstance(lex[key], list):
                 raise TypeError(f"{key} must be a list")
         return lex
@@ -151,24 +154,68 @@ def term_re(find):
     return re.compile(lead + re.escape(find).replace(r"\ ", r"\s+") + trail, re.IGNORECASE)
 
 
+def hangs(find, text, end, lex):
+    """Would deleting `find`, matched in `text` up to `end`, strand a clause?
+    Yes when the entry ends on a dependent ("double tap if") and words follow,
+    or when a dependent follows it in the same clause ("follow for more if you
+    love design"). Deleting either leaves "If you love design.", a fragment.
+    A stop (. ! ? :) or a line break in between ends the clause and nothing
+    hangs; a comma or a dash does not ("Follow for more, if you love design").
+    Any space but a newline counts as one, so a raw draft (hard spaces, em
+    dashes) reads the same as the cleaned one. Same function in humanize.py
+    and detect.py."""
+    if not re.match(r"\w", find[-1]):
+        return False
+    if find.split()[-1].lower() in lex["dependents"]:
+        return bool(re.match(r"[^\S\n]+\w", text[end:]))
+    deps = "|".join(re.escape(d) for d in lex["dependents"])
+    sep = r"(?:[^\S\n]*[,\u2014\u2013][^\S\n]*|[^\S\n]+)"
+    return bool(re.match(sep + r"(?:" + deps + r")\b", text[end:], re.IGNORECASE))
+
+
 DELETED = "\x00DEL\x00"   # marks where an entry was deleted, until cleanup
+KEPT = "\x00KEEP{}\x00"   # a deletion held back, out of reach of the next entries
 
 
 def pass_lexical(text, lex):
-    """Replace slop words and phrases. Longest first so phrases win."""
-    hits = []
+    """Replace slop words and phrases. Longest first so phrases win.
+    Returns (text, hits, held): `held` are the deletions not made because the
+    sentence would be left hanging; they go to the report for a rewrite."""
+    hits, held, kept = [], [], []
     entries = sorted(lex["phrases"] + lex["words"],
                      key=lambda e: len(e["find"]), reverse=True)
     for entry in entries:
         find = entry["find"]
         pattern = term_re(find)
-        found = pattern.findall(text)
-        if not found:
+        if not pattern.search(text):
             continue
-        hits.append({"find": find, "replace": entry["replace"] or "(deleted)",
-                     "count": len(found), "family": entry["family"]})
-        text = pattern.sub(lambda m: _match_case(m.group(0), entry["replace"])
-                           if entry["replace"] else DELETED, text)
+        if entry["replace"]:
+            hits.append({"find": find, "replace": entry["replace"],
+                         "count": len(pattern.findall(text)), "family": entry["family"]})
+            text = pattern.sub(lambda m: _match_case(m.group(0), entry["replace"]), text)
+            continue
+        counts = {"deleted": 0, "held": 0}
+
+        def delete(m):
+            if hangs(find, m.string, m.end(), lex):
+                counts["held"] += 1
+                kept.append(m.group(0))
+                return KEPT.format(len(kept) - 1)
+            counts["deleted"] += 1
+            return DELETED
+        text = pattern.sub(delete, text)
+        if counts["deleted"]:
+            hits.append({"find": find, "replace": "(deleted)",
+                         "count": counts["deleted"], "family": entry["family"]})
+        if counts["held"]:
+            held.append({"find": find, "count": counts["held"], "family": entry["family"]})
+    for i, original in enumerate(kept):
+        text = text.replace(KEPT.format(i), original)
+    # "that" after a deleted opener is residue; the clause after it is the
+    # content ("I'm thrilled to share that we hit 10k" -> "We hit 10k").
+    comp = "|".join(re.escape(c) for c in lex["complementizers"])
+    text = re.sub(DELETED + r"[ \t]+(?:" + comp + r")\b(?!')[ \t]*",
+                  DELETED, text, flags=re.IGNORECASE)
     # A conjunction that joined a deleted phrase to the sentence goes with it
     # ("today and follow for more." left "today and."). Only one touching a
     # deletion: the writer's own "I think so." is not residue.
@@ -201,7 +248,15 @@ def pass_lexical(text, lex):
     connectives = "|".join(re.escape(c) for c in lex["connectives"])
     text = re.sub(r",\s*(" + connectives + r")\s*,\s*",
                   lambda m: ". " + m.group(1)[0].upper() + m.group(1)[1:] + ", ", text)
-    return text, hits
+    return text, hits, held
+
+
+def hanging_flags(held):
+    """Held deletions, in the shape of a structural flag: a person rewrites them."""
+    return [{"name": f'Deleting "{h["find"]}" would leave the sentence hanging',
+             "count": h["count"],
+             "fix": "Rewrite the sentence without the phrase. Deleting it alone "
+                    "leaves a fragment (\"If you love design.\")."} for h in held]
 
 
 def scan_structures(text, lex):
@@ -248,14 +303,14 @@ def humanize(text, lex):
     text, urls = protect_urls(text)
     text, inv = pass_invisible(text, lex)
     text, typo = pass_typographic(text, lex)
-    text, lexi = pass_lexical(text, lex)
+    text, lexi, held = pass_lexical(text, lex)
     text = restore_capitals(raw_for_case, text)
     text = restore_urls(text, urls)
     return text.strip() + "\n", {
         "invisible": inv,
         "typographic": typo,
         "lexical": lexi,
-        "structures": scan_structures(text, lex),
+        "structures": hanging_flags(held) + scan_structures(text, lex),
     }
 
 

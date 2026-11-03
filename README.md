@@ -179,7 +179,9 @@ python3 detect.py before.txt after.txt       # prove the delta
 
 **What gets flagged instead of fixed:** "It's not just X, it's Y", rule-of-three
 triads, the video preamble, emoji bullet lists, three shouted words in a row,
-hashtag walls, reflex follow bait, uniform sentence length. Changing the shape
+hashtag walls, reflex follow bait, uniform sentence length, and a stock phrase
+with a clause hanging on it (deleting "follow for more" from "Follow for more if
+you love design." would leave "If you love design."). Changing the shape
 of a sentence needs judgement, so those come back for a rewrite rather than
 getting mangled by a regex.
 

@@ -54,7 +54,11 @@ the double punctuation and orphaned periods that leaves behind.
 to, "in today's fast-paced world", plus the Instagram block: "stop scrolling",
 "in today's video", "follow for more", "tag someone who needs this", "the
 algorithm loves", "run don't walk". Each swapped for a plain word or deleted,
-with capitalisation preserved and URLs left untouched.
+with capitalisation preserved and URLs left untouched. A deletion that would
+leave a clause hanging is not made: "Follow for more if you love design."
+would come out as "If you love design.", so the sentence stays as written and
+comes back flagged for a rewrite (a "that" after a deleted opener goes with it:
+"I'm thrilled to share that we hit 10k" becomes "We hit 10k").
 
 ## What does NOT get fixed automatically
 
@@ -69,6 +73,9 @@ a sentence needs judgement:
 - Three or more shouted words in a row
 - Hashtag walls
 - Reflex bait: "follow for more", "tag someone who", "double tap if"
+- A stock phrase with a clause hanging on it ("double tap if you agree",
+  "let me know in the comments what you think"): deleting the phrase would
+  leave a fragment, so it is kept and flagged
 
 That list is your job. Rewrite each flagged line by hand, keeping the meaning,
 then re-run `detect.py`. This is the part that moves the score from REVIEW to
@@ -104,7 +111,7 @@ do not tell a user their text is undetectable.
 ## Order of operations
 
 1. `humanize.py draft.txt -o clean.txt --report`
-2. Read the structural flags. Rewrite those lines yourself.
+2. Read the structural flags, held deletions included. Rewrite those lines yourself.
 3. `detect.py draft.txt clean.txt` to show the before and after.
 4. If the verdict is not PASS, fix what the output names (the structural tells
    still left, or else the weakest check) and go again. Two rounds is normal.

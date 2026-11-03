@@ -118,6 +118,11 @@ class OrphanConjunctionNet(unittest.TestCase):
             b = entries[(i + 1) % len(entries)]
             for c in CONJUNCTIONS:
                 for template, want in self.CASES:
+                    if template.startswith("Line one.\n{a} {c}") and ends_in_dependent(a, LEX):
+                        # Declared exempt: "double tap if and ..." has words
+                        # after the "if", so HangingClauseNet's rule holds the
+                        # phrase back instead of deleting it.
+                        continue
                     text = template.format(a=a, b=b, c=c)
                     got = clean(text)
                     if got != want:
@@ -131,6 +136,140 @@ class OrphanConjunctionNet(unittest.TestCase):
                      "Rock and roll. Follow for more.\n", "Then what? And then?\n"):
             with self.subTest(text=text):
                 self.assertEqual(clean(text), text.replace(" Follow for more.", ""))
+
+
+# Words that open a clause hanging on what came before it: deleting the
+# phrase in front leaves "If you love design." This is the spec the data must
+# meet. "so" is left out on purpose: it is a conjunction too (the net above),
+# and as one it goes with the deletion instead of holding it.
+DEPENDENTS = ("if", "when", "whenever", "what", "how", "who", "why", "whether",
+              "because", "before", "after", "until", "unless", "while", "where",
+              "which", "to")
+
+# The 20 sentences measured on 03/11, before the fix. 13 of them came out as a
+# fragment ("If you love design."); 6 of the other 7 delete cleanly (the 7th,
+# "...before Friday.", has its own test) and must keep
+# doing so.
+HELD = (
+    "Double tap if you agree!",
+    "Great tips. Double tap if this helped you.",
+    "I am humbled to announce that we raised $2M.",
+    "This is your sign to start posting daily.",
+    "You won't believe what happened next.",
+    "In this video I'm going to show you how to grow on Reels.",
+    "Let me know in the comments what you think.",
+    "Drop a comment below if you want the template.",
+    "Follow for more if you love design.",
+    "Save this for later when you need it.",
+    "Tag someone who needs this if they run a shop.",
+    "Watch till the end to see the result.",
+    "Stop scrolling if you sell online.",
+)
+DELETED_CLEANLY = (
+    ("I'm thrilled to share that we hit 10k followers.", "We hit 10k followers.\n"),
+    ("It's no secret that hooks matter.", "Hooks matter.\n"),
+    ("The harsh truth is nobody reads captions.", "Nobody reads captions.\n"),
+    ("Here's the thing: hooks matter.", "Hooks matter.\n"),
+    ("Spoiler alert: it works.", "It works.\n"),
+    ("Who's with me?", "\n"),
+)
+
+
+def ends_in_dependent(find, lex):
+    return find.split()[-1].lower() in lex["dependents"]
+
+
+def cap(s):
+    return s[0].upper() + s[1:]
+
+
+class HangingClauseNet(unittest.TestCase):
+    """Class net (owner's rule, 03/11): a deletion that would strand a clause
+    hanging on the deleted phrase is not made. The sentence stays as written,
+    humanize flags it for rewrite and detect holds the verdict at REVIEW, the
+    same path as a structural tell. Every deletable entry x every dependent,
+    read from slop.en.json, so a new entry joins without being registered."""
+
+    # A comma or a dash does not end the clause ("Follow for more, if you
+    # love design." deleted to "If you love design."), and a hard space is
+    # still a space. Only . ! ? : and a line break do.
+    SEPARATORS = (" ", ", ", " \u2014 ", "\u2014", " \u2013 ", "\u00a0")
+
+    def test_data_covers_every_dependent(self):
+        missing = [d for d in DEPENDENTS if d not in LEX["dependents"]]
+        self.assertEqual(missing, [], "slop.en.json dependents lost an entry")
+        self.assertNotIn("so", LEX["dependents"], "'so' is a conjunction, see above")
+
+    def cases(self):
+        entries = deletable_entries(LEX)
+        self.assertGreater(len(entries), 40)  # the scan reached the data
+        for find in entries:
+            if not re.match(r"\w", find[-1]):
+                continue  # "what are your thoughts?" closes its own sentence
+            if ends_in_dependent(find, LEX):
+                yield find, f"Great tips. {cap(find)} you need it.\n"
+            else:
+                for d in DEPENDENTS:
+                    for sep in self.SEPARATORS:
+                        yield find, f"Great tips. {cap(find)}{sep}{d} you need it.\n"
+
+    def test_humanize_keeps_and_flags_every_hanging_deletion(self):
+        broken = []
+        for find, text in self.cases():
+            out, report = hz.humanize(text, LEX)
+            flagged = any(find in s["name"] for s in report["structures"])
+            if find.lower() not in out.lower() or not flagged:
+                broken.append((text, out, flagged))
+        self.assertEqual(broken[:5], [], f"{len(broken)} deletions strand a clause")
+
+    def test_detect_counts_every_hanging_deletion_as_a_tell(self):
+        broken = [text for find, text in self.cases()
+                  if "hanging" not in dt.count_tells(text, LEX)[1]]
+        self.assertEqual(broken[:5], [], f"{len(broken)} hanging deletions not counted")
+
+    def test_measured_sentences_are_held(self):
+        for text in HELD:
+            with self.subTest(text=text):
+                out, report = hz.humanize(text, LEX)
+                self.assertEqual(out, text + "\n")
+                self.assertTrue(report["structures"], "kept but not flagged")
+                self.assertIn("hanging", dt.count_tells(text, LEX)[1])
+
+    def test_measured_sentences_that_delete_cleanly_still_do(self):
+        for text, want in DELETED_CLEANLY:
+            with self.subTest(text=text):
+                self.assertEqual(clean(text), want)
+                self.assertNotIn("hanging", dt.count_tells(text, LEX)[1])
+
+    def test_share_this_before_friday_is_held(self):
+        # "before" opens a clause too: "Before Friday." was a fragment.
+        text = "Share this with someone who needs it before Friday."
+        self.assertEqual(clean(text), text + "\n")
+
+    def test_dependent_after_punctuation_is_the_writers_own(self):
+        # A full stop, a comma or a line break ends the clause: what follows
+        # does not hang on the deletion and the phrase still goes.
+        for text, want in (
+                ("Follow for more. If you want the template, DM me.\n",
+                 "If you want the template, DM me.\n"),
+                ("Follow for more!\nWhen you post, post daily.\n",
+                 "When you post, post daily.\n"),
+                ("Great post. Double tap if\n", "Great post.\n"),
+                ("Great post, double tap if!\n", "Great post!\n")):
+            with self.subTest(text=text):
+                self.assertEqual(clean(text), want)
+                self.assertNotIn("hanging", dt.count_tells(text, LEX)[1])
+
+    def test_complementizer_goes_with_the_deletion(self):
+        # "that" after a deleted opener is residue; the clause after it is
+        # the content. Only the conjunction "that", not "that's".
+        self.assertEqual(clean("Spoiler alert that we hit 10k.\n"), "We hit 10k.\n")
+        self.assertEqual(clean("Follow for more that's it.\n"), "That's it.\n")
+
+    def test_held_text_is_idempotent(self):
+        text = "Follow for more if you love design.\n"
+        once = clean(text)
+        self.assertEqual(clean(once), once)
 
 
 class EveryEntryMatchesAtTheEdges(unittest.TestCase):

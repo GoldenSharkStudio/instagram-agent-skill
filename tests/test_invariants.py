@@ -236,6 +236,13 @@ class DuplicatedRegexes(unittest.TestCase):
                  if hz.term_re(e["find"]).pattern != dt.term_re(e["find"]).pattern]
         self.assertEqual(drift, [])
 
+    def test_lexicon_hangs(self):
+        # humanize holds back what detect counts as a hanging tell: the two
+        # copies of the rule must be the same function, word for word.
+        import inspect
+        hz, dt = load("humanize"), load("detect")
+        self.assertEqual(inspect.getsource(hz.hangs), inspect.getsource(dt.hangs))
+
 
 # What a reader counts as one emoji. A copy of EMOJI_RE in any script must
 # count these the same way (the scripts are found from src, not listed here).
