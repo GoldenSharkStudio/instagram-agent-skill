@@ -184,9 +184,20 @@ class JsonIsTheSource(unittest.TestCase):
     def test_caption_asks(self):
         cap = "I lost $18,000 on one contract. Banana me.\n"
         def add(j):
-            j["caption"]["asks"].append({"regex": "(?i)\\bbanana me\\b", "name": "banana"})
+            j["caption"]["asks"].append({"id": "banana", "regex": "(?i)\\bbanana me\\b",
+                                         "name": "banana"})
         proc = self.run_copy("caption", add, "-", "--json", stdin=cap)
         self.assertEqual(json.loads(proc.stdout)["asks"], ["banana"])
+        self.assertEqual(json.loads(proc.stdout)["ask_ids"], ["banana"])
+
+    def test_caption_ask_without_id_fails_closed(self):
+        # ask_ids is a contract: an ask with no id is a broken file, not a guess.
+        def add(j):
+            j["caption"]["asks"].append({"regex": "(?i)\\bbanana me\\b", "name": "banana"})
+        proc = self.run_copy("caption", add, "-", "--json", stdin="Banana me.\n")
+        self.assertEqual(proc.returncode, 2, proc.stderr)
+        self.assertIn("en.json", proc.stderr)
+        self.assertNotIn("Traceback", proc.stderr)
 
     def test_detect_pronouns(self):
         args = (fixture("good_draft.txt"), "--json")

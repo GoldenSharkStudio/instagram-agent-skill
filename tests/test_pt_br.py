@@ -7,6 +7,7 @@ pt-BR way, and auto tells the two languages apart on the shipped stopwords."""
 import glob
 import json
 import os
+import re
 import unittest
 
 from _support import SKILLS, fixture, load, read_fixture, run_json, run_tool
@@ -181,9 +182,29 @@ class Caption(unittest.TestCase):
     def test_every_ask_fires_alone(self):
         L = cp.load_lang("pt-BR")
         self.assertEqual(len(L["ASKS"]), len(ASKS), "a new ask needs a sample")
-        for (_, name), text in zip(L["ASKS"], ASKS):
+        for (_, name, _), text in zip(L["ASKS"], ASKS):
             with self.subTest(text=text):
                 self.assertEqual(cp.analyse(text, lang="pt-BR")["asks"], [name])
+
+    def test_ask_ids_are_the_same_in_every_language(self):
+        # The --json `ask_ids` is the contract a program reads (Autopost); the
+        # names are for people and translate. Same ids, same order, no repeat.
+        ids = {}
+        for path in glob.glob(os.path.join(SKILLS, "ig-caption", "lang", "*.json")):
+            with open(path, encoding="utf-8") as fh:
+                ids[os.path.basename(path)] = [a["id"] for a in json.load(fh)["caption"]["asks"]]
+        self.assertGreaterEqual(len(ids), 2)
+        self.assertEqual(len({tuple(v) for v in ids.values()}), 1, ids)
+        one = next(iter(ids.values()))
+        self.assertEqual(len(one), len(set(one)))
+        self.assertTrue(all(re.fullmatch(r"[a-z_]+", i) for i in one), one)
+
+    def test_json_ids_match_across_languages(self):
+        en = cp.analyse("Comment CLAUSE below and save this.", lang="en")
+        pt = cp.analyse("Comente CLÁUSULA e salve esse post.", lang="pt-BR")
+        self.assertEqual(en["ask_ids"], ["comment_keyword", "save"])
+        self.assertEqual(pt["ask_ids"], en["ask_ids"])
+        self.assertNotEqual(pt["asks"], en["asks"])
 
     def test_english_asks_do_not_fire_in_pt(self):
         a = cp.analyse("Comment CLAUSE and save this. Link in bio.", lang="pt-BR")
@@ -195,6 +216,7 @@ class Caption(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertEqual(d["verdict"], "READY")
         self.assertEqual(d["asks"], ["comentar uma palavra"])
+        self.assertEqual(d["ask_ids"], ["comment_keyword"])
 
     def test_generic_pt_tags(self):
         a = cp.analyse("Perdi R$ 5.\n\n#freela #sigamesigo #brasil", lang="pt-BR")

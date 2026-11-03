@@ -4,34 +4,42 @@
   "caption": {
     "asks": [
       {
+        "id": "comment_keyword",
         "regex": "(?i)\\bcoment[ea] (?:a palavra |\\\")?[^\\W_]{2,}\\b",
         "name": "comentar uma palavra"
       },
       {
+        "id": "dm",
         "regex": "(?i)\\bme (?:chama|chame|manda (?:uma )?mensagem|mande (?:uma )?mensagem)\\b|\\b(?:chama|chame|manda|mande)(?: no| na)? (?:dm|direct|direto|inbox|privado)\\b",
         "name": "chamar no direct"
       },
       {
+        "id": "save",
         "regex": "(?i)\\bsalv[ae] (?:esse|este|isso|isto|o post|pra|para)\\b",
         "name": "salvar"
       },
       {
+        "id": "share",
         "regex": "(?i)\\bcompartilh[ae] (?:esse|este|isso|isto|com)\\b|\\bmand[ae] (?:esse post |este post |isso )?(?:pra|para) (?:alguém|quem|um amigo|uma amiga)\\b",
         "name": "compartilhar"
       },
       {
+        "id": "follow",
         "regex": "(?i)\\bme sig[ae]\\b|\\bsig[ae] (?:o perfil|a página|a gente|pra|para)\\b",
         "name": "seguir"
       },
       {
+        "id": "link_in_bio",
         "regex": "(?i)\\blink (?:na|da) (?:minha )?bio\\b",
         "name": "link na bio"
       },
       {
+        "id": "swipe_or_tap",
         "regex": "(?i)\\b(?:arrast[ae]|desliz[ae]|toque|toca) (?:pr[oa]|para|até)\\b",
         "name": "arrastar ou tocar"
       },
       {
+        "id": "question",
         "regex": "(?i)\\bme (?:conta|conte|diz|diga|fala)\\b|\\bo que voc[êe] (?:faria|acha)\\b|\\bqual (?:deles|delas|dos dois|das duas)\\b",
         "name": "responder uma pergunta"
       }

@@ -82,7 +82,8 @@ def say(M, key, **kw):
 
 
 def load_lang(code="en"):
-    """asks: the calls to action ONE ASK counts, each a regex and a name.
+    """asks: the calls to action ONE ASK counts, each a regex, a name to print
+    and an id, the same in every language (the --json `ask_ids`).
     filler_tags: hashtags so generic they describe nothing.
     messages: every sentence the script prints, str.format templates."""
     if code in _LOADED:
@@ -96,7 +97,7 @@ def load_lang(code="en"):
             raise TypeError(messages)
         loaded = {
             "MESSAGES": messages,
-            "ASKS": [(re.compile(x["regex"]), x["name"]) for x in d["asks"]],
+            "ASKS": [(re.compile(x["regex"]), x["name"], x["id"]) for x in d["asks"]],
             "FILLER_TAGS": {t.lower() for t in d["filler_tags"]},
         }
     except (OSError, ValueError, KeyError, TypeError, re.error) as err:
@@ -173,7 +174,8 @@ def analyse(text, cut=TRUNCATE, keywords=None, lang="en"):
     window = visible_window(stripped, cut)
     truncated = chars > cut
     match = stripped.translate(APOSTROPHES)
-    asks = [name for pattern, name in L["ASKS"] if pattern.search(match)]
+    fired = [(name, ask_id) for pattern, name, ask_id in L["ASKS"] if pattern.search(match)]
+    asks = [name for name, _ in fired]
     filler = [t for t in tags if t.lower() in L["FILLER_TAGS"]]
     keywords = [unicodedata.normalize("NFC", k.strip()) for k in (keywords or []) if k.strip()]
 
@@ -262,7 +264,7 @@ def analyse(text, cut=TRUNCATE, keywords=None, lang="en"):
         "visible": window, "truncated": truncated,
         "first_line_chars": len(first_line),
         "hashtags": tags, "mentions": mentions, "links": links,
-        "emoji": len(emoji), "asks": asks,
+        "emoji": len(emoji), "asks": asks, "ask_ids": [i for _, i in fired],
         "checks": checks, "verdict": verdict,
     }
 

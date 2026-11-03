@@ -4,34 +4,42 @@
   "caption": {
     "asks": [
       {
+        "id": "comment_keyword",
         "regex": "(?i)\\bcomment (?:the word |\\\")?[^\\W_]{2,}\\b",
         "name": "comment a keyword"
       },
       {
+        "id": "dm",
         "regex": "(?i)\\b(?:dm|message) me\\b",
         "name": "DM me"
       },
       {
+        "id": "save",
         "regex": "(?i)\\bsave (?:this|it)\\b",
         "name": "save this"
       },
       {
+        "id": "share",
         "regex": "(?i)\\bshare (?:this|it)\\b",
         "name": "share this"
       },
       {
+        "id": "follow",
         "regex": "(?i)\\bfollow (?:me|for)\\b",
         "name": "follow"
       },
       {
+        "id": "link_in_bio",
         "regex": "(?i)\\blink in (?:my )?bio\\b",
         "name": "link in bio"
       },
       {
+        "id": "swipe_or_tap",
         "regex": "(?i)\\b(?:swipe|tap) (?:through|left|right|for|to)\\b",
         "name": "swipe or tap"
       },
       {
+        "id": "question",
         "regex": "(?i)\\btell me\\b|\\bwhat would you\\b|\\bwhich one\\b",
         "name": "answer a question"
       }

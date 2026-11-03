@@ -180,7 +180,7 @@ class AccentedWitnesses(unittest.TestCase):
 
     def test_comment_keyword_ask_takes_an_accented_word(self):
         asks = load("caption").load_lang()["ASKS"]
-        hit = [n for rx, n in asks if rx.search('Comment "AÇÃO" below')]
+        hit = [n for rx, n, _ in asks if rx.search('Comment "AÇÃO" below')]
         self.assertIn("comment a keyword", hit)
 
     def test_hook_formulas_open_on_an_accented_letter(self):
