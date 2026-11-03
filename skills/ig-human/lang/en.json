@@ -38,7 +38,8 @@
       "panel_title_labelled": "AI DETECTION PANEL  -  {label}",
       "human_score_label": "HUMAN SCORE",
       "held_at_review": "\n  Held at REVIEW: {tells} structural tell(s) left. Rewrite them by hand; humanize.py --report lists them.",
-      "weakest_signal": "\n  Weakest signal: {weakest}. Fix that first."
+      "weakest_signal": "\n  Weakest signal: {weakest}. Fix that first.",
+      "held_uncalibrated": "\n  Held at REVIEW: the {lang} lexicon is not calibrated yet, so no draft passes. Read it yourself."
     }
   }
 }

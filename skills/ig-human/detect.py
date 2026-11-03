@@ -76,7 +76,10 @@ def load_messages(lang="en"):
 
 def load_lexicon(path=None, lang="en"):
     """slop.<lang>.json. `voice` holds the two voice regexes: contractions
-    and personal pronouns, the words that put a person in the text."""
+    and personal pronouns, the words that put a person in the text.
+    `calibrated` (absent = true, so a lexicon you wrote keeps passing) says
+    whether the stock vocabulary was built from a corpus; when it is false
+    the verdict never reaches PASS."""
     path = path or os.path.join(HERE, "slop." + lang + ".json")
     try:
         with open(path, encoding="utf-8") as fh:
@@ -86,6 +89,9 @@ def load_lexicon(path=None, lang="en"):
                 raise TypeError(f"{key} must be a list")
         for key in ("contractions", "pronouns"):
             re.compile(lex["voice"][key])
+        flag = lex.get("calibrated", True)
+        if not isinstance(flag, bool):
+            raise TypeError(f"calibrated must be true or false, not {flag!r}")
         return lex
     except (OSError, ValueError, KeyError, TypeError, re.error) as err:
         raise LexiconError(f"{path}: {type(err).__name__}: {err}") from None
@@ -313,6 +319,10 @@ def scores_pass(results, overall):
     return overall >= PASS_SCORE and min(r[0] for r in results.values()) >= CHECK_FLOOR
 
 
+def is_calibrated(lex):
+    return lex.get("calibrated", True)
+
+
 def run(text, lex, lang="en"):
     # Decomposed accents (NFD, macOS paste) split words in `re`: compose them.
     text = unicodedata.normalize("NFC", text)
@@ -334,6 +344,9 @@ def run(text, lex, lang="en"):
     # left the draft stops at REVIEW, however well the numbers came out.
     if verdict == "PASS" and count_tells(match, lex)[0]:
         verdict = "REVIEW"
+    # An uncalibrated lexicon cannot vouch for a draft: fail closed.
+    if verdict == "PASS" and not is_calibrated(lex):
+        verdict = "REVIEW"
     return results, overall, verdict
 
 
@@ -342,7 +355,8 @@ def bar(score, width=24):
     return "#" * filled + "." * (width - filled)
 
 
-def render(results, overall, verdict, label=None, out=sys.stdout, tells=0, lang="en"):
+def render(results, overall, verdict, label=None, out=sys.stdout, tells=0, lang="en",
+           calibrated=True, lexicon_lang=None):
     M = load_messages(lang)
     title = say(M, "panel_title_labelled", label=label) if label else say(M, "panel_title")
     print("\n" + title, file=out)
@@ -353,9 +367,11 @@ def render(results, overall, verdict, label=None, out=sys.stdout, tells=0, lang=
         print(f"  {'':<13} {detail}", file=out)
     print("-" * 62, file=out)
     print(f"  {say(M, 'human_score_label'):<13} {bar(overall)} {overall:5.1f}   {verdict}", file=out)
-    if verdict == "REVIEW" and scores_pass(results, overall):
+    if verdict == "REVIEW" and scores_pass(results, overall) and tells:
         print(say(M, "held_at_review", tells=tells), file=out)
-    elif verdict != "PASS":
+    if not calibrated:
+        print(say(M, "held_uncalibrated", lang=lexicon_lang or lang), file=out)
+    if verdict != "PASS" and not scores_pass(results, overall):
         weakest = min(CHECKS, key=lambda c: results[c][0])
         print(say(M, "weakest_signal", weakest=weakest), file=out)
     print("", file=out)
@@ -416,6 +432,7 @@ def main():
             "human_score": round(overall, 1),
             "verdict": verdict,
             "structural_tells": count_tells(text, lex)[0],
+            "calibrated": is_calibrated(lex),
         })
 
     if args.json:
@@ -425,7 +442,8 @@ def main():
             results, overall, verdict = run(text, lex, code)
             render(results, overall, verdict,
                    label=os.path.basename(name) if args.compare else None,
-                   tells=p["structural_tells"], lang=code)
+                   tells=p["structural_tells"], lang=code,
+                   calibrated=p["calibrated"], lexicon_lang=str(lex.get("lang", code)))
         if args.compare:
             a, b = payload
             delta = b["human_score"] - a["human_score"]

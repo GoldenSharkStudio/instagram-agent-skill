@@ -1,13 +1,17 @@
-"""The pt-BR files that ship (fase 2, passo 4a.3): ig-reel, ig-caption and
-ig-viral. The --lang nets plant their own pt-BR in a lone copy; this file is
+"""The pt-BR files that ship (fase 2, passos 4a.3 and 4a.4): ig-reel,
+ig-caption, ig-viral and ig-human (the last one as a skeleton, see Human). The --lang nets plant their own pt-BR in a lone copy; this file is
 about the real ones: the README hooks translated land in the same band as in
 en, every pt-BR ask and dealbreaker fires on Portuguese, the figures read the
 pt-BR way, and auto tells the two languages apart on the shipped stopwords."""
 
 import glob
+import io
 import json
 import os
 import re
+import shutil
+import tempfile
+import unicodedata
 import unittest
 
 from _support import SKILLS, fixture, load, read_fixture, run_json, run_tool
@@ -15,6 +19,8 @@ from _support import SKILLS, fixture, load, read_fixture, run_json, run_tool
 hs = load("hookscore")
 bt = load("beats")
 cp = load("caption")
+dt = load("detect")
+hz = load("humanize")
 
 # The README ranking, en and its translation side by side: same verdict, same
 # weakest property, same number of dealbreakers.
@@ -27,28 +33,47 @@ def lines(name):
 
 
 def shipped():
-    """Every pt-BR file next to an en one, from the tree, not a list."""
+    """Every pt-BR file next to an en one, from the tree, not a list: the
+    lang/ files and ig-human's slop.<code>.json."""
     out = []
-    for en in glob.glob(os.path.join(SKILLS, "*", "lang", "en.json")):
+    ens = glob.glob(os.path.join(SKILLS, "*", "lang", "en.json"))
+    ens += glob.glob(os.path.join(SKILLS, "*", "slop.en.json"))
+    for en in ens:
         pt = en[:-len("en.json")] + "pt-BR.json"
         if os.path.exists(pt):
             out.append((en, pt))
     return out
 
 
-def shape(node):
+def folder_of(path):
+    """The skill folder a shipped file sits in, lang/ or not."""
+    folder = os.path.dirname(path)
+    return os.path.basename(os.path.dirname(folder) if os.path.basename(folder) == "lang"
+                            else folder)
+
+
+# Dicts whose keys are names the language gives to its own rules (the
+# inflection forms: en has s/ed/ing, pt-BR has 3s/past/ger), not a schema.
+# Their content is checked by tests/test_inflection.py.
+LANGUAGE_NAMED = ("suffixes", "families")
+
+
+def shape(node, key=None):
+    if key in LANGUAGE_NAMED:
+        return "dict"
     if isinstance(node, dict):
-        return {k: shape(v) for k, v in node.items() if k not in ("note",)}
+        # `calibrated` is optional and only the skeleton lexicon carries it.
+        return {k: shape(v, k) for k, v in node.items() if k not in ("note", "calibrated")}
     if isinstance(node, list):
         return "list"
     return type(node).__name__
 
 
 class Files(unittest.TestCase):
-    def test_the_three_folders_ship_pt_br(self):
-        folders = sorted(os.path.basename(os.path.dirname(os.path.dirname(pt)))
-                         for _, pt in shipped())
-        self.assertEqual(folders, ["ig-caption", "ig-reel", "ig-viral"])
+    def test_the_four_folders_ship_pt_br(self):
+        # ig-human ships two files (messages and lexicon), the others one.
+        folders = sorted(folder_of(pt) for _, pt in shipped())
+        self.assertEqual(folders, ["ig-caption", "ig-human", "ig-human", "ig-reel", "ig-viral"])
 
     def test_same_keys_as_en(self):
         for en, pt in shipped():
@@ -258,6 +283,177 @@ class Auto(unittest.TestCase):
                     else:
                         proc = run_tool(tool, "-", "--lang", "auto", stdin=text)
                     self.assertIn(f"lang: auto -> {code}", proc.stderr)
+
+
+PT_DRAFT = "good_draft.pt-BR.txt"
+
+# One sample per pt-BR structural tell, in the order of the file: (id, text).
+STRUCTURES = [
+    ("not-just", "Não é só um contrato, é uma proteção."),
+    ("not-only", "Não só protege o prazo, mas também o preço."),
+    ("isnt-about", "Não se trata de contrato. É sobre confiança."),
+    ("the-result", "O resultado? Zero retrabalho."),
+    ("heres-what", "Aqui está o que eu aprendi com isso."),
+    ("triad", "Rápido, simples e eficaz."),
+    ("rocket", "Vem aí 🚀"),
+    ("hashtag-wall", "#a #b #c #d #e"),
+    ("as-an-ai", "Como um modelo de linguagem, eu não opino."),
+    ("in-summary", "Em resumo, contrato bom é contrato claro."),
+    ("engagement-bait", "Concorda?"),
+    ("stop-scroll", "Pare de rolar agora."),
+    ("in-this-video", "Neste vídeo eu vou te mostrar como cobrar."),
+    ("emoji-bullets", "✅ Cláusula clara"),
+    ("caps-shout", "ESSA REGRA MUDA TUDO"),
+    ("follow-bait", "Segue pra mais dicas."),
+    ("important-to", "É importante ressaltar que o prazo conta."),
+    ("lets-dive", "Vamos mergulhar no assunto."),
+    ("todays-world", "No mundo de hoje, tudo muda."),
+    ("more-than-ever", "Isso importa mais do que nunca."),
+]
+
+
+def lexicon_copy(d, **changes):
+    """slop.pt-BR.json with `changes` applied, written into d; returns the path."""
+    with open(os.path.join(SKILLS, "ig-human", "slop.pt-BR.json"), encoding="utf-8") as fh:
+        data = json.load(fh)
+    data.update(changes)
+    path = os.path.join(d, "slop.pt-BR.json")
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, ensure_ascii=False)
+    return path
+
+
+class Human(unittest.TestCase):
+    """ig-human in pt-BR is a skeleton: no words, no phrases, "calibrated":
+    false. Until a corpus fills it, detect never says PASS."""
+
+    def test_skeleton_shape(self):
+        lex = dt.load_lexicon(lang="pt-BR")
+        self.assertIs(lex["calibrated"], False)
+        self.assertEqual((lex["words"], lex["phrases"]), ([], []))
+        self.assertEqual(lex["lang"], "pt-BR")
+
+    def test_en_is_calibrated_by_default(self):
+        self.assertNotIn("calibrated", dt.load_lexicon(lang="en"))
+        self.assertTrue(dt.is_calibrated(dt.load_lexicon(lang="en")))
+
+    def test_good_pt_text_never_passes(self):
+        proc, d = run_json("detect", fixture(PT_DRAFT), "--lang", "pt-BR")
+        self.assertEqual(proc.returncode, 1, proc.stderr)
+        self.assertEqual(d["verdict"], "REVIEW")
+        self.assertIs(d["calibrated"], False)
+        self.assertEqual(d["structural_tells"], 0)
+
+    def test_text_says_why(self):
+        proc = run_tool("detect", fixture(PT_DRAFT), "--lang", "pt-BR")
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("o léxico pt-BR ainda não está calibrado", proc.stdout)
+        self.assertNotIn("Sinal mais fraco", proc.stdout)
+
+    def test_the_cap_comes_from_the_flag(self):
+        # Same text, same words, the flag flipped in a copy: it passes.
+        with tempfile.TemporaryDirectory() as d:
+            lex = lexicon_copy(d, calibrated=True)
+            proc, out = run_json("detect", fixture(PT_DRAFT), "--lang", "pt-BR", "--lexicon", lex)
+            self.assertEqual((proc.returncode, out["verdict"], out["calibrated"]), (0, "PASS", True))
+            self.assertNotIn("calibrado", run_tool("detect", fixture(PT_DRAFT), "--lang", "pt-BR",
+                                                   "--lexicon", lex).stdout)
+
+    def test_calibrated_must_be_a_bool(self):
+        with tempfile.TemporaryDirectory() as d:
+            lex = lexicon_copy(d, calibrated="false")
+            proc = run_tool("detect", fixture(PT_DRAFT), "--lexicon", lex)
+            self.assertEqual(proc.returncode, 2)
+            self.assertNotIn("Traceback", proc.stderr)
+            self.assertIn("calibrated", proc.stderr)
+
+    def test_en_is_unchanged(self):
+        proc, d = run_json("detect", fixture("good_draft.txt"))
+        self.assertEqual((proc.returncode, d["verdict"], d["calibrated"]), (0, "PASS", True))
+        self.assertNotIn("calibrated", run_tool("detect", fixture("good_draft.txt")).stdout)
+
+    def test_a_lexicon_without_the_key_is_calibrated(self):
+        en = os.path.join(SKILLS, "ig-human", "slop.en.json")
+        with open(en, encoding="utf-8") as fh:
+            self.assertNotIn("calibrated", json.load(fh))
+        proc, d = run_json("detect", fixture("good_draft.txt"), "--lexicon", en)
+        self.assertEqual((proc.returncode, d["verdict"], d["calibrated"]), (0, "PASS", True))
+
+    def test_uncalibrated_en_lexicon_is_held_too(self):
+        # The cap is the flag's, not pt-BR's: a user's own lexicon can set it.
+        with tempfile.TemporaryDirectory() as d:
+            en = os.path.join(SKILLS, "ig-human", "slop.en.json")
+            with open(en, encoding="utf-8") as fh:
+                data = json.load(fh)
+            data["calibrated"] = False
+            path = os.path.join(d, "mine.json")
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(data, fh)
+            proc = run_tool("detect", fixture("good_draft.txt"), "--lexicon", path)
+            self.assertEqual(proc.returncode, 1)
+            self.assertIn("Held at REVIEW: the en lexicon is not calibrated yet", proc.stdout)
+
+    def test_both_reasons_are_shown(self):
+        results = {c: (90.0, "x") for c in dt.CHECKS}
+        for lang, tell, calib in (("en", "structural tell(s) left", "not calibrated yet"),
+                                  ("pt-BR", "sinal(is) estrutural(is) sobrando", "ainda não está calibrado")):
+            out = io.StringIO()
+            dt.render(results, 90.0, "REVIEW", out=out, tells=2, lang=lang,
+                      calibrated=False, lexicon_lang=lang)
+            with self.subTest(lang=lang):
+                self.assertIn(tell, out.getvalue())
+                self.assertIn(calib, out.getvalue())
+
+    def test_every_structure_fires_on_its_sample(self):
+        lex = dt.load_lexicon(lang="pt-BR")
+        ids = [s["id"] for s in lex["structures"]]
+        self.assertEqual(len(set(ids)), len(ids))
+        self.assertEqual(ids, [i for i, _ in STRUCTURES], "a new tell needs a sample, in file order")
+        for (id_, text) in STRUCTURES:
+            with self.subTest(id=id_):
+                self.assertIn(id_, dt.count_tells(text, lex)[1])
+                names = [f["name"] for f in hz.scan_structures(text, lex, "pt-BR")]
+                self.assertIn(next(s["name"] for s in lex["structures"] if s["id"] == id_), names)
+
+    def test_the_tells_do_not_fire_on_the_good_draft(self):
+        self.assertEqual(dt.count_tells(read_fixture(PT_DRAFT), dt.load_lexicon(lang="pt-BR")), (0, []))
+
+    def test_ia_the_verb_is_not_the_model(self):
+        lex = dt.load_lexicon(lang="pt-BR")
+        self.assertEqual(dt.count_tells("Como ia fazer isso sem prazo?", lex)[0], 0)
+        self.assertEqual(dt.count_tells("Como uma IA eu não opino.", lex)[1], ["as-an-ai"])
+
+    def test_tells_read_decomposed_accents(self):
+        # An NFD paste ("é" as e + U+0301) counts like the composed text.
+        lex = dt.load_lexicon(lang="pt-BR")
+        for id_, text in STRUCTURES:
+            nfd = unicodedata.normalize("NFD", text)
+            with self.subTest(id=id_):
+                self.assertEqual(dt.count_tells(nfd, lex), dt.count_tells(text, lex))
+        accented = [t for _, t in STRUCTURES if unicodedata.normalize("NFD", t) != t]
+        self.assertGreaterEqual(len(accented), 5, "the witness must carry accents")
+
+    def test_humanize_cleans_and_rewrites_no_word(self):
+        dirty = "Perdi\u200b R$\u00a018.000 \u2014 e “nunca” mais\u2026 Aceito isso.\n"
+        proc = run_tool("humanize", "-", "--lang", "pt-BR", stdin=dirty)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(proc.stdout, 'Perdi R$ 18.000, e "nunca" mais... Aceito isso.\n')
+        words = lambda s: re.findall(r"[^\W\d_]+", s)
+        self.assertEqual(words(proc.stdout), words(dirty))
+
+    def test_humanize_flags_the_tells(self):
+        proc = run_tool("humanize", "-", "--lang", "pt-BR", "--report",
+                        stdin="No mundo de hoje, tudo muda.\n")
+        self.assertIn("RELATÓRIO DO HUMANIZE", proc.stderr)
+        self.assertIn("1 sinais estruturais", proc.stderr)
+
+    def test_auto_picks_each_language_on_the_shipped_files(self):
+        for tool in ("humanize", "detect"):
+            for text, code in ((Auto.PT, "pt-BR"), (Auto.EN, "en")):
+                with self.subTest(tool=tool, lang=code):
+                    proc = run_tool(tool, "-", "--lang", "auto", stdin=text)
+                    self.assertIn(f"lang: auto -> {code}", proc.stderr)
+                    self.assertNotIn("Traceback", proc.stderr)
 
 
 if __name__ == "__main__":

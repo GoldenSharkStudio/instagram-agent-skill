@@ -78,11 +78,14 @@ your text.
 Every tool takes `--lang`: `en` (the default), `pt-BR` or `auto`, which guesses
 from the text and says on stderr what it picked. The skills pass the
 **Language:** line of your `voice.md`. `en` ships for every tool. `pt-BR` ships
-for `hookscore`, `beats`, `caption` and `swipe`, with two gaps: `swipe` names no
-formula in pt-BR yet (every hook comes out unclassified, and it says so), and
-the humanizer has no pt-BR files. A language whose files are not there is
-refused with exit 2 and the missing file's name, never a silent fall back to
-English.
+for every tool, with two gaps: `swipe` names no formula in pt-BR yet (every
+hook comes out unclassified, and it says so), and the pt-BR humanizer has no
+calibrated lexicon yet. `words` and `phrases` are empty, so it strips invisible
+characters, fixes typography and flags the structural tells, but it replaces no
+word, and `detect` never gives PASS in pt-BR until the lexicon is calibrated:
+it stops at REVIEW and says why (`"calibrated": false` in `--json`). A language
+whose files are not there is refused with exit 2 and the missing file's name,
+never a silent fall back to English.
 
 ### Hooks
 
@@ -359,8 +362,11 @@ skills/ig-caption/lang/en.json     the calls to action and the generic hashtags 
 skills/ig-caption/lang/pt-BR.json  the same in Portuguese
 skills/ig-caption/caption.py       the truncation preview and the caption linter
 skills/ig-human/slop.en.json       the lexicon: 240 terms, 18 invisible classes, 16 tells
+skills/ig-human/slop.pt-BR.json    the same in Portuguese, as a skeleton: structural tells and
+                                   voice, no terms yet, "calibrated": false
 skills/ig-human/lang/en.json       every sentence humanize and detect print (not the lexicon, so
                                    --lexicon never swaps them)
+skills/ig-human/lang/pt-BR.json    the same in Portuguese
 skills/ig-human/humanize.py        the three cleaning passes
 skills/ig-human/detect.py          the five-check panel
 skills/ig-viral/lang/en.json       every sentence swipe prints and writes to swipe.md

@@ -44,6 +44,7 @@ SAY = "say"
 EXEMPT_TEXT = {
     "cannot load": "the language file itself failed to load; there is no language to say it in",
     " must be a list": "loader validation of the language file, same reason",
+    " must be true or false": "loader validation of the lexicon's `calibrated` flag, same reason",
 }
 # Whole functions left out, each with its reason. Checked: must exist.
 EXEMPT_FUNCS = {

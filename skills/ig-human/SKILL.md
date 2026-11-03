@@ -103,7 +103,9 @@ PASS, and it is the part a script cannot do.
 The verdict weights the mean at 60% and the **weakest single check** at 40%,
 because one signal is enough. PASS needs an overall of 70+ with no check
 below 55, and no structural tell left: while one remains the verdict stops at
-REVIEW, whatever the score, and the output says how many.
+REVIEW, whatever the score, and the output says how many. In pt-BR the
+lexicon is not calibrated yet (`"calibrated": false`), so `detect.py` stays at
+REVIEW and says why; read the text by hand and do not declare PASS.
 
 ## Say this honestly
 

@@ -1,0 +1,467 @@
+{
+  "version": "1.0",
+  "note": "Esqueleto do léxico pt-BR usado por humanize.py e detect.py. As listas words e phrases estão vazias de propósito e calibrated é false: ainda não há corpus que diga quais termos denunciam texto de máquina em português do Brasil, e inventar a lista seria pior do que não tê-la. Enquanto não for calibrado, detect.py nunca dá PASS neste idioma (teto REVIEW) e diz por quê. Invisíveis e tipografia valem em qualquer idioma; os sinais estruturais e a voz já são pt-BR. Edite à vontade: é seu.",
+  "calibrated": false,
+  "invisible": [
+    {
+      "cp": "U+200B",
+      "name": "ZERO WIDTH SPACE",
+      "action": "delete"
+    },
+    {
+      "cp": "U+200C",
+      "name": "ZERO WIDTH NON-JOINER",
+      "action": "delete"
+    },
+    {
+      "cp": "U+200D",
+      "name": "ZERO WIDTH JOINER",
+      "action": "delete"
+    },
+    {
+      "cp": "U+2060",
+      "name": "WORD JOINER",
+      "action": "delete"
+    },
+    {
+      "cp": "U+FEFF",
+      "name": "ZERO WIDTH NO-BREAK SPACE / BOM",
+      "action": "delete"
+    },
+    {
+      "cp": "U+00AD",
+      "name": "SOFT HYPHEN",
+      "action": "delete"
+    },
+    {
+      "cp": "U+180E",
+      "name": "MONGOLIAN VOWEL SEPARATOR",
+      "action": "delete"
+    },
+    {
+      "cp": "U+061C",
+      "name": "ARABIC LETTER MARK",
+      "action": "delete"
+    },
+    {
+      "cp": "U+200E",
+      "name": "LEFT-TO-RIGHT MARK",
+      "action": "delete"
+    },
+    {
+      "cp": "U+200F",
+      "name": "RIGHT-TO-LEFT MARK",
+      "action": "delete"
+    },
+    {
+      "cp": "U+E0000-U+E007F",
+      "name": "TAG CHARACTERS (invisible ASCII smuggling)",
+      "action": "delete"
+    },
+    {
+      "cp": "U+00A0",
+      "name": "NO-BREAK SPACE",
+      "action": "space"
+    },
+    {
+      "cp": "U+202F",
+      "name": "NARROW NO-BREAK SPACE",
+      "action": "space"
+    },
+    {
+      "cp": "U+2009",
+      "name": "THIN SPACE",
+      "action": "space"
+    },
+    {
+      "cp": "U+2007",
+      "name": "FIGURE SPACE",
+      "action": "space"
+    },
+    {
+      "cp": "U+2003",
+      "name": "EM SPACE",
+      "action": "space"
+    },
+    {
+      "cp": "U+2002",
+      "name": "EN SPACE",
+      "action": "space"
+    },
+    {
+      "cp": "U+2063",
+      "name": "INVISIBLE SEPARATOR",
+      "action": "delete"
+    }
+  ],
+  "typographic": [
+    {
+      "from": "—",
+      "name": "EM DASH",
+      "to": ", "
+    },
+    {
+      "from": "–",
+      "name": "EN DASH",
+      "to": "-"
+    },
+    {
+      "from": "‘",
+      "name": "LEFT SINGLE QUOTE",
+      "to": "'"
+    },
+    {
+      "from": "’",
+      "name": "RIGHT SINGLE QUOTE",
+      "to": "'"
+    },
+    {
+      "from": "“",
+      "name": "LEFT DOUBLE QUOTE",
+      "to": "\""
+    },
+    {
+      "from": "”",
+      "name": "RIGHT DOUBLE QUOTE",
+      "to": "\""
+    },
+    {
+      "from": "…",
+      "name": "HORIZONTAL ELLIPSIS",
+      "to": "..."
+    },
+    {
+      "from": "′",
+      "name": "PRIME",
+      "to": "'"
+    },
+    {
+      "from": "·",
+      "name": "MIDDLE DOT",
+      "to": "-"
+    },
+    {
+      "from": "•",
+      "name": "BULLET",
+      "to": "-"
+    },
+    {
+      "from": "→",
+      "name": "RIGHTWARDS ARROW",
+      "to": "->"
+    }
+  ],
+  "words": [],
+  "phrases": [],
+  "structures": [
+    {
+      "id": "not-just",
+      "regex": "(?i)\\bnão é (?:só|apenas|somente|simplesmente) [^.!?\\n]{2,60}[,.;]\\s+(?:é|mas)\\b",
+      "name": "\"Não é só X, é Y\"",
+      "fix": "Diga a única coisa que você quer dizer. Corte a metade da preparação."
+    },
+    {
+      "id": "not-only",
+      "regex": "(?i)\\bnão (?:só|apenas|somente)\\b[^.!?\\n]{2,80}\\b(?:mas|como) (?:também|ainda)\\b",
+      "name": "\"Não só X, mas também Y\"",
+      "fix": "Separe em duas frases ou largue a metade mais fraca."
+    },
+    {
+      "id": "isnt-about",
+      "regex": "(?i)\\bnão (?:é sobre|se trata|é questão)\\b [^.!?\\n]{2,60}[.,;!]\\s+(?:mas d[eoa]s?\\b|(?:mas |e sim )?(?:é sobre|se trata|trata-se|é questão)\\b)",
+      "name": "\"Não se trata de X. Trata-se de Y.\"",
+      "fix": "Comece pelo Y. A virada é o sinal."
+    },
+    {
+      "id": "the-result",
+      "regex": "(?i)^\\s*(?:o resultado|a melhor parte|o segredo|a pegadinha|o pulo do gato)\\?(?:\\s|$)",
+      "name": "Pergunta retórica seguida da resposta (\"O resultado? ...\")",
+      "fix": "Responda na própria frase em vez de encenar uma revelação."
+    },
+    {
+      "id": "heres-what",
+      "regex": "(?i)\\b(?:eis|aqui está|segue) o que (?:eu |a gente )?(?:aprendi|aprendemos)\\b",
+      "name": "\"Aqui está o que eu aprendi\"",
+      "fix": "Diga a lição. Pule o anúncio."
+    },
+    {
+      "id": "triad",
+      "regex": "(?i)\\b\\w+, \\w+ e \\w+\\.",
+      "name": "Tríade de três itens ou adjetivos",
+      "fix": "Dois itens ou quatro. Três é o ritmo padrão do modelo."
+    },
+    {
+      "id": "rocket",
+      "regex": "[\\U0001F680\\U0001F525\\U0001F4A1\\u2728\\U0001F3AF]",
+      "name": "Emoji de foguete, fogo, lâmpada, brilho ou alvo",
+      "fix": "No máximo um emoji, e que não seja um desses cinco."
+    },
+    {
+      "id": "hashtag-wall",
+      "regex": "(?:#\\w+[ \\t]*){5,}",
+      "name": "Parede de hashtags (5+)",
+      "fix": "Três hashtags. A parede de hashtags virou sinal de texto de modelo."
+    },
+    {
+      "id": "as-an-ai",
+      "regex": "(?i)\\bcomo (?:uma? )?(?:inteligência artificial|modelo de linguagem)\\b|\\bcomo (?:uma )?(?-i:IA)\\b",
+      "name": "Autorreferência de modelo",
+      "fix": "Apague a frase."
+    },
+    {
+      "id": "in-summary",
+      "regex": "(?i)^\\s*(?:em resumo|em suma|em conclusão|para concluir|concluindo|resumindo)\\b",
+      "name": "Abertura de fecho de redação",
+      "fix": "Um post não precisa de parágrafo de conclusão."
+    },
+    {
+      "id": "engagement-bait",
+      "regex": "(?i)\\b(?:concordam?\\?|o que (?:você|vocês) (?:acha|acham)\\?|quem mais\\??|alguém mais\\?|estou errad[oa]\\?)\\s*$",
+      "name": "Isca de engajamento por reflexo",
+      "fix": "Faça uma pergunta que só você faria, sobre a coisa específica que está acima dela."
+    },
+    {
+      "id": "stop-scroll",
+      "regex": "(?im)^\\s*(?:pa(?:re|ra) de rolar|pare o scroll|não role|espera[,.]? não role)\\b",
+      "name": "Abertura \"pare de rolar\"",
+      "fix": "O que para o scroll tem que ser a própria afirmação. Pedir atenção é o sinal de que você ainda não a conquistou."
+    },
+    {
+      "id": "in-this-video",
+      "regex": "(?i)\\b(?:n(?:este|esse) (?:vídeo|reel|post)|no (?:vídeo|reel|post) de hoje|hoje (?:eu )?vou te (?:mostrar|ensinar)|(?:eu )?vou te (?:mostrar|ensinar) como)\\b",
+      "name": "Preâmbulo de vídeo (\"neste vídeo eu vou te mostrar\")",
+      "fix": "Apague e comece pelo ganho. Os dois primeiros segundos decidem o reel inteiro."
+    },
+    {
+      "id": "emoji-bullets",
+      "regex": "(?m)^\\s*[\\U0001F300-\\U0001FAFF✅➡⬅✔✨]\\s*\\S",
+      "name": "Lista com emoji no lugar de marcador",
+      "fix": "Use hífen ou quebra de linha. Emoji de marcador é o que mais cheira a modelo numa legenda."
+    },
+    {
+      "id": "caps-shout",
+      "regex": "\\b[A-ZÀ-ÖØ-Þ]{3,}\\b(?:\\s+\\b[A-ZÀ-ÖØ-Þ]{3,}\\b){2,}",
+      "name": "Três ou mais palavras gritadas em sequência",
+      "fix": "Caixa alta é botão de volume, não marca-texto. Uma palavra, no máximo."
+    },
+    {
+      "id": "follow-bait",
+      "regex": "(?i)\\b(?:(?:me )?segu[ea] (?:para|pra) mais|marc[ae] (?:alguém|quem)|compartilh[ae] se|comente (?:abaixo )?se|d[êe] dois toques se)\\b",
+      "name": "Isca genérica de seguir ou marcar",
+      "fix": "Peça a única ação que este post merece. O pedido genérico ensina o público a ignorar todos os pedidos."
+    },
+    {
+      "id": "important-to",
+      "regex": "(?i)\\b(?:[ée] )?(?:importante|fundamental|essencial|crucial) (?:ressaltar|destacar|salientar|lembrar|notar|observar|mencionar|enfatizar)\\b|\\b(?:vale|cabe) (?:ressaltar|destacar|salientar)\\b",
+      "name": "\"É importante ressaltar\"",
+      "fix": "Diga a coisa. Se importa, a frase já mostra."
+    },
+    {
+      "id": "lets-dive",
+      "regex": "(?i)\\b(?:vamos|bora) (?:mergulhar|embarcar|desvendar|desbravar)\\b|\\bmergulh(?:ar|e) (?:de cabeça|fundo)\\b",
+      "name": "\"Vamos mergulhar\"",
+      "fix": "Comece pelo assunto. Convite para entrar nele é enchimento."
+    },
+    {
+      "id": "todays-world",
+      "regex": "(?i)\\bno mundo (?:de hoje|atual|moderno|digital)\\b|\\bnos dias de hoje\\b|\\bna era digital\\b|\\bem um mundo (?:cada vez mais|onde)\\b",
+      "name": "Abertura de \"no mundo de hoje\"",
+      "fix": "Comece pelo fato específico, não pelo cenário."
+    },
+    {
+      "id": "more-than-ever",
+      "regex": "(?i)\\bmais (?:\\w+ )?(?:do )?que nunca\\b",
+      "name": "\"Mais do que nunca\"",
+      "fix": "Diga o que mudou e quando. \"Nunca\" sem número é enfeite."
+    }
+  ],
+  "lang": "pt-BR",
+  "voice": {
+    "contractions": "(?i)\\b(?:tá|tô|tamo|tava|tavam|pra|pro|pras|pros|né|cê|ocê|num|numa|nuns|numas|dum|duma|cadê|vamo)\\b",
+    "pronouns": "(?i)\\b(?:eu|me|mim|comigo|meu|minha|meus|minhas|nós|a gente|nosso|nossa|nossos|nossas|você|vocês|te|ti|contigo|seu|sua|seus|suas|teu|tua|teus|tuas)\\b"
+  },
+  "connectives": [
+    "também",
+    "então",
+    "ainda",
+    "basicamente",
+    "enfim",
+    "no fim das contas"
+  ],
+  "conjunctions": [
+    "e",
+    "ou",
+    "mas",
+    "então",
+    "porém",
+    "só que",
+    "nem",
+    "pois"
+  ],
+  "dependents": [
+    "se",
+    "quando",
+    "sempre que",
+    "o que",
+    "como",
+    "quem",
+    "por que",
+    "porque",
+    "antes",
+    "depois",
+    "até",
+    "a menos que",
+    "enquanto",
+    "onde",
+    "qual",
+    "quais",
+    "quanto",
+    "para",
+    "pra",
+    "caso",
+    "embora",
+    "já que"
+  ],
+  "complementizers": [
+    "que"
+  ],
+  "inflection": {
+    "note": "Como uma entrada do léxico se flexiona. Cada forma flexionada é uma entrada própria, com a própria substituição, para o humanize manter a frase gramatical, e nomeia a base em `of`. Verbos entram no infinitivo (a palavra flexionada é a primeira); substantivos no singular (a palavra é a última). Os testes derivam as formas que cada base deve ter e falham se alguma faltar. Base que não se flexiona no uso vai em `exempt`, com o motivo. Vale a primeira regra de sufixo cujo padrão casa com a palavra. Forma 3s é a 3ª pessoa do presente, past o pretérito perfeito, ger o gerúndio. Substantivos terminados em s ficam como estão.",
+    "families": {
+      "verbs": {
+        "word": "first",
+        "forms": [
+          "3s",
+          "past",
+          "ger"
+        ]
+      },
+      "nouns": {
+        "word": "last",
+        "forms": [
+          "pl"
+        ]
+      }
+    },
+    "suffixes": {
+      "3s": [
+        {
+          "pattern": "ar$",
+          "to": "a"
+        },
+        {
+          "pattern": "er$",
+          "to": "e"
+        },
+        {
+          "pattern": "ir$",
+          "to": "e"
+        }
+      ],
+      "past": [
+        {
+          "pattern": "ar$",
+          "to": "ou"
+        },
+        {
+          "pattern": "er$",
+          "to": "eu"
+        },
+        {
+          "pattern": "ir$",
+          "to": "iu"
+        }
+      ],
+      "ger": [
+        {
+          "pattern": "ar$",
+          "to": "ando"
+        },
+        {
+          "pattern": "er$",
+          "to": "endo"
+        },
+        {
+          "pattern": "ir$",
+          "to": "indo"
+        }
+      ],
+      "pl": [
+        {
+          "pattern": "ão$",
+          "to": "ões"
+        },
+        {
+          "pattern": "ável$",
+          "to": "áveis"
+        },
+        {
+          "pattern": "ível$",
+          "to": "íveis"
+        },
+        {
+          "pattern": "al$",
+          "to": "ais"
+        },
+        {
+          "pattern": "el$",
+          "to": "éis"
+        },
+        {
+          "pattern": "ol$",
+          "to": "óis"
+        },
+        {
+          "pattern": "ul$",
+          "to": "uis"
+        },
+        {
+          "pattern": "il$",
+          "to": "is"
+        },
+        {
+          "pattern": "m$",
+          "to": "ns"
+        },
+        {
+          "pattern": "([rz])$",
+          "to": "\\1es"
+        },
+        {
+          "pattern": "s$",
+          "to": "s"
+        },
+        {
+          "pattern": "$",
+          "to": "s"
+        }
+      ]
+    },
+    "exempt": []
+  },
+  "auto": {
+    "note": "Palavras funcionais que o --lang auto conta para adivinhar o idioma. Mesma lista em todo arquivo pt-BR.",
+    "stopwords": [
+      "o",
+      "de",
+      "que",
+      "e",
+      "é",
+      "não",
+      "um",
+      "uma",
+      "para",
+      "com",
+      "da",
+      "em",
+      "você",
+      "mas",
+      "isso",
+      "os",
+      "se",
+      "na",
+      "por",
+      "pra"
+    ]
+  }
+}

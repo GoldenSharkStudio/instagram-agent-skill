@@ -1,0 +1,45 @@
+{
+  "lang": "pt-BR",
+  "note": "Mensagens do humanize.py e do detect.py: toda frase que eles imprimem, como modelos str.format. Não é o léxico (slop.pt-BR.json), então --lexicon nunca as troca.",
+  "humanize": {
+    "messages": {
+      "invisible_other": "outros caracteres invisíveis de formatação",
+      "space": "(espaço)",
+      "deleted": "(apagado)",
+      "hanging_name": "Apagar \"{find}\" deixaria a frase pendurada",
+      "hanging_fix": "Reescreva a frase sem a expressão. Apagar só ela deixa um fragmento (\"Se você ama design.\").",
+      "uniform_name": "Frases de tamanho uniforme (variação {variation:.2f})",
+      "uniform_fix": "Quebre uma frase ao meio. Deixe outra correr longa. Máquina escreve parelho.",
+      "report_title": "RELATÓRIO DO HUMANIZE\n---------------------",
+      "report_summary": "{total} marcas de máquina removidas, {tells} sinais estruturais para reescrever",
+      "section_invisible": "1. CARACTERES INVISÍVEIS\n------------------------",
+      "section_typography": "2. TIPOGRAFIA\n------------",
+      "section_lexicon": "3. LÉXICO DE CLICHÊS\n--------------------",
+      "section_structural": "4. SINAIS ESTRUTURAIS  (não corrigidos sozinhos - reescreva você)\n----------------------------------------------------------------",
+      "section_clean": "LIMPO\n-----",
+      "nothing_to_strip": "  Nada para remover.",
+      "cannot_write": "humanize.py: não consegui gravar {path}: {reason}",
+      "wrote": "gravado {path}"
+    }
+  },
+  "detect": {
+    "messages": {
+      "too_short": "curto demais para julgar",
+      "burstiness_detail": "variação {variation:.2f} em {count} frases (meta: 0.55+)",
+      "specificity_detail": "{hits} marcadores concretos, {density:.1f} por 100 palavras (meta: 4+)",
+      "empty": "vazio",
+      "slop_detail": "{hits} termos de clichê, {density:.1f} por 100 palavras",
+      "slop_terms": " ({terms})",
+      "slop_terms_more": " ({terms}, ...)",
+      "fingerprint_detail": "{invisible} invisíveis, {em} travessões, {curly} aspas curvas, {ellipsis} reticências, {nbsp} espaços rígidos",
+      "voice_detail": "{contractions:.1f} contrações, {person:.1f} pronomes pessoais por 100 palavras, {tells} sinal(is) estrutural(is)",
+      "voice_ids": " [{ids}]",
+      "panel_title": "PAINEL DE DETECÇÃO DE IA",
+      "panel_title_labelled": "PAINEL DE DETECÇÃO DE IA  -  {label}",
+      "human_score_label": "NOTA HUMANA",
+      "held_at_review": "\n  Retido em REVIEW: {tells} sinal(is) estrutural(is) sobrando. Reescreva à mão; humanize.py --report lista cada um.",
+      "weakest_signal": "\n  Sinal mais fraco: {weakest}. Comece por ele.",
+      "held_uncalibrated": "\n  Retido em REVIEW: o léxico {lang} ainda não está calibrado, então nenhum texto passa. Leia o texto por conta própria."
+    }
+  }
+}
