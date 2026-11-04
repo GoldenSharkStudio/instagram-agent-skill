@@ -31,7 +31,7 @@ scratch/
 .claude/settings.local.json
 
 # Gestão interna do projeto (planos, handoff, registro). Fica só local.
-docs/PM/
+docs/PM
 
 # Estado do usuário que as skills gravam (voice, swipe, log, plan), se copiado pra cá
 instagram/
