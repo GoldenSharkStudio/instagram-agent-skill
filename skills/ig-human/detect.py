@@ -37,8 +37,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 APOSTROPHES = str.maketrans("‘’", "''")
 SENT_RE = re.compile(r"[^.!?\n]+[.!?]*")
 WORD_RE = re.compile(r"(?:[^\W\d_]|')+")
-NUMBERS = re.compile(r"\b\d[\d,.]*%?\b|\$\d")
-PROPER = re.compile(r"(?<![.!?]\s)(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zß-öø-ÿ]{2,}\b", re.MULTILINE)
 
 
 class LexiconError(Exception):
@@ -55,6 +53,62 @@ def say(M, key, **kw):
 
 
 _MESSAGES = {}                                    # code -> messages, filled on success only
+_CONCRETE = {}                                    # code -> build_concrete(...), same
+
+
+def build_concrete(d):
+    """The `concrete` section of a language file as one regex, in four groups:
+    1 a figure, with its price sign or its unit ("$7", "23h", "3,000", "9:30");
+    2 a listed word (a month, a spoken number, a money word), any case;
+    3 a name inside a sentence (not at a line start, not after a full stop);
+    4 an acronym ("USA", "EUA"), checked against its line in concrete_marks.
+    Same function in hookscore, beats, caption and detect, so the four give one
+    answer to "is this concrete?" (tests/test_concrete.py keeps them equal)."""
+    def alt(xs):
+        return "|".join(sorted({re.escape(x) for x in xs}, key=len, reverse=True)) or r"(?!)"
+    num = r"\d+(?:[.,:]\d+)*"
+    unit = r"(?:\s?(?i:" + d["number_units"] + r"))?"
+    listed = list(d["months"]) + list(d["spoken_numbers"]) + list(d["money_words"])
+    return {
+        "re": re.compile(
+            r"(\$\s?" + num + unit + r"|\b" + num + unit + r")"
+            r"|((?i:\b(?:" + alt(listed) + r")\b))"
+            r"|((?<![.!?]\s)(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zß-öø-ÿ]{2,}\b)"
+            r"|(\b[A-ZÀ-ÖØ-Þ]{2,4}\b)", re.MULTILINE),
+        "caps_skip": set(d["caps_skip"]),
+    }
+
+
+def concrete_marks(text, C):
+    """(start, mark) for every concrete thing in text, in order. An acronym
+    counts only on a line that is not shouting, and never one the language
+    lists in caps_skip ("DM", "OK"). Same function in hookscore, beats,
+    caption and detect."""
+    marks = []
+    for m in C["re"].finditer(text):
+        if m.lastindex == 4:
+            start = text.rfind("\n", 0, m.start()) + 1
+            end = text.find("\n", m.end())
+            line = text[start:end if end >= 0 else len(text)]
+            if m.group() in C["caps_skip"] or not re.search(r"[a-zß-öø-ÿ]", line):
+                continue
+        marks.append((m.start(), m.group().strip()))
+    return marks
+
+
+def load_concrete(lang="en"):
+    """What counts as concrete: lang/<lang>.json, section "concrete", shared
+    with hookscore, beats and caption. Follows --lang, as the messages do."""
+    if lang in _CONCRETE:
+        return _CONCRETE[lang]
+    path = os.path.join(HERE, "lang", lang + ".json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            C = build_concrete(json.load(fh)["concrete"])
+    except (OSError, ValueError, KeyError, TypeError, re.error) as err:
+        raise MessagesError(f"{path}: {type(err).__name__}: {err}") from None
+    _CONCRETE[lang] = C
+    return C
 
 
 def load_messages(lang="en"):
@@ -167,7 +221,7 @@ def check_specificity(text, lang="en"):
     if len(w) < 25:
         return 50.0, say(M, "too_short")
     per100 = 100 / len(w)
-    hits = len(NUMBERS.findall(text)) + len(set(PROPER.findall(text)))
+    hits = len(concrete_marks(text, load_concrete(lang)))
     density = hits * per100
     score = scale(density, human=6.0, machine=0.5)
     return score, say(M, "specificity_detail", hits=hits, density=density)
@@ -419,6 +473,7 @@ def main():
         sys.exit(2)
     try:
         load_messages(code)
+        load_concrete(code)        # loaded up front: a broken section is exit 2, not a traceback
     except MessagesError as err:
         print(f"detect.py: cannot load the messages, {err}", file=sys.stderr)
         sys.exit(2)

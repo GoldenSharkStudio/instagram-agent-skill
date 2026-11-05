@@ -119,5 +119,73 @@
       "they",
       "we"
     ]
+  },
+  "concrete": {
+    "note": "What counts as concrete, the same in hookscore, beats, caption and detect (tests/test_concrete.py keeps this section equal in ig-reel, ig-caption and ig-human). months leaves out \"may\": it is a verb far more often. caps_skip: all-caps words that are not a place or a thing.",
+    "number_units": "%|k\\b|x\\b|hrs?\\b|hours?\\b|mins?\\b|minutes?\\b|days?\\b|weeks?\\b|months?\\b|years?\\b|s\\b|secs?\\b|seconds?\\b|h\\b|am\\b|pm\\b",
+    "spoken_numbers": [
+      "billion",
+      "dozen",
+      "eight",
+      "eighty",
+      "eleven",
+      "fifteen",
+      "fifty",
+      "five",
+      "forty",
+      "four",
+      "half",
+      "hundred",
+      "million",
+      "nine",
+      "ninety",
+      "seven",
+      "seventy",
+      "six",
+      "sixty",
+      "ten",
+      "thirty",
+      "thousand",
+      "three",
+      "triple",
+      "twelve",
+      "twenty",
+      "twice",
+      "two",
+      "zero"
+    ],
+    "money_words": [
+      "billionaire",
+      "bucks",
+      "cents",
+      "dollar",
+      "dollars",
+      "grand",
+      "millionaire",
+      "percent",
+      "profit",
+      "rent",
+      "revenue",
+      "salary"
+    ],
+    "months": [
+      "january",
+      "february",
+      "march",
+      "april",
+      "june",
+      "july",
+      "august",
+      "september",
+      "october",
+      "november",
+      "december"
+    ],
+    "caps_skip": [
+      "CTA",
+      "DM",
+      "OK",
+      "PS"
+    ]
   }
 }

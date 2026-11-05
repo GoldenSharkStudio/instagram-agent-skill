@@ -46,7 +46,6 @@ WORD_RE = re.compile(r"(?:[^\W_]|[$%'’-])+")
 # copy a regex or word list is matched against does too. Same length, so
 # spans still line up, and the user's own text is never rewritten.
 APOSTROPHES = str.maketrans("‘’", "''")
-PROPER_RE = re.compile(r"(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zß-öø-ÿ]{2,}\b")
 HASHTAG_RE = re.compile(r"(?:^|\s)(#\w+)")
 # One emoji as a reader counts it: a flag pair, a keycap, or a pictograph with
 # its skin tone, variation selector and ZWJ-joined parts. Text-style symbols
@@ -74,12 +73,54 @@ def say(M, key, **kw):
     return M[key].format(**kw)
 
 
+def build_concrete(d):
+    """The `concrete` section of a language file as one regex, in four groups:
+    1 a figure, with its price sign or its unit ("$7", "23h", "3,000", "9:30");
+    2 a listed word (a month, a spoken number, a money word), any case;
+    3 a name inside a sentence (not at a line start, not after a full stop);
+    4 an acronym ("USA", "EUA"), checked against its line in concrete_marks.
+    Same function in hookscore, beats, caption and detect, so the four give one
+    answer to "is this concrete?" (tests/test_concrete.py keeps them equal)."""
+    def alt(xs):
+        return "|".join(sorted({re.escape(x) for x in xs}, key=len, reverse=True)) or r"(?!)"
+    num = r"\d+(?:[.,:]\d+)*"
+    unit = r"(?:\s?(?i:" + d["number_units"] + r"))?"
+    listed = list(d["months"]) + list(d["spoken_numbers"]) + list(d["money_words"])
+    return {
+        "re": re.compile(
+            r"(\$\s?" + num + unit + r"|\b" + num + unit + r")"
+            r"|((?i:\b(?:" + alt(listed) + r")\b))"
+            r"|((?<![.!?]\s)(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zß-öø-ÿ]{2,}\b)"
+            r"|(\b[A-ZÀ-ÖØ-Þ]{2,4}\b)", re.MULTILINE),
+        "caps_skip": set(d["caps_skip"]),
+    }
+
+
+def concrete_marks(text, C):
+    """(start, mark) for every concrete thing in text, in order. An acronym
+    counts only on a line that is not shouting, and never one the language
+    lists in caps_skip ("DM", "OK"). Same function in hookscore, beats,
+    caption and detect."""
+    marks = []
+    for m in C["re"].finditer(text):
+        if m.lastindex == 4:
+            start = text.rfind("\n", 0, m.start()) + 1
+            end = text.find("\n", m.end())
+            line = text[start:end if end >= 0 else len(text)]
+            if m.group() in C["caps_skip"] or not re.search(r"[a-zß-öø-ÿ]", line):
+                continue
+        marks.append((m.start(), m.group().strip()))
+    return marks
+
+
 def load_lang(code="en"):
     """Every word this script knows comes from lang/<code>.json.
 
-    spoken_numbers: spoken hooks say their numbers out loud ("twenty grand"),
-      and counting only digits missed them. "one" and "first" stay out: they
-      are filler far more often than a quantity.
+    concrete: what counts as a concrete marker, shared with beats, caption and
+      detect (build_concrete). Its spoken_numbers: spoken hooks say their
+      numbers out loud ("twenty grand"), and counting only digits missed
+      them. "one" and "first" stay out: they are filler far more often than
+      a quantity.
     stakes: words that put something on the line. A hook with none is a
       statement; a hook with one is a reason to keep watching.
     weak_openers: openers that spend the first second saying nothing. Order
@@ -94,19 +135,14 @@ def load_lang(code="en"):
     path = os.path.join(LANG_DIR, f"{code}.json")
     try:
         with open(path, encoding="utf-8") as fh:
-            d = json.load(fh)["hookscore"]
+            full = json.load(fh)
+        d = full["hookscore"]
         messages = d["messages"]
         if not (isinstance(messages, dict) and all(isinstance(v, str) for v in messages.values())):
             raise TypeError(messages)
         loaded = {
             "MESSAGES": messages,
-            "NUMBER_RE": re.compile(
-                r"\$\s?\d[\d,]*(?:\.\d+)?"           # money, whole
-                r"|\b\d[\d,]*(?:\.\d+)?\s?"          # a figure, with or without a unit
-                r"(?:" + d["number_units"] + r")?",
-                re.IGNORECASE),
-            "SPOKEN_NUMBERS": set(d["spoken_numbers"]),
-            "MONEY_WORDS": set(d["money_words"]),
+            "CONCRETE": build_concrete(full["concrete"]),
             "STAKES": set(d["stakes"]),
             "WEAK_OPENERS": list(d["weak_openers"]),
             "IMPERATIVES": set(d["imperatives"]),
@@ -185,13 +221,10 @@ def check_length(text, L=None):
 
 def check_specificity(text, L):
     """One concrete thing beats three abstract ones."""
-    nums = [n.strip() for n in L["NUMBER_RE"].findall(text) if n.strip()]
-    propers = set(PROPER_RE.findall(text))
-    low = [w.lower().strip("'’") for w in words(text)]
-    spoken = [w for w in low if w in L["SPOKEN_NUMBERS"] or w in L["MONEY_WORDS"]]
-    hits = len(nums) + len(propers) + len(spoken)
+    marks = [m for _, m in concrete_marks(text, L["CONCRETE"])]
+    hits = len(marks)
     score = 15.0 if hits == 0 else clamp(45 + hits * 30)
-    found = ", ".join(nums[:2] + sorted(propers)[:2] + spoken[:2])
+    found = ", ".join(marks[:4])
     if found:
         return score, say(L["MESSAGES"], "specificity_found", hits=hits, found=found)
     return score, say(L["MESSAGES"], "specificity_none", hits=hits)
@@ -227,12 +260,14 @@ def check_frontload(text, L):
         if low[:len(weak.split())] == weak.split():
             penalty, hit_opener = 30, weak
             break
-    payload = None
-    for i, token in enumerate(low):
-        if (token in L["STAKES"] or token in L["SPOKEN_NUMBERS"]
-                or token in L["MONEY_WORDS"] or L["NUMBER_RE"].match(w[i]) or (i and PROPER_RE.match(w[i]))):
-            payload = i
-            break
+    # The payload is the first stake or the first concrete marker, by word.
+    marks = concrete_marks(text, L["CONCRETE"])
+    firsts = [i for i, token in enumerate(low) if token in L["STAKES"]][:1]
+    if marks:
+        # "R$7" is one word and its marker starts at "$": that word, not the next.
+        before = text[:marks[0][0]]
+        firsts.append(len(words(before)) - (1 if before and words(before[-1]) else 0))
+    payload = min(firsts) if firsts else None
     if payload is None:
         base = 30.0
         where = say(M, "payload_none")

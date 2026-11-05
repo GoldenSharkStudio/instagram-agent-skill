@@ -152,7 +152,9 @@ class Hooks(unittest.TestCase):
         self.assertGreater(hs.check_specificity("vinte mil reais jogados fora", L)[0],
                            hs.check_specificity("muita coisa jogada fora", L)[0])
         # "um" is an article, not a quantity, as "one" is not in en.
-        self.assertNotIn("um", L["SPOKEN_NUMBERS"])
+        with open(os.path.join(os.path.dirname(hs.__file__), "lang", "pt-BR.json"), encoding="utf-8") as fh:
+            spoken = json.load(fh)["concrete"]["spoken_numbers"]
+        self.assertNotIn("um", spoken)
 
     def test_stakes(self):
         L = hs.load_lang("pt-BR")

@@ -26,6 +26,15 @@ import unittest
 from _support import ROOT, SKILLS, load, run_json
 from test_invariants import REGEX_KEYS, data_strings, script_paths
 
+CONCRETE_TOOLS = ("hookscore", "beats", "caption", "detect")
+
+
+def marks(tool, text, lang="en"):
+    """The concrete markers a tool finds, through its own copy and its own data."""
+    mod = load(tool)
+    C = mod.load_concrete(lang) if tool == "detect" else mod.load_lang(lang)["CONCRETE"]
+    return [m for _, m in mod.concrete_marks(text, C)]
+
 # A class with an ASCII letter range that does not also carry the Latin-1
 # letters for the same case. "À-Ö" is the upper half, "ß-ö" the lower one.
 _RANGE = re.compile(r"A-Z|a-z")
@@ -146,16 +155,16 @@ class AccentedWitnesses(unittest.TestCase):
 
     def test_proper_names_with_accents(self):
         text = "Ontem a Érica abriu em São Paulo."
-        self.assertEqual(set(load("hookscore").PROPER_RE.findall(text)), {"Érica", "São", "Paulo"})
-        self.assertEqual(set(load("detect").PROPER.findall(text)), {"Érica", "São", "Paulo"})
-        for tool in ("beats", "caption"):
+        for tool in CONCRETE_TOOLS:
             with self.subTest(tool=tool):
-                self.assertEqual(load(tool).CONCRETE_RE.findall(text), ["Érica", "São", "Paulo"])
+                self.assertEqual(marks(tool, text), ["Érica", "São", "Paulo"])
 
     def test_proper_still_wants_a_lower_case_tail(self):
-        for found in (load("hookscore").PROPER_RE.findall("x ÉRICA NASA Ok"),
-                      load("detect").PROPER.findall("x ÉRICA NASA Ok")):
-            self.assertEqual(found, [])
+        # ÉRICA is shouting, Ok too short: neither is a name. NASA is an
+        # acronym on a line that is not shouting, so it counts as one.
+        for tool in CONCRETE_TOOLS:
+            with self.subTest(tool=tool):
+                self.assertEqual(marks(tool, "x ÉRICA NASA Ok"), ["NASA"])
 
     def test_hashtag_keeps_the_whole_tag(self):
         _, out = run_json("caption", "-", stdin="Leia isto.\n\n#ação #marketing_digital #café\n")

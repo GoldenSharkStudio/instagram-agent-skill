@@ -37,7 +37,6 @@ WORD_RE = re.compile(r"(?:[^\W_]|[$%'’-])+")
 # spans still line up, and the user's own text is never rewritten.
 APOSTROPHES = str.maketrans("‘’", "''")
 SENT_RE = re.compile(r"[^.!?]+[.!?]*")
-CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zß-öø-ÿ]{2,}\b", re.MULTILINE)
 
 
 class LangError(Exception):
@@ -52,8 +51,50 @@ def say(M, key, **kw):
     return M[key].format(**kw)
 
 
+def build_concrete(d):
+    """The `concrete` section of a language file as one regex, in four groups:
+    1 a figure, with its price sign or its unit ("$7", "23h", "3,000", "9:30");
+    2 a listed word (a month, a spoken number, a money word), any case;
+    3 a name inside a sentence (not at a line start, not after a full stop);
+    4 an acronym ("USA", "EUA"), checked against its line in concrete_marks.
+    Same function in hookscore, beats, caption and detect, so the four give one
+    answer to "is this concrete?" (tests/test_concrete.py keeps them equal)."""
+    def alt(xs):
+        return "|".join(sorted({re.escape(x) for x in xs}, key=len, reverse=True)) or r"(?!)"
+    num = r"\d+(?:[.,:]\d+)*"
+    unit = r"(?:\s?(?i:" + d["number_units"] + r"))?"
+    listed = list(d["months"]) + list(d["spoken_numbers"]) + list(d["money_words"])
+    return {
+        "re": re.compile(
+            r"(\$\s?" + num + unit + r"|\b" + num + unit + r")"
+            r"|((?i:\b(?:" + alt(listed) + r")\b))"
+            r"|((?<![.!?]\s)(?<!^)\b[A-ZÀ-ÖØ-Þ][a-zß-öø-ÿ]{2,}\b)"
+            r"|(\b[A-ZÀ-ÖØ-Þ]{2,4}\b)", re.MULTILINE),
+        "caps_skip": set(d["caps_skip"]),
+    }
+
+
+def concrete_marks(text, C):
+    """(start, mark) for every concrete thing in text, in order. An acronym
+    counts only on a line that is not shouting, and never one the language
+    lists in caps_skip ("DM", "OK"). Same function in hookscore, beats,
+    caption and detect."""
+    marks = []
+    for m in C["re"].finditer(text):
+        if m.lastindex == 4:
+            start = text.rfind("\n", 0, m.start()) + 1
+            end = text.find("\n", m.end())
+            line = text[start:end if end >= 0 else len(text)]
+            if m.group() in C["caps_skip"] or not re.search(r"[a-zß-öø-ÿ]", line):
+                continue
+        marks.append((m.start(), m.group().strip()))
+    return marks
+
+
 def load_lang(code="en"):
-    """stopwords: words too common to count as the hook coming back at the end.
+    """concrete: what counts as a concrete marker, shared with hookscore,
+    caption and detect (build_concrete).
+    stopwords: words too common to count as the hook coming back at the end.
     thousands_separator: put back into a figure when the loop word is shown.
     messages: every sentence the script prints, str.format templates."""
     if code in _LOADED:
@@ -61,15 +102,16 @@ def load_lang(code="en"):
     path = os.path.join(LANG_DIR, f"{code}.json")
     try:
         with open(path, encoding="utf-8") as fh:
-            d = json.load(fh)["beats"]
+            full = json.load(fh)
+        d = full["beats"]
         messages = d["messages"]
         if not (isinstance(messages, dict) and all(isinstance(v, str) for v in messages.values())):
             raise TypeError(messages)
         if not isinstance(d["thousands_separator"], str):
             raise TypeError(d["thousands_separator"])
         loaded = {"STOPWORDS": set(d["stopwords"]), "THOUSANDS": d["thousands_separator"],
-                  "MESSAGES": messages}
-    except (OSError, ValueError, KeyError, TypeError) as err:
+                  "MESSAGES": messages, "CONCRETE": build_concrete(full["concrete"])}
+    except (OSError, ValueError, KeyError, TypeError, re.error) as err:
         raise LangError(f"{path}: {type(err).__name__}: {err}") from None
     _LOADED[code] = loaded
     return loaded
@@ -177,7 +219,7 @@ def analyse(raw, wpm=165, target=None, lang="en"):
             "dur": round(dur, 2),
             "words": n,
             "text": text,
-            "concrete": len(CONCRETE_RE.findall(text)),
+            "concrete": len(concrete_marks(text, L["CONCRETE"])),
             "label": "",
             "flags": [],
         })
