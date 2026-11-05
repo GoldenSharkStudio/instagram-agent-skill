@@ -371,6 +371,17 @@ class HumanizeCli(unittest.TestCase):
             with open(path, encoding="utf-8") as fh:
                 self.assertEqual(fh.read(), clean(read_fixture("bad_draft.txt")))
 
+    def test_json_with_out_file(self):
+        # -o writes the cleaned text, the JSON goes to stdout (decided 03/11).
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "out.txt")
+            proc = run_tool("humanize", fixture("bad_draft.txt"), "--json", "-o", path)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            data = json.loads(proc.stdout)
+            with open(path, encoding="utf-8") as fh:
+                self.assertEqual(fh.read(), data["text"])
+            self.assertEqual(data["text"], clean(read_fixture("bad_draft.txt")))
+
     def test_json_shape(self):
         proc, data = run_json("humanize", fixture("bad_draft.txt"))
         self.assertEqual(set(data), {"text", "report"})

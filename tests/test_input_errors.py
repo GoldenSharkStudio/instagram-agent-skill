@@ -151,6 +151,47 @@ class BadPathIsExitTwo(unittest.TestCase):
                 self.assertIn("stdin", err, tool)
 
 
+class WriteIsHonouredInEveryMode(unittest.TestCase):
+    """An output path is written whatever else is asked for. `humanize --json -o x`
+    used to print the JSON and never write x, exit 0 even when x could not be
+    written: a guard that failed open. The modes are each tool's "flag" arguments
+    from ARGS (itself checked against argparse), so a new flag joins the net."""
+
+    def modes(self, tool):
+        return [[]] + [["--" + a.replace("_", "-")] for a, k in ARGS[tool].items()
+                       if k == "flag"]
+
+    def test_the_file_is_written(self):
+        for (tool, arg), around in ARGV.items():
+            if ARGS[tool][arg] != "write":
+                continue
+            for mode in self.modes(tool):
+                with self.subTest(tool=tool, arg=arg, mode=mode), \
+                        tempfile.TemporaryDirectory() as d:
+                    path = os.path.join(d, "out.txt")
+                    argv = [path if a == "{p}" else a for a in around] + mode
+                    proc = run_tool(tool, *argv)
+                    self.assertIn(proc.returncode, (0, 1), proc.stderr)
+                    self.assertTrue(os.path.isfile(path), f"{tool} {mode}: {path} not written")
+                    with open(path, encoding="utf-8") as fh:
+                        self.assertTrue(fh.read().strip(), f"{tool} {mode}: empty file")
+
+    def test_a_bad_path_is_exit_two(self):
+        for (tool, arg), around in ARGV.items():
+            if ARGS[tool][arg] != "write":
+                continue
+            for mode in self.modes(tool):
+                with tempfile.TemporaryDirectory() as d:
+                    for label, path in hostile_writes(d):
+                        with self.subTest(tool=tool, arg=arg, mode=mode, case=label):
+                            argv = [path if a == "{p}" else a for a in around] + mode
+                            proc = run_tool(tool, *argv)
+                            self.assertEqual(proc.returncode, 2,
+                                             f"{tool} {mode} {label}: exit {proc.returncode}")
+                            self.assertIn(path, proc.stderr)
+                            self.assertNotIn("Traceback", proc.stderr)
+
+
 class DefaultHooksStillDegrades(unittest.TestCase):
     """A missing ig-reel next to ig-viral is a lone copy, not a user error: the
     default hooks.json path keeps degrading. Only an explicit --hooks fails."""

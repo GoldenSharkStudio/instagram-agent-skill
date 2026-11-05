@@ -10,8 +10,13 @@
       },
       {
         "id": "dm",
-        "regex": "(?i)\\bme (?:chama|chame|manda (?:uma )?mensagem|mande (?:uma )?mensagem)\\b|\\b(?:chama|chame|manda|mande)(?: no| na)? (?:dm|direct|direto|inbox|privado)\\b",
+        "regex": "(?i)\\bme (?:chama|chame|manda (?:uma )?mensagem|mande (?:uma )?mensagem)\\b(?![^.!?\\n]{0,40}?\\b(?:no|pelo|via|pro) (?:whats(?:app)?|zap(?:zap)?|wpp)\\b)|\\b(?:chama|chame|manda|mande)(?: no| na)? (?:dm|direct|direto|inbox|privado)\\b",
         "name": "chamar no direct"
+      },
+      {
+        "id": "whatsapp",
+        "regex": "(?i)\\b(?:chama|chame|manda|mande|fala|fale|escreve|escreva)\\b[^.!?\\n]{0,40}?\\b(?:no|pelo|via|pro) (?:whats(?:app)?|zap(?:zap)?|wpp)\\b",
+        "name": "chamar no WhatsApp"
       },
       {
         "id": "save",
@@ -30,7 +35,7 @@
       },
       {
         "id": "link_in_bio",
-        "regex": "(?i)\\blink (?:na|da) (?:minha )?bio\\b",
+        "regex": "(?i)\\blink (?:d[oa] [^\\W_]+ )?(?:(?:está|esta|tá|ta|fica) )?(?:na|da) (?:minha )?bio\\b",
         "name": "link na bio"
       },
       {

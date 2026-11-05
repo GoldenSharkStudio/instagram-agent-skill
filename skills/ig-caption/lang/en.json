@@ -10,8 +10,13 @@
       },
       {
         "id": "dm",
-        "regex": "(?i)\\b(?:dm|message) me\\b",
+        "regex": "(?i)\\b(?:dm|message) me\\b(?![^.!?\\n]{0,40}?\\b(?:on|via|over|to) (?:my |our )?whatsapp\\b)",
         "name": "DM me"
+      },
+      {
+        "id": "whatsapp",
+        "regex": "(?i)\\b(?:message|text|dm|ping|call|send)\\b[^.!?\\n]{0,40}?\\b(?:on|via|over|to) (?:my |our )?whatsapp\\b",
+        "name": "WhatsApp me"
       },
       {
         "id": "save",
@@ -30,7 +35,7 @@
       },
       {
         "id": "link_in_bio",
-        "regex": "(?i)\\blink in (?:my )?bio\\b",
+        "regex": "(?i)\\blink (?:to (?:my )?[^\\W_]+ )?(?:is )?in (?:my )?bio\\b",
         "name": "link in bio"
       },
       {

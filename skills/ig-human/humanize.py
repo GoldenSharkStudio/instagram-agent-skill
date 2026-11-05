@@ -489,10 +489,7 @@ def main():
         sys.exit(2)
     clean, report = humanize(raw, lex, code)
 
-    if args.json:
-        print(json.dumps({"text": clean, "report": report}, indent=2, ensure_ascii=False))
-        return
-    if args.out:
+    if args.out:                                 # -o writes the text in every mode
         try:
             with open(args.out, "w", encoding="utf-8") as fh:
                 fh.write(clean)
@@ -501,7 +498,10 @@ def main():
                   file=sys.stderr)
             sys.exit(2)
         print(say(M, "wrote", path=args.out), file=sys.stderr)
-    else:
+    if args.json:                                # the JSON goes to stdout, -o or not
+        print(json.dumps({"text": clean, "report": report}, indent=2, ensure_ascii=False))
+        return
+    if not args.out:
         sys.stdout.write(clean)
     if args.report:
         render_report(report, lang=code)

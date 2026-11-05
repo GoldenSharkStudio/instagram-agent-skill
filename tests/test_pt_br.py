@@ -196,6 +196,7 @@ class Figures(unittest.TestCase):
 ASKS = [
     "Comente CONTRATO que eu te mando.",
     "Me chama no direct.",
+    "Me chama no WhatsApp.",
     "Salve esse post.",
     "Compartilhe com quem precisa.",
     "Me siga pra mais.",

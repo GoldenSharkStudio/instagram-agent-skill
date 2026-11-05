@@ -143,5 +143,43 @@ class Contract(unittest.TestCase):
         self.assertEqual(a, b)
 
 
+class WhatsAppAsk(unittest.TestCase):
+    """A WhatsApp call is one ask, `whatsapp`: not also a DM (two asks would warn
+    on a caption that asks one thing), and a WhatsApp link in the bio is the
+    bio ask. Phrases written from scratch."""
+
+    CASES = {
+        "pt-BR": [
+            ("Me chama no WhatsApp.", ["whatsapp"]),
+            ("me chama no Zap que eu respondo", ["whatsapp"]),
+            ("Manda OI no WhatsApp.", ["whatsapp"]),
+            ("Manda uma mensagem no whats e eu te passo o preço.", ["whatsapp"]),
+            ("Chama no zap.", ["whatsapp"]),
+            ("Fala comigo pelo WhatsApp.", ["whatsapp"]),
+            ("O link do WhatsApp está na bio.", ["link_in_bio"]),
+            ("Link do zap na bio.", ["link_in_bio"]),
+            ("Me chama no direct.", ["dm"]),
+            ("Me chama.", ["dm"]),
+            ("Uso o WhatsApp o dia todo.", []),
+        ],
+        "en": [
+            ("Message me on WhatsApp.", ["whatsapp"]),
+            ("Text me on WhatsApp for the price.", ["whatsapp"]),
+            ("DM me on WhatsApp.", ["whatsapp"]),
+            ("Send HI to my WhatsApp.", ["whatsapp"]),
+            ("WhatsApp link in bio.", ["link_in_bio"]),
+            ("The link to my WhatsApp is in my bio.", ["link_in_bio"]),
+            ("DM me.", ["dm"]),
+            ("I use WhatsApp all day.", []),
+        ],
+    }
+
+    def test_cases(self):
+        for lang, cases in self.CASES.items():
+            for text, ids in cases:
+                with self.subTest(lang=lang, text=text):
+                    self.assertEqual(cp.analyse(text, lang=lang)["ask_ids"], ids)
+
+
 if __name__ == "__main__":
     unittest.main()
