@@ -70,6 +70,7 @@ WITNESSES = [
     "'Just raise your prices,' sure.",
     "'How do you price a logo?' I get this daily.",
     "Canva's free plan is overrated.",
+    "'Está caro.' Beleza, então faz a conta comigo.",
 ]
 
 # Regexes where the apostrophe is redundant: another alternative already
@@ -148,8 +149,10 @@ def _humanize(text):
 
 
 def _swipe(text):
+    # Every language's `match`, so a pt-BR regex is exercised too.
     sw = load("swipe")
-    return sw.classify(text, sw.load_formulas(sw.HOOKS))
+    return {c: sw.classify(text, sw.load_formulas(sw.HOOKS, c), c)
+            for c in sw.LANGS if c != "auto"}
 
 
 # What each tool answers for a piece of text, through its public entry point.

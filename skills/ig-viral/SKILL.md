@@ -160,11 +160,11 @@ Report three things and no more:
 3. **The unclassified rows.** Every hook the classifier could not name is
    either noise or a formula that is not in `hooks.json` yet. Read them by
    hand. This is the most valuable column in the output and it is the reason
-   the script prints the count. In `pt-BR` every row is unclassified for now:
-   `hooks.json` has no Portuguese `match` yet, and the script says so on stderr
-   ("hooks.json ainda não tem `match` para pt-BR"). Then item 1 has no counts:
-   name the formulas yourself by reading the hooks against `hooks.json`, and
-   say that the naming is yours, not the script's.
+   the script prints the count. Each language has its own `match` in
+   `hooks.json`; a formula with none in the language you run never matches,
+   and when the language has no `match` at all the script says so on stderr.
+   Then item 1 has no counts: name the formulas yourself by reading the hooks
+   against `hooks.json`, and say that the naming is yours, not the script's.
 
 Then state the sample size and the confidence in plain words. Forty reels
 across six accounts supports a claim. Twelve does not, and saying so is the

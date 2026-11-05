@@ -80,8 +80,7 @@ your text.
 Every tool takes `--lang`: `en` (the default), `pt-BR` or `auto`, which guesses
 from the text and says on stderr what it picked. The skills pass the
 **Language:** line of your `voice.md`. `en` ships for every tool. `pt-BR` ships
-for every tool, with two gaps: `swipe` names no formula in pt-BR yet (every
-hook comes out unclassified, and it says so), and the pt-BR humanizer has no
+for every tool, with one gap: the pt-BR humanizer has no
 calibrated lexicon yet. `words` and `phrases` are empty, so it strips invisible
 characters, fixes typography and flags the structural tells, but it replaces no
 word, and `detect` never gives PASS in pt-BR until the lexicon is calibrated:

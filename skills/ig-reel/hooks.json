@@ -20,7 +20,7 @@
       "trap": "A fake cost. 'It cost me my peace of mind' is not a number and everybody can hear that.",
       "match": {
         "en": "\\$\\s?\\d[\\d,]*\\s+(?:is|was) what\\b|\\bcost (?:me|us|him|her|them)\\b|\\blost\\b[^.!?]{0,20}\\$\\s?\\d",
-        "pt-BR": ""
+        "pt-BR": "(?:R\\$|US\\$|\\$)\\s?\\d[\\d.,]*(?:\\s?mil)?\\s+(?:é|foi) o que\\b|\\bfoi o que (?:me |nos |te )?custou\\b|\\b(?:me|nos|te|lhe) custou\\b|\\bperd(?:i|emos|eu)\\b[^.!?]{0,20}(?:R\\$|US\\$|\\$)\\s?\\d"
       }
     },
     {
@@ -33,7 +33,7 @@
       "trap": "Telling people to stop doing something nobody does. The habit has to be one the viewer recognises in themselves.",
       "match": {
         "en": "^\\s*(?:stop|quit|never|don'?t|dont|please)\\b[^.!?]{0,30}\\b(?:do|be|make|buy|use|start|say|post|send|take|charge)?\\b|\\b(?:do not|don'?t|dont|never) (?:do|be|make|buy|use|start|say|post|take)\\b|\\bquit your\\b",
-        "pt-BR": ""
+        "pt-BR": "^[^\\w]*(?:pare|para|parem|nunca|jamais|não)\\s+(?:de\\s+)?(?:faça|façam|faz|fazer|use|usar|poste|postar|mande|mandar|compre|comprar|cobre|cobrar|aceite|aceitar|contrate|contratar|comece|começar|diga|dizer|envie|enviar|gaste|gastar|publique|publicar)\\b|\\b(?:nunca|não) (?:faça|use|mande|compre|cobre|aceite|poste|contrate)\\b"
       }
     },
     {
@@ -46,7 +46,7 @@
       "trap": "Picking a truth everybody already says. If the comments are agreeing before you finish, it was not a secret.",
       "match": {
         "en": "\\b(?:nobody|no one|nobody ever)\\s+(?:ever\\s+)?(?:tells|told|talks|talked|says|said|mentions|teaches)\\b|\\bwhat (?:nobody|no one) (?:tells|says)\\b",
-        "pt-BR": ""
+        "pt-BR": "\\bningu[ée]m\\s+(?:nunca\\s+)?(?:te |vos |lhe |me |nos )?(?:conta|contou|fala|falou|diz|disse|ensina|ensinou|explica|explicou|avisa|avisou|mostra|mostrou)\\b"
       }
     },
     {
@@ -59,7 +59,7 @@
       "trap": "Overstating the replacement. If it replaced 60% of the job, say 60%, or the comments will say it for you.",
       "match": {
         "en": "\\breplaced?\\b[^.!?]*\\$\\s?\\d|\\$\\s?\\d[^.!?]*\\breplaced?\\b|\\binstead of (?:paying|hiring)\\b",
-        "pt-BR": ""
+        "pt-BR": "\\bsubstitu\\w*\\b[^.!?]*(?:R\\$|US\\$|\\$)\\s?\\d|(?:R\\$|US\\$|\\$)\\s?\\d[^.!?]*\\bsubstitu\\w*|\\b(?:em vez|no lugar) de (?:pagar|contratar)\\b"
       }
     },
     {
@@ -72,7 +72,7 @@
       "trap": "A ratio nobody believes. 40 hours to 4 seconds gets treated as a lie even when it is true.",
       "match": {
         "en": "\\bused to take\\b|\\bnow (?:it )?(?:only )?takes?\\b|\\btakes? (?:me )?\\d+\\s*(?:sec|second|min|minute|hour|hr)",
-        "pt-BR": ""
+        "pt-BR": "\\b(?:levava|demorava|gastava)\\b[^.!?]{0,40}\\b(?:horas?|minutos?|dias?|semanas?)\\b|\\b(?:agora|hoje) (?:só |isso )?(?:leva|levo|demora|demoro)\\b|\\b(?:leva|levo|demora|demoro) (?:só |apenas )?\\d+\\s*(?:seg|segundos?|min|minutos?|h|horas?)\\b"
       }
     },
     {
@@ -85,7 +85,7 @@
       "trap": "Not showing the screen. A numbers video with no screen recording is a numbers claim.",
       "match": {
         "en": "\\bi\\s+\\w+(?:ed)?\\s+[^.!?]{0,30}\\bfor\\s+\\d+\\s+(?:days?|weeks?|months?|years?)\\b|\\bhere (?:are|is) (?:the|my)\\b[^.!?]*\\bnumbers\\b|\\bwe(?:'ll| will)? do \\$\\s?\\d",
-        "pt-BR": ""
+        "pt-BR": "\\b\\w+(?:ei|amos)\\b[^.!?]{0,30}\\b(?:por|durante)\\s+\\d+\\s+(?:dias?|semanas?|meses|mês|anos?)\\b|\\b(?:aqui estão|esses são|estes são) (?:os|meus) (?:números|resultados)\\b"
       }
     },
     {
@@ -98,7 +98,7 @@
       "trap": "Skipping the absolution. 'You are doing it wrong' on its own makes people leave rather than learn.",
       "match": {
         "en": "\\b(?:big(?:gest)?|common|the) mistake\\b|\\bmistake (?:that|people|i)\\b|\\byou'?(?:re| are) doing\\b[^.!?]*\\bwrong\\b|\\bdoing (?:it|this) wrong\\b",
-        "pt-BR": ""
+        "pt-BR": "\\b(?:maior|pior|grande) erro\\b|\\berro (?:comum|que (?:todo|quase|muita|eu|você))\\b|\\b(?:fazendo|usando|escrevendo|postando|cobrando)\\b[^.!?]{0,40}\\berrad[oa]s?\\b"
       }
     },
     {
@@ -111,7 +111,7 @@
       "trap": "Promising a secret and delivering the brochure. The comments are merciless about this one.",
       "match": {
         "en": "\\bi (?:spent|worked|ran|was|have been)\\b[^.!?]*\\b\\d+\\s*\\+?\\s*years?\\b|\\bwe never (?:told|said|showed)\\b|\\bnobody (?:puts|tells you about)\\b|\\bi (?:sell|sold|run)\\b[^.!?]*\\$\\s?\\d",
-        "pt-BR": ""
+        "pt-BR": "\\b(?:passei|trabalhei|fiquei)\\b[^.!?]*\\b\\d+\\s*\\+?\\s*anos?\\b|\\b(?:passei|trabalhei|fiquei) (?:dois|três|quatro|cinco|seis|sete|oito|nove|dez|quinze|vinte) anos\\b|\\b(?:há|faz) \\d+ anos (?:eu )?(?:trabalho|vendo|atendo)\\b|\\b(?:a gente|nós) nunca (?:contou|contava|falou|falava|mostrou|mostrava|disse|dizia)\\b"
       }
     },
     {
@@ -124,7 +124,7 @@
       "trap": "The artifact not being on screen. If they cannot screenshot it, there is nothing to steal.",
       "match": {
         "en": "^\\s*steal\\b|\\bsteal (?:this|these|my)\\b|^\\s*(?:here'?s|this is) (?:the|my) (?:exact|literal)\\b",
-        "pt-BR": ""
+        "pt-BR": "^[^\\w]*(?:roube|rouba|copie|copia|pode copiar)\\b|\\b(?:roube|rouba|copie|copia) (?:esse|este|essa|esta|meu|minha|isso)\\b|^[^\\w]*(?:aqui está|esse é|este é) (?:o|meu) (?:roteiro|script|modelo|texto) (?:exato|completo)\\b"
       }
     },
     {
@@ -137,7 +137,7 @@
       "trap": "A situation so broad it qualifies nobody. 'If you want to grow' is not a situation.",
       "match": {
         "en": "^\\s*if (?:you|i|we|your|my|they)\\b",
-        "pt-BR": ""
+        "pt-BR": "^[^\\w]*se (?:você|vocês|vc|seu|sua|seus|suas|eu|a gente|nós|o seu|a sua|os seus|as suas)\\b"
       }
     },
     {
@@ -150,7 +150,7 @@
       "trap": "N above seven. Nobody believes you have nine good ones, and you do not.",
       "match": {
         "en": "^\\s*(?:here are\\s+)?\\d+\\s+\\w+|\\bnumber \\d+\\b|\\b(?:three|four|five|seven|ten)\\s+\\w+\\s+(?:every|that|you)\\b",
-        "pt-BR": ""
+        "pt-BR": "^[^\\w]*(?:(?:aqui (?:estão|vão)|os|as)\\s+)?\\d+\\s+[^\\W\\d_]{3,}|\\bo número \\d+\\b|^[^\\w]*(?:três|quatro|cinco|seis|sete|dez)\\s+[^\\W\\d_]+\\s+(?:que|para|pra|de)\\b"
       }
     },
     {
@@ -163,7 +163,7 @@
       "trap": "Inventing the objection. Pull it verbatim from a DM or a comment, including the bad grammar.",
       "match": {
         "en": "^\\s*[\\\"“'][^\\\"”']{5,120}[\\\"”'][,.]?\\s*(?:fine|ok|okay|sure|right|here)",
-        "pt-BR": ""
+        "pt-BR": "^[^\\w]*[\\\"“'][^\\\"”']{5,120}[\\\"”'][,.]?\\s*(?:tudo bem|beleza|ok|certo|justo|então|aqui|entendo)"
       }
     },
     {
@@ -176,7 +176,7 @@
       "trap": "Three levers. Name one thing that changed or the transformation stops being believable.",
       "match": {
         "en": "\\b(?:this|that) was\\b[^.!?]*[.!?]\\s*(?:this|that) is\\b|\\bbefore\\b[^.!?]*\\bafter\\b|\\bi (?:look|looked) back at\\b",
-        "pt-BR": ""
+        "pt-BR": "\\b(?:esse|este|essa|esta|isso|isto) (?:era|foi)\\b[^.!?]*[.!?]\\s*(?:esse|este|essa|esta|isso|isto) (?:é|aqui)\\b|\\bo antes e o depois\\b|\\bantes\\b[^.!?]*\\bdepois\\b"
       }
     },
     {
@@ -189,7 +189,7 @@
       "trap": "A group so large it is not a callout. 'Entrepreneurs' is not a group.",
       "match": {
         "en": "^\\s*(?:every|all|any)\\s+\\w+|^\\s*[^\\W\\d_][\\w ]{2,28}(?:ers|ists|ors|ants)\\b\\s*[,:]|^\\s*for (?:viewers|people|anyone|those|everyone)\\b|^\\s*(?:attention|listen up)\\b",
-        "pt-BR": ""
+        "pt-BR": "^[^\\w]*(?:todo|toda|todos|todas|qualquer)\\s+(?:o |a |os |as )?[^\\W\\d_]+|^[^\\w]*[^\\W\\d_]\\w{1,25}(?:or|ora|ores|oras|eiro|eira|eiros|eiras|ista|istas|ante|antes|ente|entes|ário|ária|ários|árias|ógrafo|ógrafa|ógrafos|ógrafas)\\b[^,:.!?]{0,40}[,:]|^[^\\w]*(?:para|pra) (?:quem|você que|vocês que)\\b|^[^\\w]*(?:atenção|escuta|presta atenção)\\b"
       }
     },
     {
@@ -202,7 +202,7 @@
       "trap": "Making the change sound like luck. If the answer is 'I got lucky', there is no video.",
       "match": {
         "en": "\\bmy first\\s+\\d+\\b|\\bfirst\\s+\\d+\\s+(?:reels?|videos?|posts?|clients?|months?)\\b",
-        "pt-BR": ""
+        "pt-BR": "\\b(?:meus|minhas|os|as) primeir[oa]s\\s+\\d+\\b|\\bprimeir[oa]s\\s+\\d+\\s+(?:reels?|vídeos?|posts?|clientes?|meses|vendas?)\\b"
       }
     },
     {
@@ -215,7 +215,7 @@
       "trap": "Tidying the question up. The value is that it is in their words, typos and all.",
       "match": {
         "en": "^\\s*[\\\"“']?(?:how|what|what'?s|why|when|where|who|which|can|should|do|does|did|is|are|have you|would you)\\b[^?]{3,110}\\?",
-        "pt-BR": ""
+        "pt-BR": "^[^\\w]*(?:como|qual|quais|quanto|quanta|quantos|quantas|por que|porque|pra que|quando|onde|quem|o que|dá pra|da pra|posso|devo|vale a pena|é possível|tem como|você já|vocês já)\\b[^?]{3,110}\\?"
       }
     },
     {
@@ -228,7 +228,7 @@
       "trap": "Refusing to pick. A comparison with a diplomatic ending is a video with no ending.",
       "match": {
         "en": "\\b(?:vs\\.?|versus)\\b|\\bdifferences? between\\b|\\b(?:a|the) or (?:b|the)\\b",
-        "pt-BR": ""
+        "pt-BR": "\\b(?:vs\\.?|versus)\\b|\\b[^\\W\\d_]{2,}\\s+x\\s+[^\\W\\d_]{2,}\\b|\\bdiferenças? entre\\b"
       }
     },
     {
@@ -241,7 +241,7 @@
       "trap": "A result that takes twelve seconds to arrive. If the payoff is slow, cut to it and show the wait afterwards.",
       "match": {
         "en": "^\\s*watch (?:what|this|me)\\b|^\\s*(?:let me|lemme) show you\\b|^\\s*repeat after me\\b",
-        "pt-BR": ""
+        "pt-BR": "^[^\\w]*(?:olha|olhe|veja|vê|assista|repara) (?:o que|isso|só|como)\\b|^[^\\w]*(?:deixa|deixe) (?:eu )?te mostrar\\b|^[^\\w]*vou te mostrar\\b|^[^\\w]*repete comigo\\b"
       }
     },
     {
@@ -254,7 +254,7 @@
       "trap": "Manufactured urgency. One fake deadline and every future one is discounted.",
       "match": {
         "en": "\\bbefore (?:you|it|they|the)\\b[^.!?]*\\b(?:change|changes|end|ends|close|closes|expires|goes)\\b|\\bchanges on\\b|\\bby 20\\d\\d\\b",
-        "pt-BR": ""
+        "pt-BR": "\\bantes (?:que|de)\\b[^.!?]*\\b(?:mude|mudar|acabe|acabar|feche|fechar|expire|expirar|saia|sair|vença|vencer|suba|subir)\\b|\\b(?:muda|mudam|vence|acaba|fecha|expira) (?:em|no dia|dia|a partir de)\\s+\\d|\\baté (?:o fim de )?20\\d\\d\\b"
       }
     },
     {
@@ -267,7 +267,7 @@
       "trap": "Removing the blocker and putting nothing in its place. The second half is the whole video.",
       "match": {
         "en": "\\byou (?:do not|don'?t|dont) need\\b|\\bstop (?:trying to|worrying about)\\b",
-        "pt-BR": ""
+        "pt-BR": "\\b(?:você|vocês|vc|tu) não precisa\\b|\\bnão precisa(?:m)? (?:de|ter|ser|saber)\\b|\\bpare de (?:tentar|se preocupar)\\b"
       }
     },
     {
@@ -280,7 +280,7 @@
       "trap": "Never going back to fill in the gap. Deliver the setup by second eight or it reads as a mistake.",
       "match": {
         "en": "^\\s*(?:\\.\\.\\.|…)|^\\s*(?:and (?:that'?s|that is|then) when|so (?:he|she|they) (?:said|asked))\\b|^\\s*(?:uh|um)\\b",
-        "pt-BR": ""
+        "pt-BR": "^\\s*(?:\\.\\.\\.|…)|^[^\\w]*(?:e foi (?:aí|quando)|e aí (?:ele|ela|eles|o cliente)|aí (?:ele|ela|eles|o cliente) (?:disse|falou|pediu|perguntou|virou)|foi aí que)\\b|^\\s*(?:hã|ãh|hum)\\b"
       }
     },
     {
@@ -293,7 +293,7 @@
       "trap": "Flipping a saying nobody says. The original has to be a reflex, or the inversion is just a sentence.",
       "match": {
         "en": "^\\s*[^\\W\\d_][\\w' ]{2,34}\\b(?:finish|finishes|win|wins|lose|loses|beats?|is|are)\\s+(?:first|last|dead|wrong|right|better|overrated|underrated)\\b",
-        "pt-BR": ""
+        "pt-BR": "^[^\\w]*[^\\W\\d_][\\w ]{2,40}\\b(?:não é (?:garantia|sobre|apenas|só|sinônimo)|não significa|não garante|nunca foi sobre|(?:é|está|tá) (?:superestimad|subestimad)[oa]|(?:termina|terminam|chega|chegam) em (?:primeiro|último))\\b"
       }
     },
     {
@@ -306,7 +306,7 @@
       "trap": "A statistic you cannot source. Say where it came from in the video or do not use it.",
       "match": {
         "en": "^\\s*\\d[\\d,.]*\\s?%|\\b\\d[\\d,.]*\\s?%\\s+of\\b",
-        "pt-BR": ""
+        "pt-BR": "^[^\\w]*\\d[\\d.,]*\\s?%|\\b\\d[\\d.,]*\\s?%\\s+d(?:os|as)\\b"
       }
     },
     {
@@ -319,7 +319,7 @@
       "trap": "Holding the thing up without saying what it changes. A reveal with no stake is an advert.",
       "match": {
         "en": "^\\s*(?:so,?\\s+)?(?:this|these|here) (?:is|are)\\s+(?:the\\s+)?(?:new|my new)\\b|^\\s*(?:so,?\\s+)?this (?:new|tiny|little)\\b|^\\s*this \\w+ has (?:the|a)\\b",
-        "pt-BR": ""
+        "pt-BR": "^[^\\w]*(?:então,?\\s+)?(?:esse|este|essa|esta|esses|estes|essas|estas|aqui) (?:é|são|está|estão)\\s+(?:o |a |os |as )?(?:nov[oa]s?|meu nov[oa]|minha nova)\\b|^[^\\w]*(?:esse|este|essa|esta) (?:nov[oa]|pequen[oa])\\b"
       }
     },
     {
@@ -332,7 +332,7 @@
       "trap": "No name and no link. An anonymous miracle is a rumour.",
       "match": {
         "en": "\\bthere (?:was|is) (?:one|a|this)\\b|\\b(?:one|a) (?:guy|girl|creator|student|founder|kid|client|friend) (?:i know |who |that )(?:\\w+ed|grew|made|built|went|took|got|hit)\\b|\\bwe had a new\\b",
-        "pt-BR": ""
+        "pt-BR": "\\b(?:teve|tinha|existe|existia|conheci|conheço) (?:um|uma|esse|essa) (?:cara|moça|menina|criador|criadora|aluno|aluna|cliente|empresário|empresária|amigo|amiga|dono|dona|seguidor|seguidora)\\b|\\b(?:um|uma) (?:aluno|aluna|cliente|amigo|amiga|criador|criadora|cara|seguidor|seguidora)(?: meu| minha)? que (?:fez|ganhou|faturou|cresceu|vendeu|bateu|saiu|chegou|tirou|fechou)\\b|\\bfaça como [^\\W\\d_]+\\b"
       }
     },
     {
@@ -345,7 +345,7 @@
       "trap": "A superlative with a soft answer. If the second half is 'consistency', you have said nothing and the comments will tell you.",
       "match": {
         "en": "^\\s*(?:the\\s+)?(?:fastest|quickest|best|worst|biggest|greatest|easiest|hardest|only|number one|#1|most important)\\s+\\w+|\\bthe (?:fastest|best|worst|biggest|greatest|only) way to\\b",
-        "pt-BR": ""
+        "pt-BR": "^[^\\w]*(?:(?:o|a|os|as)\\s+)?(?:jeito|forma|maneira|caminho) mais (?:rápid[oa]|fácil|barat[oa]|simples|segur[oa])\\b|^[^\\w]*(?:(?:o|a|os|as)\\s+)?(?:melhor|melhores|pior|piores|maior|maiores|únic[oa]s?|mais importante)\\s+[^\\W\\d_]+|\\b(?:o|a) (?:melhor|pior|única|maior) (?:forma|jeito|maneira) de\\b|^[^\\w]*(?:ess[ae]|est[ae]) (?:é|tem sido|foi) (?:a|o) (?:melhor|maior|pior|únic[oa])\\b"
       }
     }
   ],

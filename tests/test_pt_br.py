@@ -161,6 +161,10 @@ class Hooks(unittest.TestCase):
         self.assertEqual(hs.check_stakes("uma manhã tranquila", L)[0], 20.0)
         self.assertEqual(hs.check_stakes("nunca faça isso", L)[0], 70.0)
         self.assertEqual(hs.check_stakes("nunca pague R$ 5 nisso", L)[0], 100.0)
+        # The rival is something on the line (seen in the real batch, 4b.4).
+        for w in ("o concorrente postou", "os concorrentes da rua"):
+            with self.subTest(w=w):
+                self.assertEqual(hs.check_stakes(w, L)[0], 70.0)
 
     def test_ranking_prints_portuguese(self):
         proc = run_tool("hookscore", fixture("hooks.pt-BR.txt"), "--lang", "pt-BR")
@@ -258,10 +262,12 @@ class Caption(unittest.TestCase):
 
 
 class Swipe(unittest.TestCase):
-    def test_pt_br_runs_and_names_no_formula(self):
+    def test_english_batch_run_as_pt_br_is_unclassified(self):
+        # pt-BR has its own `match` since 4b.4 (tests/test_hooks_pt_br.py);
+        # an English batch read as Portuguese is named by none of them.
         proc, d = run_json("swipe", fixture("captured.tsv"), "--lang", "pt-BR")
         self.assertEqual(proc.returncode, 0, proc.stderr)
-        self.assertIn("ainda não tem `match` para pt-BR", proc.stderr)
+        self.assertNotIn("ainda não tem `match`", proc.stderr)
         self.assertTrue(all(r["formula_id"] is None for r in d["reels"]))
         self.assertTrue(all(r["hook_score"] is not None for r in d["reels"]))
 

@@ -62,16 +62,15 @@ class FailsClosed(unittest.TestCase):
     """The language picks the regex; no language ever borrows another's."""
 
     def test_empty_slot_never_matches(self):
-        # Today every pt-BR slot is empty: an English example run as pt-BR is
-        # unclassified, never named by the English regex.
-        formulas = sw.load_formulas(HOOKS_PATH, "pt-BR")
-        for h in hooks():
-            if h["match"]["pt-BR"]:
-                continue
-            with self.subTest(id=h["id"]):
-                self.assertNotIn(h["id"], [f[0] for f in formulas])
-                fid, _ = sw.classify(h["example"], formulas)
-                self.assertIsNone(fid)
+        # Every shipped slot is filled since 4b.4, so the empty one is planted:
+        # the formula is left out in that language and the English regex is
+        # never borrowed for it.
+        with tempfile.TemporaryDirectory() as d:
+            path = plant(d, [{"id": 1, "name": "One",
+                              "match": {"en": r"\bcost me\b", "pt-BR": ""}}])
+            pt = sw.load_formulas(path, "pt-BR")
+        self.assertEqual(pt, [])
+        self.assertIsNone(sw.classify("It cost me a client", pt)[0])
 
     def test_each_language_uses_its_own_regex(self):
         with tempfile.TemporaryDirectory() as d:
