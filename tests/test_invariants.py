@@ -284,7 +284,7 @@ class EmojiCount(unittest.TestCase):
 # string under any other key fails RegexDataNet.test_every_regex_key_is_known,
 # so a new regex field cannot dodge the net below.
 REGEX_KEYS = {"regex", "match", "contractions", "pronouns", "address_me",
-              "address_you", "number_units", "pattern"}
+              "address_you", "number_units", "pattern", "cta"}
 REGEX_HINTS = ("\\b", "(?", "\\s", "\\d", "[^")
 
 

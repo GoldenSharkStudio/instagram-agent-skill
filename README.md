@@ -370,7 +370,7 @@ skills/ig-human/lang/en.json       every sentence humanize and detect print (not
 skills/ig-human/lang/pt-BR.json    the same in Portuguese
 skills/ig-human/humanize.py        the three cleaning passes
 skills/ig-human/detect.py          the five-check panel
-skills/ig-viral/lang/en.json       every sentence swipe prints and writes to swipe.md
+skills/ig-viral/lang/en.json       every sentence swipe prints, and the patterns of a CTA row
 skills/ig-viral/lang/pt-BR.json    the same in Portuguese
 skills/ig-viral/swipe.py           outlier ranking and formula classification
 skills/ig-profile/rubric.json      the 100-point profile score

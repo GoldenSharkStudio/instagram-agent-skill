@@ -80,6 +80,34 @@ def load_messages(lang="en"):
     return messages
 
 
+_CTA = {}                                         # code -> compiled patterns
+
+
+def load_cta(lang="en"):
+    """The call-to-action patterns of lang/<lang>.json, section "swipe.cta".
+    A captured "hook" that matches is a CTA or a row of hashtags: on that reel
+    the hook is on the cover. Missing or broken list raises MessagesError."""
+    if lang in _CTA:
+        return _CTA[lang]
+    path = os.path.join(HERE, "lang", lang + ".json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            raw = json.load(fh)["swipe"]["cta"]
+        if not (isinstance(raw, list) and raw and all(isinstance(p, str) and p for p in raw)):
+            raise TypeError(raw)
+        compiled = [re.compile(p, re.IGNORECASE) for p in raw]
+    except (OSError, ValueError, KeyError, TypeError, re.error) as err:
+        raise MessagesError(f"{path}: {type(err).__name__}: {err}") from None
+    _CTA[lang] = compiled
+    return compiled
+
+
+def is_cta(hook, lang="en"):
+    """True when the captured line is a call to action, not a hook."""
+    hook = unicodedata.normalize("NFC", hook).translate(APOSTROPHES)
+    return any(p.search(hook) for p in load_cta(lang))
+
+
 def hook_lang_error(lang):
     """Why hookscore cannot score in this language, or None if it can."""
     if score_hook is None:
@@ -196,6 +224,7 @@ def analyse(rows, formulas, lang="en"):
         r["outlier"] = round(r["views"] / base, 2) if base else None
         r["formula_id"], r["formula"] = classify(r["hook"], formulas, lang)
         r["words"] = len(WORD_RE.findall(r["hook"]))
+        r["cta"] = is_cta(r["hook"], lang)
         if scoring:
             _, overall, verdict, _ = score_hook(r["hook"], lang=lang)
             r["hook_score"], r["hook_verdict"] = round(overall, 1), verdict
@@ -223,6 +252,7 @@ def analyse(rows, formulas, lang="en"):
         "top_words": med(top, "words"),
         "bottom_words": med(bottom, "words"),
         "unclassified": sum(1 for r in ranked if r["formula_id"] is None),
+        "cta": sum(1 for r in ranked if r["cta"]),
     }
 
 
@@ -238,6 +268,8 @@ def render(a, out=sys.stdout, lang="en"):
         print(say(M, "reel_line", mult=mult, score=score, fid=fid, formula=r["formula"][:22],
                   account=r.get("account", "")[:16], views=r["views"]), file=out)
         print(f"           \"{r['hook'][:96]}\"", file=out)
+        if r["cta"]:
+            print(say(M, "cta_mark"), file=out)
     print("-" * max(len(head), 78), file=out)
     print(say(M, "working_title"), file=out)
     if a["top_formulas"]:
@@ -248,6 +280,8 @@ def render(a, out=sys.stdout, lang="en"):
               file=out)
     print(say(M, "median_length", top=a["top_words"], bottom=a["bottom_words"]), file=out)
     print(say(M, "unclassified_line", count=a["unclassified"], n=a["n"]), file=out)
+    if a["cta"]:                         # no CTA, no line: a clean batch prints as before
+        print(say(M, "cta_line", count=a["cta"], n=a["n"]), file=out)
     print(say(M, "caveat"), file=out)
 
 
@@ -260,7 +294,10 @@ def to_markdown(a, lang="en"):
         lines += [say(M, "md_reel", mult=mult, formula=r["formula"], account=r.get("account", "")),
                   say(M, "md_views", views=r["views"], baseline=r["baseline"]),
                   say(M, "md_score", score=r["hook_score"], words=r["words"]),
-                  say(M, "md_hook", hook=r["hook"]), ""]
+                  say(M, "md_hook", hook=r["hook"])]
+        if r["cta"]:
+            lines.append(say(M, "md_cta"))
+        lines.append("")
     return "\n".join(lines) + "\n"
 
 
@@ -294,6 +331,7 @@ def main():
         lang = pick_swipe_lang(rows)
     try:
         M = load_messages(lang)
+        load_cta(lang)
     except MessagesError as err:
         print(f"swipe.py: cannot load the messages, {err}", file=sys.stderr)
         sys.exit(2)

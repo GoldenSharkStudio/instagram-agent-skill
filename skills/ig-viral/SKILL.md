@@ -147,6 +147,11 @@ It computes the outlier multiple, names the hook formula using the same 30
 formulas `/ig-reel` writes from, scores each hook with `hookscore.py`, and
 prints what separates the top third from the bottom third.
 
+A row whose hook reads as a call to action or a row of hashtags ("Follow for
+more", "Comment GUIDE") is marked under the hook and counted in the summary.
+On that reel the hook is on the cover or spoken: recapture it from there
+before you read the batch. The mark is a warning; the row still counts.
+
 ## Step 4: say what it means, carefully
 
 Report three things and no more:

@@ -219,7 +219,7 @@ class Caption(unittest.TestCase):
                 self.assertEqual(cp.analyse(text, lang="pt-BR")["asks"], [name])
 
     def test_ask_ids_are_the_same_in_every_language(self):
-        # The --json `ask_ids` is the contract a program reads (Autopost); the
+        # The --json `ask_ids` is the contract a program reads; the
         # names are for people and translate. Same ids, same order, no repeat.
         ids = {}
         for path in glob.glob(os.path.join(SKILLS, "ig-caption", "lang", "*.json")):

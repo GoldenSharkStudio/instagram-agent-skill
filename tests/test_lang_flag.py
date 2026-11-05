@@ -358,7 +358,7 @@ class AutoPicks(unittest.TestCase):
 
 
 class InProcess(unittest.TestCase):
-    """The library path: two languages in one process do not bleed (Autopost, fase 5)."""
+    """The library path: two languages in one process do not bleed (a program that imports the tools)."""
 
     def module(self, d, tool):
         lone(d, folder_of(tool))

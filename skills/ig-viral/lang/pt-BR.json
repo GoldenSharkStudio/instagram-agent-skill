@@ -26,7 +26,20 @@
       "md_views": "- views: {views:,}  base: {baseline:,}",
       "md_score": "- nota do gancho: {score}  palavras: {words}",
       "md_hook": "- gancho: \"{hook}\"",
-      "unclassified": "sem fórmula"
-    }
+      "unclassified": "sem fórmula",
+      "cta_mark": "           ^ chamada para ação, não gancho: capture o texto da capa ou a primeira frase falada",
+      "cta_line": "  chamada para ação:      {count} de {n}. O gancho deles está na capa ou na primeira frase falada: capture de novo.",
+      "md_cta": "- aviso: chamada para ação, não gancho. Use o texto da capa ou a primeira frase falada."
+    },
+    "cta": [
+      "^\\W*(?:siga|segue|sigam)\\s+(?:@|(?:a gente|o perfil|a página|nosso|nossa|pra|para)\\b)",
+      "^\\W*(?:comenta|comente|comentem)\\s+(?:aqui\\b|embaixo\\b|abaixo\\b|eu quero\\b|(?-i:[A-ZÀ-ÖØ-Þ]{3,})\\b|[\\\"“])",
+      "^\\W*(?:salva|salve|salvem|compartilha|compartilhe|manda|mande|envia|envie)\\s+(?:esse|este|essa|esta|o post|pra|para|com)\\b",
+      "^\\W*(?:marca|marque|marquem)\\s+(?:alguém|aquele|aquela|um|uma|quem|seu|sua)\\b",
+      "^\\W*(?:me\\s+chama|chama|chame)\\s+(?:no|na)\\s+(?:direct|dm|zap|whats|whatsapp|inbox)\\b",
+      "^\\W*(?:\\w+\\s+){0,2}link na bio\\b",
+      "^\\W*(?:clica|clique)\\s+no link\\b",
+      "^\\s*(?:[#@][^\\s#@]+\\s*)+$"
+    ]
   }
 }

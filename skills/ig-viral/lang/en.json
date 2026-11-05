@@ -26,7 +26,19 @@
       "md_views": "- views: {views:,}  baseline: {baseline:,}",
       "md_score": "- hook score: {score}  words: {words}",
       "md_hook": "- hook: \"{hook}\"",
-      "unclassified": "unclassified"
-    }
+      "unclassified": "unclassified",
+      "cta_mark": "           ^ a call to action, not a hook: capture the cover text or the first spoken line",
+      "cta_line": "  call to action:        {count} of {n}. Their hook is on the cover or in the first spoken line: recapture those.",
+      "md_cta": "- note: a call to action, not a hook. Take the cover text or the first spoken line."
+    },
+    "cta": [
+      "^\\W*(?:follow|subscribe)\\s+(?:@|(?:me|us|for)\\b)",
+      "^\\W*comment\\s+(?:below\\b|(?-i:[A-ZÀ-ÖØ-Þ]{3,})\\b|[\\\"“])",
+      "^\\W*(?:save|share|send)\\s+(?:this|it|for later)\\b",
+      "^\\W*tag\\s+(?:a|someone|your)\\b",
+      "^\\W*(?:dm|message)\\s+me\\b",
+      "^\\W*(?:\\w+\\s+){0,2}link in (?:my |the )?bio\\b",
+      "^\\s*(?:[#@][^\\s#@]+\\s*)+$"
+    ]
   }
 }
