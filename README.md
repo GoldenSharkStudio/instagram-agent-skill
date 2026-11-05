@@ -245,6 +245,39 @@ SWIPE FILE  ·  4 reels  ·  4 accounts  ·  baseline: account median
            "in this video I am going to show you my morning routine"
 ```
 
+### From another program
+
+```bash
+python3 -m igtools hookscore --hook "You lose $400 a month on this" --json
+python3 -m igtools caption caption.txt --keywords "reels,hooks" --lang pt-BR --json
+```
+
+`igtools/` puts the six tools behind one command and one Python import, for a
+program that wants a gate before it publishes anything (caption READY, hook
+70 or more, humanizer PASS). It holds none of their code: it runs each
+script's own `main()` from the `skills/` folder beside it, so a skill folder
+copied alone still works and there is no second copy to drift. Carry the repo
+whole (a git subtree under any prefix is enough) and point `PYTHONPATH` at it,
+or run from its root. Without `skills/` it stops with exit 2 and names the path.
+
+The command takes the script's arguments and gives the script's output and
+exit code. Every `--json` object carries `"schema": 1`; in a list, each
+element does. The same from Python:
+
+```python
+import igtools
+igtools.score_hook("Você perde R$400 por mês nisso", lang="pt-BR")["verdict"]
+igtools.lint_caption(text, keywords=["reels"], lang="pt-BR")
+igtools.beat_sheet(script, target=30), igtools.humanize(draft), igtools.detect(draft)
+igtools.rank_swipe(tsv_text)
+```
+
+Each function returns the dict the script prints with `--json`. A verdict
+(exit 1) is in the dict; a refusal (exit 2: empty text, language data that
+does not load, a path that cannot be read) raises `igtools.Error` with the
+tool's message. The functions swap `sys.stdin`/`stdout` while a tool runs, so
+call them from one thread, or use the command.
+
 ### Tests
 
 ```bash
@@ -350,6 +383,8 @@ doing when you read it, Instagram is right.
 ## Files
 
 ```
+igtools/                           the six tools as one command and one import, for a program
+                                   (runs the scripts in skills/, holds none of their code)
 skills/ig-reel/hooks.json          30 hook formulas: template, example, on-screen line,
                                    what it is for, how it gets ruined, and a match regex
                                    per language (an empty one never matches)

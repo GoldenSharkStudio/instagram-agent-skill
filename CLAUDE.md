@@ -25,6 +25,8 @@ Every tool also takes `--lang {en,pt-BR,auto}`, default `en`. `auto` counts the 
 
 Exit codes are meaningful (skills use them as verdicts): `hookscore` exits 1 if the best hook scores < 70; `caption` exits 1 unless verdict is `READY`; `detect` exits 1 unless the last result is `PASS`; `2` means bad input: a file that cannot be read or written (missing, a folder, not UTF-8, an explicit `--hooks` or `--lexicon` that does not load) is exit 2 naming the path, never a traceback (`tests/test_input_errors.py` derives the path arguments from each argparse). Only swipe's default `../ig-reel/hooks.json` degrades instead, so `ig-viral` still runs alone. The exit code is the same with `--json`. `humanize --report` writes the report to stderr and the cleaned text to stdout.
 
+**`igtools/`** (repo root, not a skill) fronts the six tools for another program: `python3 -m igtools <tool> …` runs the script's own `main()` with its arguments (same stdout, stderr, exit code; argparse's `prog` is `igtools <tool>`), and `score_hook`/`beat_sheet`/`lint_caption`/`humanize`/`detect`/`rank_swipe` run that `main()` in process (argv, stdin and stdout swapped under a lock) and return its `--json`; exit 2 raises `igtools.Error`. It holds no tool code and needs `skills/` beside it; never move logic into it, the skill folders must keep working alone. Every `--json` object carries `"schema": 1` (`SCHEMA` in each script, `tests/test_schema.py`); bump it, in all six and in `igtools`, when a key changes meaning or goes away. `tests/test_igtools.py` reads the tools from `skills/*/*.py` with a `main` and compares script and igtools run by run. A program reading the JSON may live anywhere: never name it in the repo.
+
 ## Tests
 
 ```bash
