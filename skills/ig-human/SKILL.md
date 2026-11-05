@@ -88,7 +88,9 @@ with capitalisation preserved and URLs left untouched. A deletion that would
 leave a clause hanging is not made: "Follow for more if you love design."
 would come out as "If you love design.", so the sentence stays as written and
 comes back flagged for a rewrite (a "that" after a deleted opener goes with it:
-"I'm thrilled to share that we hit 10k" becomes "We hit 10k").
+"I'm thrilled to share that we hit 10k" becomes "We hit 10k"). What no pass
+changed comes back as written: the writer's line breaks, blank lines, double
+spaces and lower case after a "..." stay.
 
 ## What does NOT get fixed automatically
 

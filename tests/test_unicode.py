@@ -164,11 +164,12 @@ class AccentedWitnesses(unittest.TestCase):
 
     def test_restore_capitals_after_an_accented_opener(self):
         hz = load("humanize")
-        self.assertEqual(hz.restore_capitals("Ótimo. Ética conta. Árvore.", "ótimo. ética conta."),
-                         "Ótimo. Ética conta.")
+        d = hz.DELETED   # the mark a deleted opener leaves until cleanup
+        self.assertEqual(hz.restore_capitals("Ótimo. Ética conta. Árvore.", f"{d} ética conta."),
+                         f"{d} Ética conta.")
         # A lower-case voice that starts on an accented letter stays lower case.
-        self.assertEqual(hz.restore_capitals("ótimo. ética. árvore.", "ótimo. ética."),
-                         "ótimo. ética.")
+        self.assertEqual(hz.restore_capitals("ótimo. ética. árvore.", f"{d} ética."),
+                         f"{d} ética.")
 
     def test_caps_shout_tell_counts_accented_words(self):
         caps = next(s for s in load("humanize").load_lexicon()["structures"]

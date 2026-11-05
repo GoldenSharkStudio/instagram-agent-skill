@@ -187,17 +187,28 @@ def pass_typographic(text, lex, lang="en"):
         hits.append({"name": f"{ch} {entry['name']}", "count": n, "to": entry["to"].strip() or say(M, "space")})
         if ch == "—":
             # " word — word " and "word—word" both collapse to a comma + space.
-            text = re.sub(r"\s*—\s*", ", ", text)
+            text = _dash_to_comma(text, r"\s*—\s*", lex)
         elif ch == "–":
             text = re.sub(r"\s*–\s*(?=\d)", "-", text)      # 5–10  -> 5-10
-            text = re.sub(r"\s+–\s+", ", ", text)            # used as em dash
+            text = _dash_to_comma(text, r"\s+–\s+", lex)     # used as em dash
             text = text.replace("–", "-")
         else:
             text = text.replace(ch, entry["to"])
-    # A comma inserted before existing punctuation reads wrong.
-    text = re.sub(r",\s*([,.;:!?])", r"\1", text)
-    text = re.sub(r",\s*\n", "\n", text)
     return text, hits
+
+
+def _dash_to_comma(text, dash, lex):
+    """A dash used as a pause becomes a comma, decided at the dash itself: the
+    writer's own commas are not this pass's business ("Hi Ana,\\nthanks" and
+    "it works, also, it's cheap" stay as written)."""
+    # Before a sentence connective the comma would splice two sentences
+    # ("is important — also, it's proof"): a full stop instead.
+    connectives = "|".join(re.escape(c) for c in lex["connectives"])
+    text = re.sub(dash + r"(" + connectives + r")\s*,\s*",
+                  lambda m: ". " + m.group(1)[0].upper() + m.group(1)[1:] + ", ", text)
+    # Before punctuation of its own a comma reads wrong: the dash just goes.
+    text = re.sub(dash + r"(?=[,.;:!?])", "", text)
+    return re.sub(dash, ", ", text)
 
 
 def _match_case(src, repl):
@@ -241,12 +252,15 @@ def hangs(find, text, end, lex):
 
 DELETED = "\x00DEL\x00"   # marks where an entry was deleted, until cleanup
 KEPT = "\x00KEEP{}\x00"   # a deletion held back, out of reach of the next entries
+DROPPED = "\x00DROP\x00"  # a line a deletion emptied, until the blank lines settle
 
 
-def pass_lexical(text, lex, lang="en"):
+def pass_lexical(text, lex, lang="en", original=None):
     """Replace slop words and phrases. Longest first so phrases win.
     Returns (text, hits, held): `held` are the deletions not made because the
-    sentence would be left hanging; they go to the report for a rewrite."""
+    sentence would be left hanging; they go to the report for a rewrite.
+    With `original` (the text as the writer sent it), a deleted sentence opener
+    gives its capital to the next word, in the voices that use capitals."""
     M = load_messages(lang)
     hits, held, kept = [], [], []
     entries = sorted(lex["phrases"] + lex["words"],
@@ -292,30 +306,37 @@ def pass_lexical(text, lex, lang="en"):
     # A line that was nothing but deleted phrases goes whole, newline too.
     # Left alone it keeps its end mark ("!"), which the joins below would
     # glue onto the line above, or a blank line the writer never wrote.
-    text = re.sub(r"(?m)^(?:[ \t,]*" + DELETED + r")+[ \t,.;:!?]*(?:\n|$)", "", text)
-    text = text.replace(DELETED, "")
-    # Clean up after deletions. Deleting a whole clause leaves orphaned
-    # punctuation behind ("system. ." or a line that now opens on a comma),
-    # and that reads worse than the slop did.
-    text = re.sub(r"[ \t]{2,}", " ", text)
-    text = re.sub(r"(?m)^[ \t]*(?:[,.;:]+[ \t]*)+", "", text)
-    text = re.sub(r"(?m)^[ \t](?=\S)", "", text)       # one space left by a deletion.
+    text = re.sub(r"(?m)^(?:[ \t,]*" + DELETED + r")+[ \t,.;:!?]*(\n|$)",
+                  lambda m: DROPPED + m.group(1), text)
+    if original is not None:
+        text = restore_capitals(original, text)
+    # Clean up after deletions, on the lines that had one and nowhere else:
+    # the writer's own double space, "..", " !" or blank lines are a choice.
+    lines = [_tidy(line) if DELETED in line else line for line in text.split("\n")]
+    text = "\n".join(lines)
+    # A dropped line goes with its newline; the blank lines around it keep at
+    # most one, so the drop does not open a gap the writer never wrote.
+    return re.sub(r"(\n*)(?:" + DROPPED + r"(?:\n|$))+(\n*)",
+                  lambda m: "\n" * min(2, len(m.group(1)) + len(m.group(2))), text), hits, held
+
+
+def _tidy(line):
+    """A line after a deletion. Deleting a whole clause leaves orphaned
+    punctuation behind ("system. ." or a line that now opens on a comma), and
+    that reads worse than the slop did. A line left empty is dropped."""
+    line = line.replace(DELETED, "")
+    line = re.sub(r"[ \t]{2,}", " ", line)
+    line = re.sub(r"^[ \t]*(?:[,.;:]+[ \t]*)+", "", line)
+    line = re.sub(r"^[ \t](?=\S)", "", line)          # one space left by a deletion.
                                                       # Deeper indents are deliberate.
-    text = re.sub(r"\s+([,.;:!?])", r"\1", text)
-    text = re.sub(r",\s*([,.;:!?])", r"\1", text)      # an em dash became a comma,
+    line = re.sub(r"\s+([,.;:!?])", r"\1", line)
+    line = re.sub(r",\s*([,.;:!?])", r"\1", line)      # an em dash became a comma,
                                                       # then the clause after it went
-    text = text.replace("...", "\x00ELL\x00")          # protect real ellipses
-    text = re.sub(r"\.\s*\.+", ".", text)
-    text = re.sub(r"([!?])\s*\.", r"\1", text)
-    text = text.replace("\x00ELL\x00", "...")
-    text = re.sub(r"(?m)^[ \t]+$", "", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    # An em dash that became a comma, followed by a sentence connective, leaves
-    # a splice ("is important, also, it's proof"). Promote it to a full stop.
-    connectives = "|".join(re.escape(c) for c in lex["connectives"])
-    text = re.sub(r",\s*(" + connectives + r")\s*,\s*",
-                  lambda m: ". " + m.group(1)[0].upper() + m.group(1)[1:] + ", ", text)
-    return text, hits, held
+    line = line.replace("...", "\x00ELL\x00")          # protect real ellipses
+    line = re.sub(r"\.\s*\.+", ".", line)
+    line = re.sub(r"([!?])\s*\.", r"\1", line)
+    line = line.replace("\x00ELL\x00", "...")
+    return line if line.strip() else DROPPED
 
 
 def hanging_flags(held, lang="en"):
@@ -355,6 +376,9 @@ def scan_structures(text, lex, lang="en"):
 def restore_capitals(original, text):
     """Deleting an opener leaves the next word lower case.
 
+    `text` still carries the DELETED marks: only a word right after a deletion
+    that opened a sentence gets the capital. A lower-case word the writer put
+    after a line break, a "...", a "?" or an "e.g." is theirs and stays.
     Only fix it for writers who capitalise their sentences in the first place:
     a deliberately lower-case voice is a style, not an artefact, and shouting
     over it would be exactly the kind of thing this script exists to stop.
@@ -362,8 +386,9 @@ def restore_capitals(original, text):
     starts = re.findall(r"(?:^|[.!?]\s+|\n)\s*([^\W\d_])", original)
     if not starts or sum(1 for c in starts if c.isupper()) * 2 < len(starts):
         return text
-    return re.sub(r"(?:^|(?<=[.!?] )|(?<=[.!?]\n)|(?<=\n))\s*([a-zß-öø-ÿ])",
-                  lambda m: m.group(0)[:-1] + m.group(1).upper(), text)
+    mark = re.escape(DELETED)
+    return re.sub(r"(?m)((?:^|[.!?][ \t]+)[ \t]*(?:" + mark + r"[ \t,.;:!?]*)+)([^\W\d_])",
+                  lambda m: m.group(1) + m.group(2).upper(), text)
 
 
 def humanize(text, lex, lang="en"):
@@ -374,8 +399,7 @@ def humanize(text, lex, lang="en"):
     text, urls = protect_urls(text)
     text, inv = pass_invisible(text, lex, lang)
     text, typo = pass_typographic(text, lex, lang)
-    text, lexi, held = pass_lexical(text, lex, lang)
-    text = restore_capitals(raw_for_case, text)
+    text, lexi, held = pass_lexical(text, lex, lang, original=raw_for_case)
     text = restore_urls(text, urls)
     return text.strip() + "\n", {
         "invisible": inv,
