@@ -151,10 +151,25 @@ class SlopJson(unittest.TestCase):
         finds = []
         for e in SLOP["words"] + SLOP["phrases"]:
             with self.subTest(find=e.get("find")):
-                # `of` names the base of an inflected form (tests/test_inflection.py)
-                self.assertIn(set(e), ({"find", "replace", "family"},
-                                       {"find", "replace", "family", "of"}))
+                # `of` names the base of an inflected form (tests/test_inflection.py);
+                # `roles` give a use its own replacement (tests/test_lexicon_uses.py)
+                self.assertLessEqual({"find", "replace", "family"}, set(e))
+                self.assertLessEqual(set(e), {"find", "replace", "family", "of", "roles"})
                 self.assertTrue(e["find"].strip())
+                roles = e.get("roles", [])
+                if "roles" in e:
+                    self.assertTrue(e["replace"], "roles need a replacement to fall back to")
+                    self.assertTrue(roles, "an empty roles list")
+                for i, r in enumerate(roles):
+                    self.assertLessEqual(set(r), {"prev", "next", "replace"})
+                    self.assertIn("replace", r)
+                    # None keeps the word and flags it; "" would delete it.
+                    self.assertTrue(r["replace"] is None or r["replace"].strip())
+                    for k in ("prev", "next"):
+                        if k in r:
+                            re.compile(r[k])
+                    if not ({"prev", "next"} & set(r)):
+                        self.assertEqual(i, len(roles) - 1, "a role with no condition hides the ones after it")
             finds.append(e["find"].lower())
         dupes = sorted({f for f in finds if finds.count(f) > 1})
         self.assertEqual(dupes, [])
@@ -284,7 +299,8 @@ class EmojiCount(unittest.TestCase):
 # string under any other key fails RegexDataNet.test_every_regex_key_is_known,
 # so a new regex field cannot dodge the net below.
 REGEX_KEYS = {"regex", "match", "contractions", "pronouns", "address_me",
-              "address_you", "number_units", "pattern", "cta"}
+              "address_you", "number_units", "pattern", "cta", "vowel",
+              "prev", "next"}
 REGEX_HINTS = ("\\b", "(?", "\\s", "\\d", "[^")
 
 

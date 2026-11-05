@@ -1,0 +1,822 @@
+{
+  "note": "Real uses of every `words` entry of slop.en.json, each with the sentence humanize should give back. Written by hand, never generated from the tool's output: a want that copies a broken output pins the bug. `held` names a word humanize keeps and flags for a rewrite, because no plain word fits that use. tests/test_lexicon_uses.py fails on an entry with no use here.",
+  "lang": "en",
+  "uses": [
+    {
+      "text": "Let's delve into the numbers.",
+      "want": "Let's look at the numbers."
+    },
+    {
+      "text": "She delves into every brief.",
+      "want": "She looks at every brief."
+    },
+    {
+      "text": "We delved into the data last week.",
+      "want": "We looked at the data last week."
+    },
+    {
+      "text": "Delving into old posts taught me a lot.",
+      "want": "Looking at old posts taught me a lot."
+    },
+    {
+      "text": "Before you post, delve deeper.",
+      "want": "Before you post, look deeper."
+    },
+    {
+      "text": "He delves deeper every time.",
+      "want": "He looks deeper every time."
+    },
+    {
+      "text": "I delved a little.",
+      "want": "I looked a little."
+    },
+    {
+      "text": "Stop delving and start writing.",
+      "want": "Stop looking and start writing."
+    },
+    {
+      "text": "Today we dive deep into pricing.",
+      "want": "Today we get into pricing."
+    },
+    {
+      "text": "She dives deep into hooks.",
+      "want": "She gets into hooks."
+    },
+    {
+      "text": "We dived deep into the comments.",
+      "want": "We got into the comments."
+    },
+    {
+      "text": "Diving deep into your niche pays off.",
+      "want": "Getting into your niche pays off."
+    },
+    {
+      "text": "This is a deep dive on reels.",
+      "want": "This is a breakdown on reels."
+    },
+    {
+      "text": "I posted three deep dives this month.",
+      "want": "I posted three breakdowns this month."
+    },
+    {
+      "text": "Leverage your best post.",
+      "want": "Use your best post."
+    },
+    {
+      "text": "She leverages every trend.",
+      "want": "She uses every trend."
+    },
+    {
+      "text": "We leveraged a cheap camera.",
+      "want": "We used a cheap camera."
+    },
+    {
+      "text": "Leveraging old clips saves time.",
+      "want": "Using old clips saves time."
+    },
+    {
+      "text": "Utilize the first line.",
+      "want": "Use the first line."
+    },
+    {
+      "text": "He utilizes templates.",
+      "want": "He uses templates."
+    },
+    {
+      "text": "We utilized the story slot.",
+      "want": "We used the story slot."
+    },
+    {
+      "text": "Utilizing captions helps reach.",
+      "want": "Using captions helps reach."
+    },
+    {
+      "text": "Harness the comments.",
+      "want": "Use the comments."
+    },
+    {
+      "text": "She harnesses her audience.",
+      "want": "She uses her audience."
+    },
+    {
+      "text": "We harnessed one idea.",
+      "want": "We used one idea."
+    },
+    {
+      "text": "Harnessing feedback is free.",
+      "want": "Using feedback is free."
+    },
+    {
+      "text": "We embark on a new series today.",
+      "want": "We start a new series today."
+    },
+    {
+      "text": "She embarks on a launch.",
+      "want": "She starts a launch."
+    },
+    {
+      "text": "I embarked on a rebrand in May.",
+      "want": "I started a rebrand in May."
+    },
+    {
+      "text": "Embarking on a series takes nerve.",
+      "want": "Starting a series takes nerve."
+    },
+    {
+      "text": "Foster a real community.",
+      "want": "Build a real community."
+    },
+    {
+      "text": "Small replies foster trust.",
+      "want": "Small replies build trust."
+    },
+    {
+      "text": "We fostered trust with replies.",
+      "want": "We built trust with replies."
+    },
+    {
+      "text": "Fostering trust takes months.",
+      "want": "Building trust takes months."
+    },
+    {
+      "text": "We facilitate workshops.",
+      "want": "We help with workshops."
+    },
+    {
+      "text": "The tool facilitates planning.",
+      "want": "The tool helps with planning."
+    },
+    {
+      "text": "She facilitated the call.",
+      "want": "She helped with the call."
+    },
+    {
+      "text": "Facilitating a live is hard.",
+      "want": "Helping with a live is hard."
+    },
+    {
+      "text": "Showcase your work.",
+      "want": "Show your work."
+    },
+    {
+      "text": "This reel showcases the process.",
+      "want": "This reel shows the process."
+    },
+    {
+      "text": "We showcased three clients.",
+      "want": "We showed three clients."
+    },
+    {
+      "text": "Showcasing results builds trust.",
+      "want": "Showing results builds trust."
+    },
+    {
+      "text": "Unlock your potential.",
+      "want": "Reach your potential."
+    },
+    {
+      "text": "This trick unlocks more reach.",
+      "want": "This trick gets more reach."
+    },
+    {
+      "text": "We unlocked a new audience.",
+      "want": "We got a new audience."
+    },
+    {
+      "text": "Unlocking the algorithm is a myth.",
+      "want": "Getting the algorithm is a myth."
+    },
+    {
+      "text": "Elevate your feed.",
+      "want": "Improve your feed."
+    },
+    {
+      "text": "Good light elevates any shot.",
+      "want": "Good light improves any shot."
+    },
+    {
+      "text": "We elevated the brand.",
+      "want": "We improved the brand."
+    },
+    {
+      "text": "Elevating your content takes practice.",
+      "want": "Improving your content takes practice."
+    },
+    {
+      "text": "Streamline your workflow.",
+      "want": "Simplify your workflow."
+    },
+    {
+      "text": "A template streamlines editing.",
+      "want": "A template simplifies editing."
+    },
+    {
+      "text": "We streamlined the shoot.",
+      "want": "We simplified the shoot."
+    },
+    {
+      "text": "Streamlining posts saves hours.",
+      "want": "Simplifying posts saves hours."
+    },
+    {
+      "text": "She will spearhead the launch.",
+      "want": "She will lead the launch."
+    },
+    {
+      "text": "He spearheads our design team.",
+      "want": "He leads our design team."
+    },
+    {
+      "text": "I spearheaded the redesign.",
+      "want": "I led the redesign."
+    },
+    {
+      "text": "Spearheading a team is lonely.",
+      "want": "Leading a team is lonely."
+    },
+    {
+      "text": "These numbers underscore the point.",
+      "want": "These numbers show the point."
+    },
+    {
+      "text": "The result underscores it.",
+      "want": "The result shows it."
+    },
+    {
+      "text": "She underscored the risk.",
+      "want": "She showed the risk."
+    },
+    {
+      "text": "Underscoring the price helps.",
+      "want": "Showing the price helps."
+    },
+    {
+      "text": "Cultivate a habit of posting.",
+      "want": "Build a habit of posting."
+    },
+    {
+      "text": "She cultivates loyal fans.",
+      "want": "She builds loyal fans."
+    },
+    {
+      "text": "We cultivated a small audience.",
+      "want": "We built a small audience."
+    },
+    {
+      "text": "Cultivating fans takes time.",
+      "want": "Building fans takes time."
+    },
+    {
+      "text": "Amplify your voice.",
+      "want": "Boost your voice."
+    },
+    {
+      "text": "A good hook amplifies reach.",
+      "want": "A good hook boosts reach."
+    },
+    {
+      "text": "We amplified the best clip.",
+      "want": "We boosted the best clip."
+    },
+    {
+      "text": "Amplifying one message works.",
+      "want": "Boosting one message works."
+    },
+    {
+      "text": "Curate your feed.",
+      "want": "Pick your feed."
+    },
+    {
+      "text": "She curates the playlist.",
+      "want": "She picks the playlist."
+    },
+    {
+      "text": "We curated ten tips.",
+      "want": "We picked ten tips."
+    },
+    {
+      "text": "Curating content is a job.",
+      "want": "Picking content is a job."
+    },
+    {
+      "text": "We empower small brands to grow.",
+      "want": "We help small brands to grow."
+    },
+    {
+      "text": "This course empowers creators.",
+      "want": "This course helps creators."
+    },
+    {
+      "text": "She felt empowered after the call.",
+      "want": "She felt empowered after the call.",
+      "held": [
+        "empowered"
+      ]
+    },
+    {
+      "text": "It was an empowering talk.",
+      "want": "It was an empowering talk.",
+      "held": [
+        "empowering"
+      ]
+    },
+    {
+      "text": "Empowering your team pays off.",
+      "want": "Helping your team pays off."
+    },
+    {
+      "text": "Brands empowered by data win.",
+      "want": "Brands helped by data win."
+    },
+    {
+      "text": "AI will revolutionize editing.",
+      "want": "AI will change editing."
+    },
+    {
+      "text": "This app revolutionizes planning.",
+      "want": "This app changes planning."
+    },
+    {
+      "text": "Phones revolutionized photography.",
+      "want": "Phones changed photography."
+    },
+    {
+      "text": "Revolutionizing your feed starts here.",
+      "want": "Changing your feed starts here."
+    },
+    {
+      "text": "This is a transformative idea.",
+      "want": "This is a big idea."
+    },
+    {
+      "text": "We built a robust plan.",
+      "want": "We built a solid plan."
+    },
+    {
+      "text": "The checkout is seamless.",
+      "want": "The checkout is clean."
+    },
+    {
+      "text": "It works seamlessly on mobile.",
+      "want": "It works cleanly on mobile."
+    },
+    {
+      "text": "This is a pivotal moment.",
+      "want": "This is a key moment."
+    },
+    {
+      "text": "Timing is crucial.",
+      "want": "Timing is important."
+    },
+    {
+      "text": "Light is vital for reels.",
+      "want": "Light is important for reels."
+    },
+    {
+      "text": "Here is a comprehensive guide.",
+      "want": "Here is a complete guide."
+    },
+    {
+      "text": "We use cutting-edge gear.",
+      "want": "We use new gear."
+    },
+    {
+      "text": "It was a game-changing launch.",
+      "want": "It was a big launch."
+    },
+    {
+      "text": "This app is a game-changer.",
+      "want": "This app is a big deal."
+    },
+    {
+      "text": "These tools are game-changers.",
+      "want": "These tools are big deals."
+    },
+    {
+      "text": "It was a groundbreaking study.",
+      "want": "It was a new study."
+    },
+    {
+      "text": "The service is unparalleled.",
+      "want": "The service is unmatched."
+    },
+    {
+      "text": "Your feedback is invaluable.",
+      "want": "Your feedback is useful."
+    },
+    {
+      "text": "She is a meticulous editor.",
+      "want": "She is a careful editor."
+    },
+    {
+      "text": "We meticulously plan every post.",
+      "want": "We carefully plan every post."
+    },
+    {
+      "text": "There is a myriad of options.",
+      "want": "There is a lot of options."
+    },
+    {
+      "text": "We tried myriad ideas.",
+      "want": "We tried many ideas."
+    },
+    {
+      "text": "Skip the myriad of apps.",
+      "want": "Skip the many apps."
+    },
+    {
+      "text": "Pricing is a multifaceted problem.",
+      "want": "Pricing is a complicated problem."
+    },
+    {
+      "text": "We take a holistic approach.",
+      "want": "We take a whole approach."
+    },
+    {
+      "text": "We sell bespoke cakes.",
+      "want": "We sell custom cakes."
+    },
+    {
+      "text": "It is an innovative format.",
+      "want": "It is a new format."
+    },
+    {
+      "text": "An innovative idea wins.",
+      "want": "A new idea wins."
+    },
+    {
+      "text": "The change was profound.",
+      "want": "The change was big."
+    },
+    {
+      "text": "It was a remarkable year.",
+      "want": "It was a notable year."
+    },
+    {
+      "text": "She told a compelling story.",
+      "want": "She told a convincing story."
+    },
+    {
+      "text": "Your feed is a tapestry of moments.",
+      "want": "Your feed is a mix of moments."
+    },
+    {
+      "text": "Old photos are tapestries of memory.",
+      "want": "Old photos are mixes of memory."
+    },
+    {
+      "text": "Welcome to the realm of reels.",
+      "want": "Welcome to the world of reels."
+    },
+    {
+      "text": "These are new realms for us.",
+      "want": "These are new worlds for us."
+    },
+    {
+      "text": "The landscape has changed.",
+      "want": "The market has changed."
+    },
+    {
+      "text": "Creator landscapes shift fast.",
+      "want": "Creator markets shift fast."
+    },
+    {
+      "text": "Your growth journey starts today.",
+      "want": "Your growth process starts today."
+    },
+    {
+      "text": "Customer journeys take weeks.",
+      "want": "Customer processes take weeks."
+    },
+    {
+      "text": "This post is a testament to hard work.",
+      "want": "This post is proof of hard work."
+    },
+    {
+      "text": "It stands as testament to her work.",
+      "want": "It stands as proof of her work."
+    },
+    {
+      "text": "Trust is the cornerstone of sales.",
+      "want": "Trust is the base of sales."
+    },
+    {
+      "text": "These are the cornerstones of design.",
+      "want": "These are the bases of design."
+    },
+    {
+      "text": "Your brand is a beacon for clients.",
+      "want": "Your brand is a signal for clients."
+    },
+    {
+      "text": "Reviews are beacons of trust.",
+      "want": "Reviews are signals of trust."
+    },
+    {
+      "text": "It is a new paradigm.",
+      "want": "It is a new model."
+    },
+    {
+      "text": "Old paradigms die slowly.",
+      "want": "Old models die slowly."
+    },
+    {
+      "text": "There is real synergy between us.",
+      "want": "There is real overlap between us."
+    },
+    {
+      "text": "We look for synergies.",
+      "want": "We look for overlaps."
+    },
+    {
+      "text": "The creator ecosystem is huge.",
+      "want": "The creator system is huge."
+    },
+    {
+      "text": "Both ecosystems grew.",
+      "want": "Both systems grew."
+    },
+    {
+      "text": "This app is a treasure trove of ideas.",
+      "want": "This app is a pile of ideas."
+    },
+    {
+      "text": "Old blogs are treasure troves.",
+      "want": "Old blogs are piles."
+    },
+    {
+      "text": "There is a plethora of tools.",
+      "want": "There is a lot of tools."
+    },
+    {
+      "text": "We saw a plethora.",
+      "want": "We saw a lot."
+    },
+    {
+      "text": "Skip the plethora of apps.",
+      "want": "Skip the many apps."
+    },
+    {
+      "text": "The plethora is too much.",
+      "want": "The lot is too much."
+    },
+    {
+      "text": "Build an arsenal of hooks.",
+      "want": "Build a set of hooks."
+    },
+    {
+      "text": "Both arsenals are full.",
+      "want": "Both sets are full."
+    },
+    {
+      "text": "Clients are your north star.",
+      "want": "Clients are your goal."
+    },
+    {
+      "text": "We have two north stars.",
+      "want": "We have two goals."
+    },
+    {
+      "text": "Moreover, it is cheap.",
+      "want": "Also, it is cheap."
+    },
+    {
+      "text": "Furthermore, it works offline.",
+      "want": "Also, it works offline."
+    },
+    {
+      "text": "Additionally, we ship free.",
+      "want": "Also, we ship free."
+    },
+    {
+      "text": "Nevertheless, we kept going.",
+      "want": "Still, we kept going."
+    },
+    {
+      "text": "Consequently, sales went up.",
+      "want": "So, sales went up."
+    },
+    {
+      "text": "Thus, we changed the price.",
+      "want": "So, we changed the price."
+    },
+    {
+      "text": "Hence the new plan.",
+      "want": "So the new plan."
+    },
+    {
+      "text": "Notably, it is free.",
+      "want": "It is free."
+    },
+    {
+      "text": "Importantly, read the terms.",
+      "want": "Read the terms."
+    },
+    {
+      "text": "Ultimately, it is your call.",
+      "want": "In the end, it is your call."
+    },
+    {
+      "text": "In essence, post more.",
+      "want": "Basically, post more."
+    },
+    {
+      "text": "In conclusion, test it.",
+      "want": "So, test it."
+    },
+    {
+      "text": "When it comes to hooks, be short.",
+      "want": "With hooks, be short."
+    },
+    {
+      "text": "We cut prices in order to grow.",
+      "want": "We cut prices to grow."
+    },
+    {
+      "text": "We sell a wide range of cakes.",
+      "want": "We sell many cakes."
+    },
+    {
+      "text": "It is worth noting that prices rise in May.",
+      "want": "Note that prices rise in May."
+    },
+    {
+      "text": "Supercharge your reach.",
+      "want": "Boost your reach."
+    },
+    {
+      "text": "This trick supercharges growth.",
+      "want": "This trick boosts growth."
+    },
+    {
+      "text": "We supercharged the launch.",
+      "want": "We boosted the launch."
+    },
+    {
+      "text": "Supercharging reels is easy.",
+      "want": "Boosting reels is easy."
+    },
+    {
+      "text": "Skyrocket your sales.",
+      "want": "Boost your sales."
+    },
+    {
+      "text": "Sales skyrocketed in May.",
+      "want": "Sales shot up in May."
+    },
+    {
+      "text": "My sales skyrocketed this month.",
+      "want": "My sales shot up this month."
+    },
+    {
+      "text": "This hook skyrockets views.",
+      "want": "This hook boosts views."
+    },
+    {
+      "text": "Our reach is skyrocketing.",
+      "want": "Our reach is shooting up."
+    },
+    {
+      "text": "Unleash your creativity.",
+      "want": "Release your creativity."
+    },
+    {
+      "text": "She unleashes a new drop.",
+      "want": "She releases a new drop."
+    },
+    {
+      "text": "We unleashed the full series.",
+      "want": "We released the full series."
+    },
+    {
+      "text": "Unleashing a product takes nerve.",
+      "want": "Releasing a product takes nerve."
+    },
+    {
+      "text": "She edits effortlessly.",
+      "want": "She edits easily."
+    },
+    {
+      "text": "It was a captivating reel.",
+      "want": "It was an interesting reel."
+    },
+    {
+      "text": "The view is stunning.",
+      "want": "The view is good."
+    },
+    {
+      "text": "It was a breathtaking shot.",
+      "want": "It was a striking shot."
+    },
+    {
+      "text": "It is an iconic logo.",
+      "want": "It is a known logo."
+    },
+    {
+      "text": "This is a must-have tool.",
+      "want": "This is an essential tool."
+    },
+    {
+      "text": "This offer is a no-brainer.",
+      "want": "This offer is an easy call."
+    },
+    {
+      "text": "These deals are no-brainers.",
+      "want": "These deals are easy calls."
+    },
+    {
+      "text": "This cafe is a hidden gem.",
+      "want": "This cafe is a good one."
+    },
+    {
+      "text": "We found three hidden gems.",
+      "want": "We found three good ones."
+    },
+    {
+      "text": "Consistency is my secret sauce.",
+      "want": "Consistency is my method."
+    },
+    {
+      "text": "Here is the ultimate guide to reels.",
+      "want": "Here is the guide to reels."
+    },
+    {
+      "text": "We wrote two ultimate guides.",
+      "want": "We wrote two guides."
+    },
+    {
+      "text": "Level up your captions.",
+      "want": "Improve your captions."
+    },
+    {
+      "text": "She levels up every month.",
+      "want": "She improves every month."
+    },
+    {
+      "text": "We leveled up the brand.",
+      "want": "We improved the brand."
+    },
+    {
+      "text": "Leveling up takes time.",
+      "want": "Improving takes time."
+    },
+    {
+      "text": "Try this editing hack.",
+      "want": "Try this editing trick."
+    },
+    {
+      "text": "Here are five hacks.",
+      "want": "Here are five tricks."
+    },
+    {
+      "text": "It is an ultimate guide.",
+      "want": "It is a guide."
+    },
+    {
+      "text": "He is an innovative chef.",
+      "want": "He is a new chef."
+    },
+    {
+      "text": "That was an invaluable lesson.",
+      "want": "That was a useful lesson."
+    },
+    {
+      "text": "She fosters trust daily.",
+      "want": "She builds trust daily."
+    },
+    {
+      "text": "Supercharge it.",
+      "want": "Boost it."
+    },
+    {
+      "text": "Unlock it today.",
+      "want": "Get it today."
+    },
+    {
+      "text": "Skyrocketing prices hurt.",
+      "want": "Skyrocketing prices hurt.",
+      "held": [
+        "skyrocketing"
+      ]
+    },
+    {
+      "text": "Skyrocketing your sales is easy.",
+      "want": "Boosting your sales is easy."
+    },
+    {
+      "text": "They feel empowered.",
+      "want": "They feel empowered.",
+      "held": [
+        "empowered"
+      ]
+    },
+    {
+      "text": "She was empowered by the data.",
+      "want": "She was helped by the data."
+    },
+    {
+      "text": "Empower them.",
+      "want": "Help them."
+    }
+  ]
+}

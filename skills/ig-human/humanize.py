@@ -252,6 +252,66 @@ def hangs(find, text, end, lex):
     return bool(re.match(sep + r"(?:" + deps + r")\b", text[end:], re.IGNORECASE))
 
 
+REPLACED = "\x00REP\x00"  # a replacement right after an article, until the article agrees
+
+
+def _article(lex):
+    """The `article` section when it has both forms, else None: a language
+    whose article does not change with the next sound (pt-BR) leaves them
+    empty, and nothing is marked or changed."""
+    art = lex.get("article") or {}
+    forms = art.get("forms") or {}
+    if forms.get("consonant") and forms.get("vowel") and art.get("vowel"):
+        return art
+    return None
+
+
+def _role_replace(m, entry):
+    """The replacement for this use of the entry. A word's `roles` are tried
+    in order: a role holds when its `prev` regex ends right where the match
+    starts and its `next` regex matches right after it (a missing one always
+    holds), and the first that holds gives its `replace`. None means no plain
+    word fits that use ("an empowering talk"): the word stays and is flagged
+    for a rewrite. No role holds: the entry's own `replace`."""
+    for role in entry.get("roles") or ():
+        if "prev" in role and not re.search("(?:" + role["prev"] + r")\Z",
+                                            m.string[:m.start()], re.IGNORECASE):
+            continue
+        if "next" in role and not re.match(role["next"], m.string[m.end():], re.IGNORECASE):
+            continue
+        return role["replace"]
+    return entry["replace"]
+
+
+def _after_article(m, lex):
+    """The REPLACED mark when an article stands right before the match:
+    without it "an innovative" would become "an new"."""
+    art = _article(lex)
+    if art and re.search(r"(?i)\b(?:" + "|".join(re.escape(a) for a in art["forms"].values())
+                         + r")[^\S\n]+\Z", m.string[:m.start()]):
+        return REPLACED
+    return ""
+
+
+def fix_articles(text, lex):
+    """Make the article agree with the word a replacement put after it
+    ("an innovative format" -> "a new format"; "a captivating reel" -> "an
+    interesting reel"). Only where REPLACED marks it: the writer's own "a"
+    and "an" are theirs. A lexicon with no `article` changes nothing."""
+    art = _article(lex)
+    if not art:
+        return text.replace(REPLACED, "")
+    forms = art["forms"]
+    vowel = re.compile(art["vowel"], re.IGNORECASE)
+    alts = "|".join(re.escape(a) for a in sorted(forms.values(), key=len, reverse=True))
+
+    def agree(m):
+        want = forms["vowel"] if vowel.match(m.group(3)) else forms["consonant"]
+        return _match_case(m.group(1), want) + m.group(2)
+    text = re.sub(r"(?i)\b(" + alts + r")([^\S\n]+)" + REPLACED + r"(?=(\w+))", agree, text)
+    return text.replace(REPLACED, "")
+
+
 DELETED = "\x00DEL\x00"   # marks where an entry was deleted, until cleanup
 KEPT = "\x00KEEP{}\x00"   # a deletion held back, out of reach of the next entries
 DROPPED = "\x00DROP\x00"  # a line a deletion emptied, until the blank lines settle
@@ -260,7 +320,8 @@ DROPPED = "\x00DROP\x00"  # a line a deletion emptied, until the blank lines set
 def pass_lexical(text, lex, lang="en", original=None):
     """Replace slop words and phrases. Longest first so phrases win.
     Returns (text, hits, held): `held` are the deletions not made because the
-    sentence would be left hanging; they go to the report for a rewrite.
+    sentence would be left hanging, and the words kept because no plain word
+    fits that use (`"role": True`); they go to the report for a rewrite.
     With `original` (the text as the writer sent it), a deleted sentence opener
     gives its capital to the next word, in the voices that use capitals."""
     M = load_messages(lang)
@@ -273,9 +334,24 @@ def pass_lexical(text, lex, lang="en", original=None):
         if not pattern.search(text):
             continue
         if entry["replace"]:
-            hits.append({"find": find, "replace": entry["replace"],
-                         "count": len(pattern.findall(text)), "family": entry["family"]})
-            text = pattern.sub(lambda m: _match_case(m.group(0), entry["replace"]), text)
+            swaps, kept_n = {}, [0]   # each replacement made, with its count
+
+            def swap(m):
+                repl = _role_replace(m, entry)
+                if repl is None:
+                    kept_n[0] += 1
+                    kept.append(m.group(0))
+                    return KEPT.format(len(kept) - 1)
+                swaps[repl] = swaps.get(repl, 0) + 1
+                return _after_article(m, lex) + _match_case(m.group(0), repl)
+            text = pattern.sub(swap, text)
+            # One hit per word put in: a role's word is not the entry's.
+            for repl, n in swaps.items():
+                hits.append({"find": find, "replace": repl,
+                             "count": n, "family": entry["family"]})
+            if kept_n[0]:
+                held.append({"find": find, "count": kept_n[0],
+                             "family": entry["family"], "role": True})
             continue
         counts = {"deleted": 0, "held": 0}
 
@@ -294,6 +370,7 @@ def pass_lexical(text, lex, lang="en", original=None):
             held.append({"find": find, "count": counts["held"], "family": entry["family"]})
     for i, original in enumerate(kept):
         text = text.replace(KEPT.format(i), original)
+    text = fix_articles(text, lex)
     # "that" after a deleted opener is residue; the clause after it is the
     # content ("I'm thrilled to share that we hit 10k" -> "We hit 10k").
     comp = "|".join(re.escape(c) for c in lex["complementizers"])
@@ -342,11 +419,17 @@ def _tidy(line):
 
 
 def hanging_flags(held, lang="en"):
-    """Held deletions, in the shape of a structural flag: a person rewrites them."""
+    """Held deletions and held words, in the shape of a structural flag: a
+    person rewrites them."""
     M = load_messages(lang)
-    return [{"name": say(M, "hanging_name", find=h["find"]),
-             "count": h["count"],
-             "fix": say(M, "hanging_fix")} for h in held]
+    flags = []
+    for h in held:
+        if h.get("role"):
+            name, fix = say(M, "role_name", find=h["find"]), say(M, "role_fix")
+        else:
+            name, fix = say(M, "hanging_name", find=h["find"]), say(M, "hanging_fix")
+        flags.append({"name": name, "count": h["count"], "fix": fix})
+    return flags
 
 
 def scan_structures(text, lex, lang="en"):

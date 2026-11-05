@@ -348,24 +348,24 @@
     },
     {
       "find": "facilitate",
-      "replace": "help",
+      "replace": "help with",
       "family": "verbs"
     },
     {
       "find": "facilitates",
-      "replace": "helps",
+      "replace": "helps with",
       "family": "verbs",
       "of": "facilitate"
     },
     {
       "find": "facilitated",
-      "replace": "helped",
+      "replace": "helped with",
       "family": "verbs",
       "of": "facilitate"
     },
     {
       "find": "facilitating",
-      "replace": "helping",
+      "replace": "helping with",
       "family": "verbs",
       "of": "facilitate"
     },
@@ -395,25 +395,49 @@
     {
       "find": "unlock",
       "replace": "get",
-      "family": "verbs"
+      "family": "verbs",
+      "roles": [
+        {
+          "next": "^[^\\S\\n]+(?:your|my|our|their|his|her|its|the)[^\\S\\n]+(?:full[^\\S\\n]+)?potential\\b",
+          "replace": "reach"
+        }
+      ]
     },
     {
       "find": "unlocks",
       "replace": "gets",
       "family": "verbs",
-      "of": "unlock"
+      "of": "unlock",
+      "roles": [
+        {
+          "next": "^[^\\S\\n]+(?:your|my|our|their|his|her|its|the)[^\\S\\n]+(?:full[^\\S\\n]+)?potential\\b",
+          "replace": "reaches"
+        }
+      ]
     },
     {
       "find": "unlocked",
       "replace": "got",
       "family": "verbs",
-      "of": "unlock"
+      "of": "unlock",
+      "roles": [
+        {
+          "next": "^[^\\S\\n]+(?:your|my|our|their|his|her|its|the)[^\\S\\n]+(?:full[^\\S\\n]+)?potential\\b",
+          "replace": "reached"
+        }
+      ]
     },
     {
       "find": "unlocking",
       "replace": "getting",
       "family": "verbs",
-      "of": "unlock"
+      "of": "unlock",
+      "roles": [
+        {
+          "next": "^[^\\S\\n]+(?:your|my|our|their|his|her|its|the)[^\\S\\n]+(?:full[^\\S\\n]+)?potential\\b",
+          "replace": "reaching"
+        }
+      ]
     },
     {
       "find": "elevate",
@@ -578,26 +602,38 @@
     },
     {
       "find": "empower",
-      "replace": "let",
+      "replace": "help",
       "family": "verbs"
     },
     {
       "find": "empowers",
-      "replace": "lets",
+      "replace": "helps",
       "family": "verbs",
       "of": "empower"
     },
     {
       "find": "empowered",
-      "replace": "let",
+      "replace": "helped",
       "family": "verbs",
-      "of": "empower"
+      "of": "empower",
+      "roles": [
+        {
+          "prev": "\\b(?:a|an|the|so|very|really|truly|more|most|feel|feels|felt|feeling)[^\\S\\n]+",
+          "replace": null
+        }
+      ]
     },
     {
       "find": "empowering",
-      "replace": "letting",
+      "replace": "helping",
       "family": "verbs",
-      "of": "empower"
+      "of": "empower",
+      "roles": [
+        {
+          "prev": "\\b(?:a|an|the|so|very|really|truly|more|most|feel|feels|felt|feeling)[^\\S\\n]+",
+          "replace": null
+        }
+      ]
     },
     {
       "find": "revolutionize",
@@ -711,6 +747,11 @@
     {
       "find": "myriad of",
       "replace": "many",
+      "family": "adjectives"
+    },
+    {
+      "find": "a myriad of",
+      "replace": "a lot of",
       "family": "adjectives"
     },
     {
@@ -870,12 +911,22 @@
     },
     {
       "find": "plethora of",
-      "replace": "lots of",
+      "replace": "many",
+      "family": "nouns"
+    },
+    {
+      "find": "a plethora of",
+      "replace": "a lot of",
+      "family": "nouns"
+    },
+    {
+      "find": "a plethora",
+      "replace": "a lot",
       "family": "nouns"
     },
     {
       "find": "plethora",
-      "replace": "lots",
+      "replace": "lot",
       "family": "nouns"
     },
     {
@@ -982,49 +1033,80 @@
     },
     {
       "find": "supercharge",
-      "replace": "speed up",
+      "replace": "boost",
       "family": "verbs"
     },
     {
       "find": "supercharges",
-      "replace": "speeds up",
+      "replace": "boosts",
       "family": "verbs",
       "of": "supercharge"
     },
     {
       "find": "supercharged",
-      "replace": "sped up",
+      "replace": "boosted",
       "family": "verbs",
       "of": "supercharge"
     },
     {
       "find": "supercharging",
-      "replace": "speeding up",
+      "replace": "boosting",
       "family": "verbs",
       "of": "supercharge"
     },
     {
       "find": "skyrocket",
-      "replace": "raise",
-      "family": "verbs"
+      "replace": "boost",
+      "family": "verbs",
+      "roles": [
+        {
+          "next": "^(?:[^\\S\\n]*(?:[.,!?;:)]|$)|[^\\S\\n]+(?:in|by|to|after|since|over|from|this|last|overnight|when|once|again|thanks|because|with|during|within|and|but|as|at|on|for)\\b)",
+          "replace": "shoot up"
+        }
+      ]
     },
     {
       "find": "skyrockets",
-      "replace": "raises",
+      "replace": "boosts",
       "family": "verbs",
-      "of": "skyrocket"
+      "of": "skyrocket",
+      "roles": [
+        {
+          "next": "^(?:[^\\S\\n]*(?:[.,!?;:)]|$)|[^\\S\\n]+(?:in|by|to|after|since|over|from|this|last|overnight|when|once|again|thanks|because|with|during|within|and|but|as|at|on|for)\\b)",
+          "replace": "shoots up"
+        }
+      ]
     },
     {
       "find": "skyrocketed",
-      "replace": "raised",
+      "replace": "boosted",
       "family": "verbs",
-      "of": "skyrocket"
+      "of": "skyrocket",
+      "roles": [
+        {
+          "next": "^(?:[^\\S\\n]*(?:[.,!?;:)]|$)|[^\\S\\n]+(?:in|by|to|after|since|over|from|this|last|overnight|when|once|again|thanks|because|with|during|within|and|but|as|at|on|for)\\b)",
+          "replace": "shot up"
+        }
+      ]
     },
     {
       "find": "skyrocketing",
-      "replace": "raising",
+      "replace": "boosting",
       "family": "verbs",
-      "of": "skyrocket"
+      "of": "skyrocket",
+      "roles": [
+        {
+          "next": "^(?:[^\\S\\n]*(?:[.,!?;:)]|$)|[^\\S\\n]+(?:in|by|to|after|since|over|from|this|last|overnight|when|once|again|thanks|because|with|during|within|and|but|as|at|on|for)\\b)",
+          "replace": "shooting up"
+        },
+        {
+          "next": "^[^\\S\\n]+(?:your|my|our|their|his|her|its|the|a|an|this|that|these|those|every|each|some|more|it|them|him|me|us|you)\\b",
+          "replace": "boosting"
+        },
+        {
+          "replace": null
+        }
+      ]
     },
     {
       "find": "unleash",
@@ -1076,17 +1158,17 @@
     },
     {
       "find": "must-have",
-      "replace": "worth having",
+      "replace": "essential",
       "family": "adjectives"
     },
     {
       "find": "no-brainer",
-      "replace": "obvious",
+      "replace": "easy call",
       "family": "nouns"
     },
     {
       "find": "no-brainers",
-      "replace": "obvious",
+      "replace": "easy calls",
       "family": "nouns",
       "of": "no-brainer"
     },
@@ -1103,7 +1185,7 @@
     },
     {
       "find": "secret sauce",
-      "replace": "the actual method",
+      "replace": "method",
       "family": "nouns"
     },
     {
@@ -1543,6 +1625,14 @@
     }
   ],
   "lang": "en",
+  "article": {
+    "note": "The indefinite article before a word a replacement put in: humanize makes it agree with that word ('an innovative format' -> 'a new format'), and only there. `vowel` matches the start of a word said with a vowel sound, so it takes `forms.vowel`.",
+    "forms": {
+      "consonant": "a",
+      "vowel": "an"
+    },
+    "vowel": "^(?:[aei]|o(?!ne\\b|nce\\b)|u(?!ni|s[aeiou]|ti|r[aeiou]|ke)|h(?:our|onest|onou?r|eir))"
+  },
   "voice": {
     "contractions": "(?i)\\b\\w+'(?:s|t|re|ve|ll|d|m)\\b",
     "pronouns": "(?i)\\b(i|me|my|mine|we|us|our|you|your)\\b"
@@ -1660,6 +1750,14 @@
       {
         "base": "plethora",
         "why": "only singular in use"
+      },
+      {
+        "base": "a plethora of",
+        "why": "the article fixes it singular"
+      },
+      {
+        "base": "a plethora",
+        "why": "the article fixes it singular"
       },
       {
         "base": "secret sauce",

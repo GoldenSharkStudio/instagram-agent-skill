@@ -8,6 +8,8 @@
       "deleted": "(deleted)",
       "hanging_name": "Deleting \"{find}\" would leave the sentence hanging",
       "hanging_fix": "Rewrite the sentence without the phrase. Deleting it alone leaves a fragment (\"If you love design.\").",
+      "role_name": "No plain word fits \"{find}\" here, so it was kept",
+      "role_fix": "Rewrite the sentence around it. One word cannot stand in for it in this use (\"an empowering talk\" is not \"a helping talk\").",
       "uniform_name": "Uniform sentence length (variation {variation:.2f})",
       "uniform_fix": "Break one sentence in half. Let another run long. Machines write even.",
       "report_title": "HUMANIZE REPORT\n---------------",

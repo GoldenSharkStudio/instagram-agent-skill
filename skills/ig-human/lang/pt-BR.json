@@ -8,6 +8,8 @@
       "deleted": "(apagado)",
       "hanging_name": "Apagar \"{find}\" deixaria a frase pendurada",
       "hanging_fix": "Reescreva a frase sem a expressão. Apagar só ela deixa um fragmento (\"Se você ama design.\").",
+      "role_name": "Nenhuma palavra simples cabe em \"{find}\" aqui, então ela ficou",
+      "role_fix": "Reescreva a frase em volta dela. Uma palavra só não a substitui neste uso.",
       "uniform_name": "Frases de tamanho uniforme (variação {variation:.2f})",
       "uniform_fix": "Quebre uma frase ao meio. Deixe outra correr longa. Máquina escreve parelho.",
       "report_title": "RELATÓRIO DO HUMANIZE\n---------------------",

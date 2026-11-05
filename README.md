@@ -184,10 +184,15 @@ python3 detect.py before.txt after.txt       # prove the delta
   survive copy-paste and they are invisible in every editor you own.
 - **Typography.** Em dash to comma, en dash to hyphen, curly quotes to
   straight, ellipsis to three dots, and the orphaned punctuation that leaves.
-- **The lexicon.** 240 stock words and phrases with plain-English replacements.
+- **The lexicon.** 243 stock words and phrases with plain-English replacements.
   The last block of it is Instagram-specific: "stop scrolling", "in today's
   video", "follow for more", "tag someone who needs this", "the algorithm
-  loves", "run don't walk". It lives in
+  loves", "run don't walk". A replacement keeps the sentence grammatical: the
+  article agrees with the new word ("an innovative format" becomes "a new
+  format"), a word can take a different replacement by use ("Skyrocket your
+  sales" becomes "Boost your sales", "Sales skyrocketed" becomes "Sales shot
+  up"), and a use no plain word fits ("an empowering talk") is kept and flagged
+  for a rewrite. It lives in
   [`slop.en.json`](skills/ig-human/slop.en.json) and it is meant to be edited.
 
 **What gets flagged instead of fixed:** "It's not just X, it's Y", rule-of-three
@@ -397,7 +402,7 @@ skills/ig-caption/lang/en.json     the calls to action and the generic hashtags 
                                    and every sentence it prints
 skills/ig-caption/lang/pt-BR.json  the same in Portuguese
 skills/ig-caption/caption.py       the truncation preview and the caption linter
-skills/ig-human/slop.en.json       the lexicon: 240 terms, 18 invisible classes, 16 tells
+skills/ig-human/slop.en.json       the lexicon: 243 terms, 18 invisible classes, 16 tells
 skills/ig-human/slop.pt-BR.json    the same in Portuguese, as a skeleton: structural tells and
                                    voice, no terms yet, "calibrated": false
 skills/ig-human/lang/en.json       every sentence humanize and detect print (not the lexicon, so

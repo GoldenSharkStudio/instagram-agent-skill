@@ -52,8 +52,10 @@ NOT_READ = {
         "conjunctions": "orphan conjunctions come from a deletion, and detect deletes nothing",
         "complementizers": "same: the 'that' left by a deleted opener",
         "inflection": "rules the test suite checks the lexicon with; the forms are entries",
+        "article": "the article agrees after a replacement, and detect replaces nothing",
     },
     "humanize": {
+        "note": "a note describes its section to the person editing it; no tool reads it",
         "voice": "voice is scored by detect; humanize does not rewrite pronouns",
         "inflection": "rules the test suite checks the lexicon with; the forms are entries",
     },
@@ -76,7 +78,8 @@ WITNESS = {
     "caption": (["-"], read_fixture("caption.txt") + " #explore\n"),
     # bad_draft has no invisible character, splice or "that" after an opener.
     "humanize": (["-"], read_fixture("bad_draft.txt")
-                 + "\n\u200bHere's the thing that we hit 10k. It is crucial \u2014 also, it's proof.\n"),
+                 + "\n\u200bHere's the thing that we hit 10k. It is crucial \u2014 also, it's proof.\n"
+                 + "It was a captivating reel.\n"),
     "detect": ([fixture("good_draft.txt"), fixture("bad_draft.txt")], None),
 }
 

@@ -276,6 +276,14 @@
     }
   ],
   "lang": "pt-BR",
+  "article": {
+    "note": "Empty on purpose: the Portuguese article agrees in gender and number, not with the next sound, and a replacement keeps the gender of the word it replaces. humanize changes no article.",
+    "forms": {
+      "consonant": "",
+      "vowel": ""
+    },
+    "vowel": ""
+  },
   "voice": {
     "contractions": "(?i)\\b(?:tá|tô|tamo|tava|tavam|pra|pro|pras|pros|né|cê|ocê|num|numa|nuns|numas|dum|duma|cadê|vamo)\\b",
     "pronouns": "(?i)\\b(?:eu|me|mim|comigo|meu|minha|meus|minhas|nós|a gente|nosso|nossa|nossos|nossas|você|vocês|te|ti|contigo|seu|sua|seus|suas|teu|tua|teus|tuas)\\b"

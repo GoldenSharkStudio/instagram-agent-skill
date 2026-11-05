@@ -65,6 +65,7 @@ CODE_TOKENS = {
     "ig-reel": "sibling folder name",
     "uniform-bullets": "structural tell id, same family as the `id` fields in slop.en.json",
     "hanging": "structural tell id, same",
+    "role": "key of a held lexicon word, inside humanize: no replacement fits that use",
     "Cf": "unicodedata category",
     "en": "language code",
     "pt-BR": "language code",

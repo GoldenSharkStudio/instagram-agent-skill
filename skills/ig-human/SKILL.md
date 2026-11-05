@@ -24,7 +24,7 @@ python3 {skill_dir}/detect.py before.txt after.txt --lang {language}   # prove t
 
 `--lexicon` wins over `--lang` when both are given.
 
-Both read `slop.en.json`: 240 stock words and phrases with plain-English
+Both read `slop.en.json`: 243 stock words and phrases with plain-English
 replacements, 18 invisible character classes, 11 typographic substitutions and
 16 structural tells. The last block of each list is Instagram-specific, the
 vocabulary that only shows up in captions and voiceovers. It is meant to be
@@ -84,7 +84,11 @@ the double punctuation and orphaned periods that leaves behind.
 to, "in today's fast-paced world", plus the Instagram block: "stop scrolling",
 "in today's video", "follow for more", "tag someone who needs this", "the
 algorithm loves", "run don't walk". Each swapped for a plain word or deleted,
-with capitalisation preserved and URLs left untouched. A deletion that would
+with capitalisation preserved and URLs left untouched. The article agrees with
+the new word ("an innovative format" becomes "a new format"), a word can swap
+differently by use ("Sales skyrocketed" becomes "Sales shot up", "Skyrocket
+your sales" becomes "Boost your sales"), and a use no plain word fits ("an
+empowering talk") stays as written and comes back flagged for a rewrite. A deletion that would
 leave a clause hanging is not made: "Follow for more if you love design."
 would come out as "If you love design.", so the sentence stays as written and
 comes back flagged for a rewrite (a "that" after a deleted opener goes with it:
