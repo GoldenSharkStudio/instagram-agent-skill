@@ -42,10 +42,12 @@ def prose(path):
 
 
 def claims(pattern):
-    """Every (file, number) the prose states for `pattern` (one group)."""
+    """Every (file, number) the prose states for `pattern` (one group).
+    Whitespace is collapsed first: Markdown wraps at any space, so "the same
+    26\\nformulas" is a claim too, and a literal space in `pattern` missed it."""
     found = []
     for path in PROSE_FILES:
-        for m in re.finditer(pattern, prose(path), re.IGNORECASE):
+        for m in re.finditer(pattern, re.sub(r"\s+", " ", prose(path)), re.IGNORECASE):
             raw = m.group(1).lower()
             found.append((path, int(raw) if raw.isdigit() else WORD_NUMBERS[raw]))
     return found
@@ -130,9 +132,10 @@ class HooksJson(unittest.TestCase):
             with self.subTest(id=h["id"], got=fid):
                 self.assertIn(fid, (h["id"], None))
             own += fid == h["id"]
-        # Regression floor measured on 02/11/2026: 20 of 26 examples name
-        # their own formula. Changing a match regex must not lower it.
-        self.assertGreaterEqual(own, 20)
+        # Regression floor measured on 05/11/2026: 24 of 30 examples name
+        # their own formula (20 of 26 on 02/11, plus the four new ones).
+        # Changing a match regex must not lower it.
+        self.assertGreaterEqual(own, 24)
 
 
 class SlopJson(unittest.TestCase):

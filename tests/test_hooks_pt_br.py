@@ -79,6 +79,18 @@ PT = {
     26: ["O jeito mais rápido de ganhar confiança é juntar provas.",
          "A melhor forma de responder cliente bravo é por escrito.",
          "Esta tem sido a maior procura do ano na loja."],
+    27: ["Enquanto você posta todo dia, seu concorrente responde cada direct.",
+         "Enquanto a maioria espera o cliente voltar, ela manda mensagem no dia seguinte.",
+         "Enquanto uns reclamam do algoritmo, outros vendem pelo story."],
+    28: ["Meu contador disse que eu não precisava de sistema. Fui testar.",
+         "Disseram que post de manhã não vende. Testei por um mês.",
+         "Todo mundo jura que hashtag morreu, então fui conferir."],
+    29: ["Se eu fosse nutricionista, nunca pagaria um site antes de ter agenda.",
+         "Se eu começasse uma loja hoje, faria só isso no primeiro mês.",
+         "Se eu tivesse que começar do zero, eu faria assim."],
+    30: ["Como vender pelo Instagram sem dançar na câmera.",
+         "Como conseguir cliente sem pagar anúncio?",
+         "Como eu dobrei as vendas sem contratar ninguém."],
 }
 
 # Things that are not hooks and must stay unclassified in pt-BR: the CTA, the
@@ -94,6 +106,10 @@ NOT_A_HOOK = [
     "Que noite especial com a equipe toda",
     # "por" ends in "-or" like a group noun; the group is the first word.
     "É por isso que a gente continua aqui, todo dia, com o time.",
+    # "Enquanto" and "Como ... sem" open the Contrast and the How-Without;
+    # a connective and a figure of speech do not.
+    "Enquanto isso, a equipe arruma a vitrine para amanhã.",
+    "Como sempre, sem pressa e com café.",
 ]
 
 

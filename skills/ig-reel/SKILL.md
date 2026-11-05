@@ -53,7 +53,7 @@ Then, for a Reel:
 1. The three posts of step 1 are **three of their own reels**, transcribed or
    read. A script in the wrong voice is unusable, because they have to say it
    out loud.
-2. Read `hooks.json` in this folder. 26 formulas, each with a template, a filled
+2. Read `hooks.json` in this folder. 30 formulas, each with a template, a filled
    example, the on-screen version, what it is for, and how it gets ruined.
    Four of them are in there because they kept turning up in real hooks, not
    because they completed a pattern.

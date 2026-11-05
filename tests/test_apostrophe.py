@@ -40,6 +40,7 @@ DISPLAY_KEYS = {
     "on_screen": "hooks.json sample for the model",
     "rules": "hooks.json advice for the model",
     "best_for": "hooks.json advice for the model",
+    "template": "hooks.json pattern for the model to fill, read by no tool",
     "hashtags_over": "caption.py message, printed (tests/test_messages.py owns the messages)",
     "common_fail": "rubric.json, read by the model, not by code",
     "full_marks": "rubric.json, read by the model, not by code",

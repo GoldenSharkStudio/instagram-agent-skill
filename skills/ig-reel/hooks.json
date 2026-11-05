@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "note": "26 hook formulas for Reels. A Reel has two hooks that fire at the same time and they are not the same sentence: the first thing you say, and the first thing on screen. The spoken hook has about two seconds. The on-screen hook has about one, because it is read before it is heard. Every formula here carries a template, a filled example, the on-screen version, what it is for, and the way it usually gets ruined. Each formula also carries a `match` regex per language (`{\"en\": ..., \"pt-BR\": ...}`), so the same vocabulary can name a hook found in the wild and not only write a new one. swipe.py uses only the regex of the language it runs in; an empty one never matches, so a hook is never named by another language's pattern. Walk them in `classify_order`, which is most specific first, case-insensitive.",
+  "note": "30 hook formulas for Reels. A Reel has two hooks that fire at the same time and they are not the same sentence: the first thing you say, and the first thing on screen. The spoken hook has about two seconds. The on-screen hook has about one, because it is read before it is heard. Every formula here carries a template, a filled example, the on-screen version, what it is for, and the way it usually gets ruined. Each formula also carries a `match` regex per language (`{\"en\": ..., \"pt-BR\": ...}`), so the same vocabulary can name a hook found in the wild and not only write a new one. swipe.py uses only the regex of the language it runs in; an empty one never matches, so a hook is never named by another language's pattern. Walk them in `classify_order`, which is most specific first, case-insensitive.",
   "rules": [
     "Write the spoken line and the on-screen line separately. On screen is the shorter, blunter one, six words or fewer, no punctuation it does not need.",
     "No setup. The video starts at the sentence you would normally reach at second six.",
@@ -347,11 +347,67 @@
         "en": "^\\s*(?:the\\s+)?(?:fastest|quickest|best|worst|biggest|greatest|easiest|hardest|only|number one|#1|most important)\\s+\\w+|\\bthe (?:fastest|best|worst|biggest|greatest|only) way to\\b",
         "pt-BR": "^[^\\w]*(?:(?:o|a|os|as)\\s+)?(?:jeito|forma|maneira|caminho) mais (?:rápid[oa]|fácil|barat[oa]|simples|segur[oa])\\b|^[^\\w]*(?:(?:o|a|os|as)\\s+)?(?:melhor|melhores|pior|piores|maior|maiores|únic[oa]s?|mais importante)\\s+[^\\W\\d_]+|\\b(?:o|a) (?:melhor|pior|única|maior) (?:forma|jeito|maneira) de\\b|^[^\\w]*(?:ess[ae]|est[ae]) (?:é|tem sido|foi) (?:a|o) (?:melhor|maior|pior|únic[oa])\\b"
       }
+    },
+    {
+      "id": 27,
+      "name": "The Contrast",
+      "template": "While you {the common habit}, {someone} {the better move}.",
+      "example": "While you post every day, your competitor posts twice and answers every DM.",
+      "on_screen": "WHILE YOU POST DAILY",
+      "best_for": "Opinion videos that need an edge. The viewer sees themselves in the first half and the gap in the second.",
+      "trap": "A second half nobody can copy. If the better move is 'has a team of ten', you have shown a gap and no way across it.",
+      "match": {
+        "en": "^\\s*while (?:you|your|most|everyone|they|some)\\b",
+        "pt-BR": "^[^\\w]*enquanto (?:você|vocês|vc|seu|sua|seus|suas|o seu|a sua|a maioria|todo mundo|muita gente|uns|umas|eles|elas)\\b"
+      }
+    },
+    {
+      "id": 28,
+      "name": "Tested The Claim",
+      "template": "{Someone} said {claim}. I went and tested it.",
+      "example": "My accountant said I didn't need a CRM. So I tested it for a month.",
+      "on_screen": "I TESTED IT",
+      "best_for": "Retention to the verdict. The claim is a question the viewer already has, and the test promises an answer they did not have to pay for.",
+      "trap": "A test with no result in the video. If the verdict is 'it depends', the comments will ask what the point was.",
+      "match": {
+        "en": "\\b(?:said|says|told (?:me|us)|swears?|claims?)\\b[^.!?]{2,90}[.!?]+\\s*(?:so\\s+)?(?:i|we)(?: went and)? (?:tested|tried|checked)\\b|^\\s*(?:so\\s+)?i (?:went and )?tested\\b",
+        "pt-BR": "\\b(?:disse|disseram|falou|falaram|diz|dizem|jura|juram|garante|garantem)\\b[^.!?]{2,90}?(?:[.!?]+|,)\\s*(?:(?:então|aí|e)\\s+)?(?:fui|fomos) (?:testar|tentar|conferir|checar|ver)\\b|\\b(?:disse|disseram|falou|falaram|diz|dizem|jura|juram|garante|garantem)\\b[^.!?]{2,90}[.!?]+\\s*(?:(?:então|aí|e)\\s+)?(?:testei|testamos)\\b|^[^\\w]*(?:fui|fomos) testar\\b"
+      }
+    },
+    {
+      "id": 29,
+      "name": "If I Were You",
+      "template": "If I were a {profession} starting today, I'd {one move}.",
+      "example": "If I were a physio starting today, I'd never pay for a website first.",
+      "on_screen": "IF I WERE A PHYSIO",
+      "best_for": "Callouts with advice attached. The profession qualifies the viewer and the 'I'd' borrows your experience without a lecture.",
+      "trap": "A profession you know nothing about. People in it hear the first wrong detail and leave a comment saying so.",
+      "match": {
+        "en": "^\\s*if i (?:were|was) (?:a|an|you|starting)\\b|^\\s*if i (?:had to )?start(?:ed)? (?:over|again|today|from)\\b",
+        "pt-BR": "^[^\\w]*se eu (?:fosse|estivesse|começasse|tivesse que (?:começar|recomeçar)|recomeçasse)\\b"
+      }
+    },
+    {
+      "id": 30,
+      "name": "How To Without",
+      "template": "How to {result} without {the thing they hate}.",
+      "example": "How to get clients from Instagram without dancing on camera.",
+      "on_screen": "CLIENTS WITHOUT DANCING",
+      "best_for": "Saves and search. The 'without' names the objection that has kept the viewer from trying.",
+      "trap": "A 'without' that is not a cost. 'Without stress' is a wish; 'without paying for ads' is a reason to watch.",
+      "match": {
+        "en": "^\\s*how (?:to|i \\w+ed|we \\w+ed)\\b[^.!?]{0,80}?\\bwithout\\b",
+        "pt-BR": "^[^\\w]*como (?:[^\\W\\d_]+(?:ar|er|ir|or)|eu [^\\W\\d_]+ei|a gente [^\\W\\d_]+ou)\\b[^.!?]{0,80}?\\bsem\\b"
+      }
     }
   ],
   "classify_order": [
     1,
     23,
+    28,
+    29,
+    30,
+    27,
     5,
     4,
     3,

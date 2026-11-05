@@ -3,7 +3,7 @@
 Fourteen Claude skills that run an Instagram account. Free, MIT, no signup, no
 API key, nothing to connect.
 
-One of them writes your Reels off 26 hook formulas and scores the hook before
+One of them writes your Reels off 30 hook formulas and scores the hook before
 you waste a take on it. One goes and finds the reels that are actually working
 in your niche and ranks them by how far each beat its own account. One writes
 the caption and shows you exactly what the feed shows before the "... more".
@@ -58,7 +58,7 @@ say the words out loud.
 | command | what it does |
 | --- | --- |
 | `/ig-setup` | Start here. Writes your `voice.md` with you, from three of your own posts or a short interview, and picks the language your posts are checked in. |
-| `/ig-reel` | One idea into a Reel. Three hooks from [26 formulas](skills/ig-reel/hooks.json), scored, then the script, the on-screen text and a timed beat sheet. |
+| `/ig-reel` | One idea into a Reel. Three hooks from [30 formulas](skills/ig-reel/hooks.json), scored, then the script, the on-screen text and a timed beat sheet. |
 | `/ig-viral` | Goes and finds what is working in your niche, ranks it by multiple over each account's own median, names the formula, writes the swipe file. |
 | `/ig-caption` | The caption, linted. Shows you the 125 characters the feed actually shows before the tap. |
 | `/ig-carousel` | Swipe posts. The cover that earns the swipe, slide copy, and the 1080x1350 files. |
@@ -350,7 +350,7 @@ doing when you read it, Instagram is right.
 ## Files
 
 ```
-skills/ig-reel/hooks.json          26 hook formulas: template, example, on-screen line,
+skills/ig-reel/hooks.json          30 hook formulas: template, example, on-screen line,
                                    what it is for, how it gets ruined, and a match regex
                                    per language (an empty one never matches)
 skills/ig-reel/lang/en.json        the words hookscore and beats know (stakes, openers, numbers)
