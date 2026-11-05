@@ -16,6 +16,7 @@ the case table does not cover.
 """
 
 import ast
+import glob
 import os
 import subprocess
 import sys
@@ -106,7 +107,8 @@ class DecomposedText(unittest.TestCase):
 class FilesAreClosed(unittest.TestCase):
     def test_every_open_is_a_with(self):
         bare = []
-        for path in script_paths():
+        # igtools/ is Python that ships too: the same rule.
+        for path in script_paths() + sorted(glob.glob(os.path.join(ROOT, "igtools", "*.py"))):
             with open(path, encoding="utf-8") as fh:
                 tree = ast.parse(fh.read())
             heads = {id(item.context_expr) for node in ast.walk(tree)

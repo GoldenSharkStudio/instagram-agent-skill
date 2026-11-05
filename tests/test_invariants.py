@@ -439,6 +439,23 @@ class StdlibOnly(unittest.TestCase):
             with self.subTest(tool=name):
                 self.assertEqual(sorted(mods - stdlib - self.LOCAL), [])
 
+    def test_igtools_imports(self):
+        # The library front ships too, with the same promise.
+        stdlib = set(sys.stdlib_module_names)
+        paths = sorted(glob.glob(os.path.join(ROOT, "igtools", "*.py")))
+        self.assertTrue(paths)
+        for path in paths:
+            with open(path, encoding="utf-8") as fh:
+                tree = ast.parse(fh.read())
+            mods = set()
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    mods |= {a.name.split(".")[0] for a in node.names}
+                elif isinstance(node, ast.ImportFrom) and node.module:
+                    mods.add(node.module.split(".")[0])
+            with self.subTest(file=os.path.basename(path)):
+                self.assertEqual(sorted(mods - stdlib - {"igtools"}), [])
+
 
 if __name__ == "__main__":
     unittest.main()

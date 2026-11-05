@@ -390,8 +390,8 @@ def main():
                     help="language data to score with; auto picks by stopwords")
     args = ap.parse_args()
 
-    if args.hook:
-        lines = [args.hook]
+    if args.hook is not None:                    # "" or blanks: nothing to score, not stdin
+        lines = [args.hook.strip()] if args.hook.strip() else []
     else:
         raw = read_text(args.input)
         lines = [l.strip() for l in raw.splitlines() if l.strip()]
