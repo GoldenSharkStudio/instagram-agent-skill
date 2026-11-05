@@ -88,7 +88,7 @@ class Contract(unittest.TestCase):
         proc, data = run_json("beats", fixture("script.txt"), "--target", "30")
         self.assertEqual(proc.returncode, 0)
         self.assertEqual(data["total_words"], 73)
-        self.assertEqual(set(data), {"wpm", "target", "total_seconds", "total_words",
+        self.assertEqual(set(data), {"schema", "wpm", "target", "total_seconds", "total_words",
                                      "beats", "notes"})
 
     def test_empty_exits_2(self):

@@ -384,7 +384,7 @@ class HumanizeCli(unittest.TestCase):
 
     def test_json_shape(self):
         proc, data = run_json("humanize", fixture("bad_draft.txt"))
-        self.assertEqual(set(data), {"text", "report"})
+        self.assertEqual(set(data), {"schema", "text", "report"})
         self.assertEqual(set(data["report"]), {"invisible", "typographic", "lexical", "structures"})
 
     def test_custom_lexicon(self):

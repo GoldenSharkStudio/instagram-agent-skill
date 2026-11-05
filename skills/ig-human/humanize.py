@@ -96,6 +96,8 @@ def load_lexicon(path=None, lang="en"):
 
 
 LANGS = ("en", "pt-BR", "auto")
+# The --json output is versioned: a program reading it checks this number.
+SCHEMA = 1
 
 
 def pick_lang(text, candidates):
@@ -499,7 +501,7 @@ def main():
             sys.exit(2)
         print(say(M, "wrote", path=args.out), file=sys.stderr)
     if args.json:                                # the JSON goes to stdout, -o or not
-        print(json.dumps({"text": clean, "report": report}, indent=2, ensure_ascii=False))
+        print(json.dumps({"schema": SCHEMA, "text": clean, "report": report}, indent=2, ensure_ascii=False))
         return
     if not args.out:
         sys.stdout.write(clean)

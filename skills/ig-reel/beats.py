@@ -118,6 +118,8 @@ def load_lang(code="en"):
 
 
 LANGS = ("en", "pt-BR", "auto")
+# The --json output is versioned: a program reading it checks this number.
+SCHEMA = 1
 
 
 def pick_lang(text, candidates):
@@ -347,7 +349,7 @@ def main():
         print(say(load_lang(lang)["MESSAGES"], "empty_script"), file=sys.stderr)
         sys.exit(2)
     if args.json:
-        print(json.dumps(a, indent=2, ensure_ascii=False))
+        print(json.dumps({"schema": SCHEMA, **a}, indent=2, ensure_ascii=False))
     else:
         render(a, lang=lang)
     sys.exit(0)

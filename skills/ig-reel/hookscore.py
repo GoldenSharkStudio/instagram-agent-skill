@@ -161,6 +161,8 @@ def load_lang(code="en"):
 
 
 LANGS = ("en", "pt-BR", "auto")
+# The --json output is versioned: a program reading it checks this number.
+SCHEMA = 1
 
 
 def pick_lang(text, candidates):
@@ -414,6 +416,7 @@ def main():
     for line in lines:
         results, overall, verdict, flags = run(line, lang)
         payload.append({
+            "schema": SCHEMA,
             "hook": line,
             "checks": {k: {"score": round(v[0], 1), "detail": v[1]} for k, v in results.items()},
             "weakest": min(CHECKS, key=lambda c: results[c][0]),

@@ -49,6 +49,8 @@ except Exception:                                 # ig-viral copied on its own
     score_hook = None
 
 LANGS = ("en", "pt-BR", "auto")
+# The --json output is versioned: a program reading it checks this number.
+SCHEMA = 1
 
 
 class MessagesError(Exception):
@@ -357,7 +359,7 @@ def main():
               file=sys.stderr)
 
     if args.json:
-        print(json.dumps(a, indent=2, ensure_ascii=False))
+        print(json.dumps({"schema": SCHEMA, **a}, indent=2, ensure_ascii=False))
     else:
         render(a, lang=lang)
     if args.out:

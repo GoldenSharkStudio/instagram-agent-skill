@@ -152,6 +152,8 @@ def load_lexicon(path=None, lang="en"):
 
 
 LANGS = ("en", "pt-BR", "auto")
+# The --json output is versioned: a program reading it checks this number.
+SCHEMA = 1
 
 
 def pick_lang(text, candidates):
@@ -482,6 +484,7 @@ def main():
     for name, text in targets:
         results, overall, verdict = run(text, lex, code)
         payload.append({
+            "schema": SCHEMA,
             "source": name,
             "checks": {k: {"score": round(v[0], 1), "detail": v[1]} for k, v in results.items()},
             "human_score": round(overall, 1),

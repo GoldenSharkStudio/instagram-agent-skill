@@ -150,6 +150,8 @@ def load_lang(code="en"):
 
 
 LANGS = ("en", "pt-BR", "auto")
+# The --json output is versioned: a program reading it checks this number.
+SCHEMA = 1
 
 
 def pick_lang(text, candidates):
@@ -363,7 +365,7 @@ def main():
         print(f"caption.py: cannot load language data, {err}", file=sys.stderr)
         sys.exit(2)
     if args.json:
-        print(json.dumps(a, indent=2, ensure_ascii=False))
+        print(json.dumps({"schema": SCHEMA, **a}, indent=2, ensure_ascii=False))
     else:
         render(a, lang=lang)
     sys.exit(0 if a["verdict"] == "READY" else 1)

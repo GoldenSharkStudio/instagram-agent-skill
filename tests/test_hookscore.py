@@ -55,7 +55,8 @@ class GoldenReadme(unittest.TestCase):
         self.assertIsInstance(data, list)
         self.assertEqual([d["score"] for d in data], [g[1] for g in GOLDEN])
         for d in data:
-            self.assertEqual(set(d), {"hook", "checks", "weakest", "flags", "score", "verdict"})
+            self.assertEqual(set(d), {"schema", "hook", "checks", "weakest", "flags", "score",
+                                      "verdict"})
             self.assertEqual(set(d["checks"]), set(hs.CHECKS))
 
     def test_json_single_is_an_object(self):
