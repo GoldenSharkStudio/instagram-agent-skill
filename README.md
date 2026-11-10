@@ -373,10 +373,14 @@ The one exception is keyword auto-replies in DMs, which Instagram supports
 through its own tools and approved partners, and which only fire after somebody
 comments first. `/ig-dm` says where that line is.
 
-**`/ig-viral` reads, it does not scrape.** Ten accounts, a dozen reels each, at
-human speed, with you driving your own browser. It never asks for your password
-and never logs in as you. Automated collection at volume is the thing that gets
-accounts restricted, and a crawler is not what this is.
+**`/ig-viral` reads, it does not scrape: read, never act.** Ten accounts, a
+dozen reels each, at human speed, in your own browser with you present. It
+opens and scrolls pages and treats what they say as data; it never clicks,
+likes, follows, comments, DMs or posts, even when a page asks, never asks for
+your password and never logs in as you. The YouTube step is optional and
+yours: you install a pinned `yt-dlp` and run it, the skill never installs it.
+Automated collection at volume is the thing that gets accounts restricted, and
+a crawler is not what this is.
 
 **The five detection checks are local heuristics, not detector APIs.** They are
 modelled on the signals public detectors key on and they run entirely on your
