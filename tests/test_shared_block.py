@@ -104,6 +104,35 @@ class EverySkillSharesTheBlock(unittest.TestCase):
             self.assertIn("`" + v + "`", body)
         # missing voice.md or Language line: scripts run as en
         self.assertRegex(body, r"no (Language )?line[^.]*`en`")
+        # a new voice.md asks the language and writes the line the way
+        # ig-setup does, and only after the user's yes
+        self.assertIn("- **Language:** pt-BR", body)
+        self.assertRegex(body, r"language\s+they\s+post\s+in")
+        self.assertRegex(body, r"voice\.md`? only after[^.]*\byes\b")
+        # numbers under the user's name come from them, never from the model
+        for needle in ("**Never fabricate.**", "{{your number}}", "**Proof I can use**", "**Provas que posso usar**"):
+            with self.subTest(needle=needle):
+                self.assertIn(needle, body)
+
+    def test_proof_sections_named_in_the_block_exist(self):
+        """The block names the proof section of each voice form by its heading."""
+        body = blocks(read(skill_files()[0]))[NAME][0]
+        forms = glob.glob(os.path.join(SKILLS, "..", "templates", "voice.*.md"))
+        self.assertGreaterEqual(len(forms), 2)
+        for form in forms:
+            heads = re.findall(r"^## (.+?)\s*$", read(form), re.M)
+            with self.subTest(form=os.path.basename(form)):
+                self.assertTrue([h for h in heads if "**" + h + "**" in body], heads)
+
+    def test_fabrication_rule_lives_only_in_the_block(self):
+        """The rule is shared; a local copy would drift from it."""
+        for path in skill_files():
+            text = read(path)
+            outside = OPEN.sub("", text)
+            for body in blocks(text).get(NAME, []):
+                outside = outside.replace(body, "")
+            with self.subTest(skill=os.path.basename(os.path.dirname(path))):
+                self.assertNotIn("**Never fabricate.**", outside)
 
     def test_block_comes_before_the_skill_own_sections(self):
         for path in skill_files():

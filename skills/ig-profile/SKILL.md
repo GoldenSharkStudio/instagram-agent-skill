@@ -23,8 +23,11 @@ The same steps open every ig-* skill.
 
 1. Read `~/.claude/instagram/voice.md` if it exists: who the user is, who they
    talk to, how they sound, what they never say. If it does not exist, ask once
-   for three of their own posts (reels, captions or comments), infer the voice
-   from them, write the file, and tell the user you did. Never invent a voice.
+   for three of their own posts (reels, captions or comments) and the language
+   they post in (`en`, `pt-BR`, or `auto` for both). Infer the voice from the
+   posts, put the language on a line of its own, written exactly
+   `- **Language:** pt-BR` (with their code), show the user the file, and write
+   `~/.claude/instagram/voice.md` only after they say yes. Never invent a voice.
 2. Answer in the language of its **Language:** line: `en` is English, `pt-BR`
    is Brazilian Portuguese. With `auto`, no voice.md or no Language line, answer
    in the language the user writes to you in. These instructions are in English;
@@ -40,6 +43,11 @@ The same steps open every ig-* skill.
    file this skill calls "in this folder" from there. If the folder has no
    scripts (this file was pasted on its own), do the checks by hand and say
    they were not run.
+5. **Never fabricate.** A number, client, result or quote under the user's
+   name comes from what they told you or from the **Proof I can use** section
+   of voice.md (**Provas que posso usar** in the pt-BR form), never from you,
+   not even as an example. When one is needed and missing, write
+   `{{your number}}` in its place and tell the user what to fill.
 <!-- /shared:before-you-write -->
 
 ## Input
