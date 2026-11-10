@@ -135,7 +135,8 @@ CAROUSEL  ·  8 slides
 Caption: Job B, hook in line 1, one ask, 3 tags.
 ```
 
-Nothing is uploaded. The user posts it. When they approve the copy, append one
+Nothing is uploaded, and nothing is posted until the user says yes to the
+copy. The user posts it. When they approve the copy, append one
 line to `~/.claude/instagram/log.md` (create it if it is missing), type
 `carousel`, with the cover line as `first line`, so `/ig-audit` and `/ig-plan`
 see it:

@@ -124,9 +124,10 @@ caption:    run /ig-caption next
 Reply "yes" to log it, or tell me what to change.
 ```
 
-**7. Never publish.** This skill produces a script. The user shoots it and
-posts it. On "yes", append one line to `~/.claude/instagram/log.md` (create it
-if it is missing), type `reel`, so `/ig-audit` has a history later:
+**7. Never publish.** This skill produces a script, and nothing is posted
+until the user says yes to it. The user shoots it and posts it. On "yes",
+append one line to `~/.claude/instagram/log.md` (create it if it is missing),
+type `reel`, so `/ig-audit` has a history later:
 
 <!-- shared:log-schema -->
 One line per item, oldest at the top, newest at the bottom:

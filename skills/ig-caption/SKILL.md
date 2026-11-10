@@ -151,4 +151,5 @@ search:     "client proposals" in line 3, "agency pricing" in line 5
 linter:     READY
 ```
 
-Nothing is posted. The user pastes it.
+Then the gate: nothing is posted until the user says yes to the block. They
+paste it.

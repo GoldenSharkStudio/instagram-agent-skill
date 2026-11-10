@@ -150,5 +150,6 @@ Then stop. A third converts nobody and costs the relationship.
 ## Output
 
 The message, the character count, and the two follow-ups with the day each
-goes out, all run through `/ig-human`. The user sends every one of them by
-hand, or through their own approved automation for keyword replies only.
+goes out, all run through `/ig-human`. Nothing is sent until the user says
+yes to it. The user sends every one of them by hand, or through their own
+approved automation for keyword replies only.

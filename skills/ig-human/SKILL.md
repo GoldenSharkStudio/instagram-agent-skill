@@ -164,3 +164,4 @@ do not tell a user their text is undetectable.
    Five means the draft was written by formula, and the fix is a different
    draft, not more passes.
 5. Show the user the cleaned text and the score. Never the score alone.
+   Nothing is posted until the user says yes to the cleaned text.

@@ -129,7 +129,8 @@ STORIES  ·  Tuesday  ·  5 frames
 After: everyone who votes Yes gets a reply. That is the whole funnel.
 ```
 
-Nothing is posted. The user posts it. When they approve the sequence, append
+Nothing is posted until the user says yes to the sequence. The user posts it.
+When they approve the sequence, append
 one line to `~/.claude/instagram/log.md` (create it if it is missing), type
 `story`, with frame 1's line as `first line` and `-` as `formula`, so
 `/ig-plan` does not repeat the day's theme:
