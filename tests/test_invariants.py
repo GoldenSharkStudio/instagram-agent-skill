@@ -271,6 +271,16 @@ class DuplicatedRegexes(unittest.TestCase):
         hz, dt = load("humanize"), load("detect")
         self.assertEqual(inspect.getsource(hz.hangs), inspect.getsource(dt.hangs))
 
+    def test_lexicon_check_and_any_of(self):
+        # Both tools refuse the same broken lexicon, and build the same
+        # alternation from its lists (tests/test_lexicon_schema.py).
+        import inspect
+        hz, dt = load("humanize"), load("detect")
+        for name in ("check_lexicon", "any_of"):
+            with self.subTest(name=name):
+                self.assertEqual(inspect.getsource(getattr(hz, name)),
+                                 inspect.getsource(getattr(dt, name)))
+
 
 # What a reader counts as one emoji. A copy of EMOJI_RE in any script must
 # count these the same way (the scripts are found from src, not listed here).

@@ -86,13 +86,115 @@ def load_lexicon(path=None, lang="en"):
     try:
         with open(path, encoding="utf-8") as fh:
             lex = json.load(fh)
-        for key in ("invisible", "typographic", "words", "phrases", "structures",
-                    "connectives", "conjunctions", "dependents", "complementizers"):
-            if not isinstance(lex[key], list):
-                raise TypeError(f"{key} must be a list")
+        check_lexicon(lex)
         return lex
     except (OSError, ValueError, KeyError, TypeError) as err:
         raise LexiconError(f"{path}: {type(err).__name__}: {err}") from None
+
+
+def check_lexicon(lex):
+    """Every field humanize and detect read, checked once, at load. A lexicon
+    edited by hand and broken stops here with the field named (exit 2), never
+    halfway through a run with a traceback, and never by quietly skipping a
+    check: a structural tell whose regex does not compile used to vanish, and
+    the verdict went up to PASS. Same function in humanize.py and detect.py."""
+    def fail(where, what):
+        raise ValueError(f"{where}: {what}")
+
+    def text(v, where, empty=True):
+        if not isinstance(v, str) or (not empty and not v):
+            fail(where, "must be a string" if empty else "must be a non-empty string")
+
+    def regex(v, where, empty=False):
+        text(v, where, empty)
+        try:
+            re.compile(v)
+        except re.error as err:
+            fail(where, f"not a valid regex ({err})")
+
+    def table(v, where):
+        if not isinstance(v, dict):
+            fail(where, "must be an object")
+        return v
+
+    def field(obj, key, where):
+        if key not in obj:
+            fail(where, f'missing "{key}"')
+        return obj[key]
+
+    table(lex, "lexicon")
+    for key in ("invisible", "typographic", "words", "phrases", "structures",
+                "connectives", "conjunctions", "dependents", "complementizers"):
+        if not isinstance(field(lex, key, "lexicon"), list):
+            fail(key, "must be a list")
+    for key in ("connectives", "conjunctions", "dependents", "complementizers"):
+        for i, v in enumerate(lex[key]):
+            text(v, f"{key}[{i}]", empty=False)
+    for i, e in enumerate(lex["invisible"]):
+        at = f"invisible[{i}]"
+        table(e, at)
+        cp = field(e, "cp", at)
+        ends = [int(c[2:], 16) for c in cp.split("-")] if (
+            isinstance(cp, str)
+            and re.fullmatch(r"U\+[0-9A-Fa-f]{1,6}(?:-U\+[0-9A-Fa-f]{1,6})?", cp)) else []
+        if not ends or max(ends) > 0x10FFFF or ends != sorted(ends):
+            fail(at + ".cp", 'must be "U+XXXX" or "U+XXXX-U+YYYY", low to high')
+        text(field(e, "name", at), at + ".name")
+        if field(e, "action", at) not in ("delete", "space"):
+            fail(at + ".action", 'must be "delete" or "space"')
+    for i, e in enumerate(lex["typographic"]):
+        at = f"typographic[{i}]"
+        table(e, at)
+        text(field(e, "from", at), at + ".from", empty=False)
+        text(field(e, "name", at), at + ".name")
+        text(field(e, "to", at), at + ".to")
+    for key in ("words", "phrases"):
+        for i, e in enumerate(lex[key]):
+            at = f"{key}[{i}]"
+            table(e, at)
+            text(field(e, "find", at), at + ".find", empty=False)
+            text(field(e, "replace", at), at + ".replace")
+            text(field(e, "family", at), at + ".family")
+            roles = e.get("roles", [])
+            if not isinstance(roles, list):
+                fail(at + ".roles", "must be a list")
+            for j, r in enumerate(roles):
+                rat = f"{at}.roles[{j}]"
+                table(r, rat)
+                for side in ("prev", "next"):
+                    if side in r:
+                        regex(r[side], f"{rat}.{side}")
+                if field(r, "replace", rat) is not None:
+                    text(r["replace"], rat + ".replace")
+    for i, s in enumerate(lex["structures"]):
+        at = f"structures[{i}]"
+        table(s, at)
+        for key in ("id", "name", "fix"):
+            text(field(s, key, at), f"{at}.{key}")
+        regex(field(s, "regex", at), at + ".regex")
+    voice = table(field(lex, "voice", "lexicon"), "voice")
+    for key in ("contractions", "pronouns"):
+        regex(field(voice, key, "voice"), "voice." + key)
+    if "article" in lex:
+        art = table(lex["article"], "article")
+        if "vowel" in art:
+            regex(art["vowel"], "article.vowel", empty=True)
+        forms = table(art.get("forms", {}), "article.forms")
+        for key in ("consonant", "vowel"):
+            if key in forms:
+                text(forms[key], "article.forms." + key)
+    if not isinstance(lex.get("calibrated", True), bool):
+        fail("calibrated", f"must be true or false, not {lex['calibrated']!r}")
+    if "lang" in lex:
+        text(lex["lang"], "lang")
+
+
+def any_of(items):
+    """A lexicon list as one alternation of literals. An empty list matches
+    nothing: a bare "|".join gave "(?:)", which matches everywhere, so an
+    empty `dependents` held every deletion. Same function in humanize.py and
+    detect.py."""
+    return "|".join(re.escape(x) for x in items) or r"(?!)"
 
 
 LANGS = ("en", "pt-BR", "auto")
@@ -205,7 +307,7 @@ def _dash_to_comma(text, dash, lex):
     "it works, also, it's cheap" stay as written)."""
     # Before a sentence connective the comma would splice two sentences
     # ("is important — also, it's proof"): a full stop instead.
-    connectives = "|".join(re.escape(c) for c in lex["connectives"])
+    connectives = any_of(lex["connectives"])
     text = re.sub(dash + r"(" + connectives + r")\s*,\s*",
                   lambda m: ". " + m.group(1)[0].upper() + m.group(1)[1:] + ", ", text)
     # Before punctuation of its own a comma reads wrong: the dash just goes.
@@ -247,7 +349,7 @@ def hangs(find, text, end, lex):
         return False
     if find.split()[-1].lower() in lex["dependents"]:
         return bool(re.match(r"[^\S\n]+\w", text[end:]))
-    deps = "|".join(re.escape(d) for d in lex["dependents"])
+    deps = any_of(lex["dependents"])
     sep = r"(?:[^\S\n]*[,\u2014\u2013][^\S\n]*|[^\S\n]+)"
     return bool(re.match(sep + r"(?:" + deps + r")\b", text[end:], re.IGNORECASE))
 
@@ -315,6 +417,7 @@ def fix_articles(text, lex):
 DELETED = "\x00DEL\x00"   # marks where an entry was deleted, until cleanup
 KEPT = "\x00KEEP{}\x00"   # a deletion held back, out of reach of the next entries
 DROPPED = "\x00DROP\x00"  # a line a deletion emptied, until the blank lines settle
+WORD_DELETED = "\x00DELW\x00"  # a one-word deletion, until its commas are settled
 
 
 def pass_lexical(text, lex, lang="en", original=None):
@@ -361,25 +464,32 @@ def pass_lexical(text, lex, lang="en", original=None):
                 kept.append(m.group(0))
                 return KEPT.format(len(kept) - 1)
             counts["deleted"] += 1
-            return DELETED
+            return WORD_DELETED if not re.search(r"\s", find) else DELETED
         text = pattern.sub(delete, text)
         if counts["deleted"]:
             hits.append({"find": find, "replace": say(M, "deleted"),
                          "count": counts["deleted"], "family": entry["family"]})
         if counts["held"]:
             held.append({"find": find, "count": counts["held"], "family": entry["family"]})
+    # A one-word deletion between two commas was an aside, and both commas
+    # were its ("We grew, notably, in March" -> "We grew in March"). A phrase
+    # there is a clause: dropping both would run the two sides together ("I
+    # tried it, here's the thing, it works"), so one stays (see _join_site).
+    text = re.sub(r",[ \t]*" + re.escape(WORD_DELETED) + r"[ \t]*,",
+                  " " + DELETED + " ", text)
+    text = text.replace(WORD_DELETED, DELETED)
     for i, original in enumerate(kept):
         text = text.replace(KEPT.format(i), original)
     text = fix_articles(text, lex)
     # "that" after a deleted opener is residue; the clause after it is the
     # content ("I'm thrilled to share that we hit 10k" -> "We hit 10k").
-    comp = "|".join(re.escape(c) for c in lex["complementizers"])
+    comp = any_of(lex["complementizers"])
     text = re.sub(DELETED + r"[ \t]+(?:" + comp + r")\b(?!')[ \t]*",
                   DELETED, text, flags=re.IGNORECASE)
     # A conjunction that joined a deleted phrase to the sentence goes with it
     # ("today and follow for more." left "today and."). Only one touching a
     # deletion: the writer's own "I think so." is not residue.
-    conj = "|".join(re.escape(c) for c in lex["conjunctions"])
+    conj = any_of(lex["conjunctions"])
     text = re.sub(r"[ \t]*,?[ \t]*\b(?:" + conj + r")[ \t]+(?=" + DELETED + ")",
                   "", text, flags=re.IGNORECASE)
     # A line that was nothing but deleted phrases goes whole, newline too.
@@ -387,6 +497,7 @@ def pass_lexical(text, lex, lang="en", original=None):
     # glue onto the line above, or a blank line the writer never wrote.
     text = re.sub(r"(?m)^(?:[ \t,]*" + DELETED + r")+[ \t,.;:!?]*(\n|$)",
                   lambda m: DROPPED + m.group(1), text)
+    text = SITE_RE.sub(_join_site, text)
     if original is not None:
         text = restore_capitals(original, text)
     # Clean up after deletions, on the lines that had one and nowhere else:
@@ -397,6 +508,32 @@ def pass_lexical(text, lex, lang="en", original=None):
     # most one, so the drop does not open a gap the writer never wrote.
     return re.sub(r"(\n*)(?:" + DROPPED + r"(?:\n|$))+(\n*)",
                   lambda m: "\n" * min(2, len(m.group(1)) + len(m.group(2))), text), hits, held
+
+
+# A deletion with punctuation on both sides: "works. DEL, it", "Note: DEL, it",
+# "grew, DEL, in". The marks of a run of deletions ("DEL, DEL,") count as one.
+# \x00DEL\x00 is DELETED, written out so the pattern stays a literal.
+SITE_RE = re.compile(r"([,.;:!?]+)[ \t]*(\x00DEL\x00(?:[ \t]*[,;:]?[ \t]*\x00DEL\x00)*)[ \t]*([,.;:!?]+)")
+
+
+def _join_site(m):
+    """One mark of punctuation where a deletion had one on each side. The
+    sentence before it ended: its end stays and what followed the deletion was
+    the deletion's ("It works. Importantly, it" -> "It works. It"). It did not
+    end: an end mark after the deletion wins ("works; notably." -> "works."),
+    and otherwise the mark before stays ("Note: notably, it" -> "Note: it",
+    "I tried it, here's the thing, it works" -> "I tried it, it works"). Only
+    here, at the deletion: the writer's own "?!" is theirs."""
+    before, after = m.group(1), m.group(3)
+    end = re.search(r"[.!?]", after)
+    if before[-1] in ".!?":
+        keep = before
+    elif end:
+        keep = after[end.start():]
+    else:
+        keep = before
+    rest = m.string[m.end():m.end() + 1]
+    return keep + DELETED + (" " if rest and not rest.isspace() else "")
 
 
 def _tidy(line):
@@ -436,10 +573,7 @@ def scan_structures(text, lex, lang="en"):
     M = load_messages(lang)
     flags = []
     for s in lex["structures"]:
-        try:
-            pattern = re.compile(s["regex"], re.MULTILINE)
-        except re.error:
-            continue
+        pattern = re.compile(s["regex"], re.MULTILINE)   # load_lexicon compiled it
         found = pattern.findall(text)
         if found:
             flags.append({"name": s["name"], "count": len(found), "fix": s["fix"]})
@@ -472,7 +606,7 @@ def restore_capitals(original, text):
     if not starts or sum(1 for c in starts if c.isupper()) * 2 < len(starts):
         return text
     mark = re.escape(DELETED)
-    return re.sub(r"(?m)((?:^|[.!?][ \t]+)[ \t]*(?:" + mark + r"[ \t,.;:!?]*)+)([^\W\d_])",
+    return re.sub(r"(?m)((?:^|[.!?][ \t]*)[ \t]*(?:" + mark + r"[ \t,.;:!?]*)+)([^\W\d_])",
                   lambda m: m.group(1) + m.group(2).upper(), text)
 
 

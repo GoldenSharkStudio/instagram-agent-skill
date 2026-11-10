@@ -76,11 +76,13 @@ WITNESS = {
     "hookscore": (["-"], HOOKS),
     "beats": (["-", "--target", "30"], read_fixture("script.txt")),
     "caption": (["-"], read_fixture("caption.txt") + " #explore\n"),
-    # bad_draft has no invisible character, splice or "that" after an opener.
+    # bad_draft has no invisible character, splice or "that" after an opener,
+    # and no deletion a dependent holds ("if" keeps "follow for more" here).
     "humanize": (["-"], read_fixture("bad_draft.txt")
                  + "\n\u200bHere's the thing that we hit 10k. It is crucial \u2014 also, it's proof.\n"
-                 + "It was a captivating reel.\n"),
-    "detect": ([fixture("good_draft.txt"), fixture("bad_draft.txt")], None),
+                 + "It was a captivating reel.\nFollow for more if you love design.\n"),
+    "detect": ([fixture("good_draft.txt"), "-"],
+               read_fixture("bad_draft.txt") + "\nFollow for more if you love design.\n"),
 }
 
 

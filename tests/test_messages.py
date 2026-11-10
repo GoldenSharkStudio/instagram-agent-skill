@@ -43,8 +43,6 @@ SAY = "say"
 # its values shown as {}). Checked: an exemption nothing matches is stale.
 EXEMPT_TEXT = {
     "cannot load": "the language file itself failed to load; there is no language to say it in",
-    " must be a list": "loader validation of the language file, same reason",
-    " must be true or false": "loader validation of the lexicon's `calibrated` flag, same reason",
 }
 # Whole functions left out, each with its reason. Checked: must exist.
 EXEMPT_FUNCS = {
@@ -53,10 +51,14 @@ EXEMPT_FUNCS = {
     "read_text": "the input fails to read before any language is chosen (--lang auto needs the text)",
     "match_for": "hooks.json schema validation; the reason sits inside the translated "
                  "cannot_load_hooks sentence, like json's own parse errors",
+    "check_lexicon": "slop.<lang>.json schema validation (humanize and detect); its reason "
+                     "follows \"cannot load the lexicon\" (exempt above, same reason), like "
+                     "json's own parse errors",
 }
 # Code tokens that are neither phrases nor emitted contract, each with its reason.
 CODE_TOKENS = {
     "utf-8": "file encoding",
+    "stdin": "the name standard input goes by in an error, as read_text shows it",
     "NFC": "unicodedata form",
     "__main__": "module guard",
     ".json": "file name part",

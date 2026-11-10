@@ -138,17 +138,115 @@ def load_lexicon(path=None, lang="en"):
     try:
         with open(path, encoding="utf-8") as fh:
             lex = json.load(fh)
-        for key in ("words", "phrases", "structures", "dependents"):
-            if not isinstance(lex[key], list):
-                raise TypeError(f"{key} must be a list")
-        for key in ("contractions", "pronouns"):
-            re.compile(lex["voice"][key])
-        flag = lex.get("calibrated", True)
-        if not isinstance(flag, bool):
-            raise TypeError(f"calibrated must be true or false, not {flag!r}")
+        check_lexicon(lex)
         return lex
-    except (OSError, ValueError, KeyError, TypeError, re.error) as err:
+    except (OSError, ValueError, KeyError, TypeError) as err:
         raise LexiconError(f"{path}: {type(err).__name__}: {err}") from None
+
+
+def check_lexicon(lex):
+    """Every field humanize and detect read, checked once, at load. A lexicon
+    edited by hand and broken stops here with the field named (exit 2), never
+    halfway through a run with a traceback, and never by quietly skipping a
+    check: a structural tell whose regex does not compile used to vanish, and
+    the verdict went up to PASS. Same function in humanize.py and detect.py."""
+    def fail(where, what):
+        raise ValueError(f"{where}: {what}")
+
+    def text(v, where, empty=True):
+        if not isinstance(v, str) or (not empty and not v):
+            fail(where, "must be a string" if empty else "must be a non-empty string")
+
+    def regex(v, where, empty=False):
+        text(v, where, empty)
+        try:
+            re.compile(v)
+        except re.error as err:
+            fail(where, f"not a valid regex ({err})")
+
+    def table(v, where):
+        if not isinstance(v, dict):
+            fail(where, "must be an object")
+        return v
+
+    def field(obj, key, where):
+        if key not in obj:
+            fail(where, f'missing "{key}"')
+        return obj[key]
+
+    table(lex, "lexicon")
+    for key in ("invisible", "typographic", "words", "phrases", "structures",
+                "connectives", "conjunctions", "dependents", "complementizers"):
+        if not isinstance(field(lex, key, "lexicon"), list):
+            fail(key, "must be a list")
+    for key in ("connectives", "conjunctions", "dependents", "complementizers"):
+        for i, v in enumerate(lex[key]):
+            text(v, f"{key}[{i}]", empty=False)
+    for i, e in enumerate(lex["invisible"]):
+        at = f"invisible[{i}]"
+        table(e, at)
+        cp = field(e, "cp", at)
+        ends = [int(c[2:], 16) for c in cp.split("-")] if (
+            isinstance(cp, str)
+            and re.fullmatch(r"U\+[0-9A-Fa-f]{1,6}(?:-U\+[0-9A-Fa-f]{1,6})?", cp)) else []
+        if not ends or max(ends) > 0x10FFFF or ends != sorted(ends):
+            fail(at + ".cp", 'must be "U+XXXX" or "U+XXXX-U+YYYY", low to high')
+        text(field(e, "name", at), at + ".name")
+        if field(e, "action", at) not in ("delete", "space"):
+            fail(at + ".action", 'must be "delete" or "space"')
+    for i, e in enumerate(lex["typographic"]):
+        at = f"typographic[{i}]"
+        table(e, at)
+        text(field(e, "from", at), at + ".from", empty=False)
+        text(field(e, "name", at), at + ".name")
+        text(field(e, "to", at), at + ".to")
+    for key in ("words", "phrases"):
+        for i, e in enumerate(lex[key]):
+            at = f"{key}[{i}]"
+            table(e, at)
+            text(field(e, "find", at), at + ".find", empty=False)
+            text(field(e, "replace", at), at + ".replace")
+            text(field(e, "family", at), at + ".family")
+            roles = e.get("roles", [])
+            if not isinstance(roles, list):
+                fail(at + ".roles", "must be a list")
+            for j, r in enumerate(roles):
+                rat = f"{at}.roles[{j}]"
+                table(r, rat)
+                for side in ("prev", "next"):
+                    if side in r:
+                        regex(r[side], f"{rat}.{side}")
+                if field(r, "replace", rat) is not None:
+                    text(r["replace"], rat + ".replace")
+    for i, s in enumerate(lex["structures"]):
+        at = f"structures[{i}]"
+        table(s, at)
+        for key in ("id", "name", "fix"):
+            text(field(s, key, at), f"{at}.{key}")
+        regex(field(s, "regex", at), at + ".regex")
+    voice = table(field(lex, "voice", "lexicon"), "voice")
+    for key in ("contractions", "pronouns"):
+        regex(field(voice, key, "voice"), "voice." + key)
+    if "article" in lex:
+        art = table(lex["article"], "article")
+        if "vowel" in art:
+            regex(art["vowel"], "article.vowel", empty=True)
+        forms = table(art.get("forms", {}), "article.forms")
+        for key in ("consonant", "vowel"):
+            if key in forms:
+                text(forms[key], "article.forms." + key)
+    if not isinstance(lex.get("calibrated", True), bool):
+        fail("calibrated", f"must be true or false, not {lex['calibrated']!r}")
+    if "lang" in lex:
+        text(lex["lang"], "lang")
+
+
+def any_of(items):
+    """A lexicon list as one alternation of literals. An empty list matches
+    nothing: a bare "|".join gave "(?:)", which matches everywhere, so an
+    empty `dependents` held every deletion. Same function in humanize.py and
+    detect.py."""
+    return "|".join(re.escape(x) for x in items) or r"(?!)"
 
 
 LANGS = ("en", "pt-BR", "auto")
@@ -299,7 +397,7 @@ def hangs(find, text, end, lex):
         return False
     if find.split()[-1].lower() in lex["dependents"]:
         return bool(re.match(r"[^\S\n]+\w", text[end:]))
-    deps = "|".join(re.escape(d) for d in lex["dependents"])
+    deps = any_of(lex["dependents"])
     sep = r"(?:[^\S\n]*[,\u2014\u2013][^\S\n]*|[^\S\n]+)"
     return bool(re.match(sep + r"(?:" + deps + r")\b", text[end:], re.IGNORECASE))
 
@@ -327,10 +425,7 @@ def count_tells(text, lex):
     text = unicodedata.normalize("NFC", text).translate(APOSTROPHES)
     tells, names = 0, []
     for s in lex["structures"]:
-        try:
-            n = len(re.compile(s["regex"], re.MULTILINE).findall(text))
-        except re.error:
-            continue
+        n = len(re.compile(s["regex"], re.MULTILINE).findall(text))   # load_lexicon compiled it
         if n:
             tells += n
             names.append(s["id"])
