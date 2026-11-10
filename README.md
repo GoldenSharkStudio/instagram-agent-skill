@@ -43,7 +43,7 @@ Or as a plugin:
 
 Project-local instead of global: copy the same folders into your repo's
 `.claude/skills/`. No Claude Code at all? Paste any single `SKILL.md` at the top
-of a chat and it runs as a mode. You lose the five Python tools, which is most
+of a chat and it runs as a mode. You lose the six Python tools, which is most
 of the point of `/ig-reel` and `/ig-human`, but the rest works.
 
 Then run `/ig-setup`: ten minutes, once. It writes `~/.claude/instagram/voice.md`
@@ -72,10 +72,17 @@ say the words out loud.
 | `/ig-repurpose` | One video, podcast or newsletter into a week of reels and carousels that each stand alone. |
 | `/ig-audit` | Post-mortem on what you already posted. Ranks by outlier multiple and sends per reach, not views. |
 
-## The five tools that actually run
+## The six tools that actually run
 
 No dependencies, no network, nothing uploaded. They run on your machine, on
-your text.
+your text, with Python 3.10 or newer and nothing else.
+
+The exit code is the verdict, so a script or another program can act on it:
+`0` is a pass (for `beats`, `humanize` and `swipe`, which give no verdict, a
+finished run), `1` is a fail (`hookscore` with no hook at 70, `caption` short
+of READY, `detect` short of PASS), and `2` is input it refused (a file it
+cannot read, an empty text, language data that does not load), with the
+reason on stderr. `--json` gives the same exit code.
 
 Every tool takes `--lang`: `en` (the default), `pt-BR` or `auto`, which guesses
 from the text and says on stderr what it picked. The skills pass the
@@ -237,6 +244,13 @@ something. `swipe.py` ranks on the multiple over each account's own median,
 names the hook formula, and prints what separates the top third from the
 bottom third.
 
+Counts go in the way the screen shows them (`412K`, `1.2M`, or `1,2 mi` and
+`12 mil` with `--lang pt-BR`) or in full. A cell it cannot read stops the run
+with exit 2 and names the line and column, because a guessed count would go
+into the swipe file as if it were measured. A captured hook that is really a
+call to action ("Follow for more", a row of hashtags) is marked and counted:
+the real hook of that reel is on the cover or in the first spoken line.
+
 ```
 SWIPE FILE  ·  4 reels  ·  4 accounts  ·  baseline: account median
 ==============================================================================
@@ -327,7 +341,8 @@ your audio and who Instagram shows it to.
 **3. The formula classifier was broken and the test is what caught it.** The
 `match` regexes in `hooks.json` were written off my own templates, and they
 named **8%** of real hooks. People do not speak in templates. Rewriting them
-against actual transcribed speech took it to **49%**, and four formulas went
+against actual transcribed speech took it to **49%** (measured on v1.0, when
+the set had 26; it has not been re-measured since), and four formulas went
 into the set because they kept appearing and were not there: Contrarian Flip,
 The Statistic, The Reveal, Someone Else's Result, plus The Superlative. On the
 other 51% it abstains, which is correct: a lot of short-form is podcast clips

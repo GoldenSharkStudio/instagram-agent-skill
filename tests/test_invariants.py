@@ -12,7 +12,12 @@ import unittest
 from _support import ROOT, SKILLS, TOOLS, load
 
 WORD_NUMBERS = {"five": 5, "twelve": 12, "thirteen": 13, "fourteen": 14, "sixteen": 16, "eighteen": 18,
-                "twenty-six": 26}
+                "twenty-six": 26, "six": 6}
+
+
+def open_text(path):
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
 
 
 def jload(*parts):
@@ -82,6 +87,12 @@ class CountsInProse(unittest.TestCase):
         self.assertClaims(NUM + r" (?:claude )?skills\b", len(SKILL_DIRS), 4)
         self.assertIn("## The fourteen", prose("README.md"))
         self.assertEqual(len(SKILL_DIRS), 14)
+
+    def test_tool_count(self):
+        """The scripts that run: every skills/*/*.py with a main(), read from src."""
+        tools = [p for p in glob.glob(os.path.join(SKILLS, "*", "*.py"))
+                 if re.search(r"^def main\(", open_text(p), re.M)]
+        self.assertClaims(NUM + r" (?:python )?(?:tools|scripts)\b", len(tools), 3)
 
     def test_readme_table_lists_every_skill(self):
         """One row per skill folder, in the table under "## The fourteen"."""
