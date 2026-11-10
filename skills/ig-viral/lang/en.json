@@ -29,7 +29,8 @@
       "unclassified": "unclassified",
       "cta_mark": "           ^ a call to action, not a hook: capture the cover text or the first spoken line",
       "cta_line": "  call to action:        {count} of {n}. Their hook is on the cover or in the first spoken line: recapture those.",
-      "md_cta": "- note: a call to action, not a hook. Take the cover text or the first spoken line."
+      "md_cta": "- note: a call to action, not a hook. Take the cover text or the first spoken line.",
+      "bad_count": "{path}, line {line}: the {column} cell \"{cell}\" is not a count. Write it as the screen shows it (412K, 1.2M) or in full (412000); nothing was ranked."
     },
     "cta": [
       "^\\W*(?:follow|subscribe)\\s+(?:@|(?:me|us|for)\\b)",
@@ -39,6 +40,11 @@
       "^\\W*(?:dm|message)\\s+me\\b",
       "^\\W*(?:\\w+\\s+){0,2}link in (?:my |the )?bio\\b",
       "^\\s*(?:[#@][^\\s#@]+\\s*)+$"
-    ]
+    ],
+    "units": {
+      "k": 1000,
+      "m": 1000000,
+      "b": 1000000000
+    }
   }
 }

@@ -102,7 +102,7 @@ small enough to read.
 | account | handle |
 | followers | from the profile |
 | median | eyeball the last 12 reels and take the middle view count |
-| views | this reel |
+| views | this reel. Counts go in as the screen shows them (`412K`, `1.2M`, `1,2 mi`, `12 mil`) or in full; a cell the tool cannot read stops the run, naming it |
 | hook | the first line, spoken or on screen, verbatim including bad grammar |
 | on-screen | the first text card, if different |
 | length | seconds |

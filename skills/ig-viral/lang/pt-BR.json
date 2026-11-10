@@ -29,7 +29,8 @@
       "unclassified": "sem fórmula",
       "cta_mark": "           ^ chamada para ação, não gancho: capture o texto da capa ou a primeira frase falada",
       "cta_line": "  chamada para ação:      {count} de {n}. O gancho deles está na capa ou na primeira frase falada: capture de novo.",
-      "md_cta": "- aviso: chamada para ação, não gancho. Use o texto da capa ou a primeira frase falada."
+      "md_cta": "- aviso: chamada para ação, não gancho. Use o texto da capa ou a primeira frase falada.",
+      "bad_count": "{path}, linha {line}: a célula {column} \"{cell}\" não é uma contagem. Escreva como aparece na tela (412 mil, 1,2 mi) ou por extenso (412000); nada foi ranqueado."
     },
     "cta": [
       "^\\W*(?:siga|segue|sigam)\\s+(?:@|(?:a gente|o perfil|a página|nosso|nossa|pra|para)\\b)",
@@ -40,6 +41,12 @@
       "^\\W*(?:\\w+\\s+){0,2}link na bio\\b",
       "^\\W*(?:clica|clique)\\s+no link\\b",
       "^\\s*(?:[#@][^\\s#@]+\\s*)+$"
-    ]
+    ],
+    "units": {
+      "mil": 1000,
+      "mi": 1000000,
+      "bi": 1000000000,
+      "k": 1000
+    }
   }
 }

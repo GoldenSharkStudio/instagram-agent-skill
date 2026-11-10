@@ -55,7 +55,9 @@ def folder_of(path):
 # Dicts whose keys are names the language gives to its own rules (the
 # inflection forms: en has s/ed/ing, pt-BR has 3s/past/ger), not a schema.
 # Their content is checked by tests/test_inflection.py.
-LANGUAGE_NAMED = ("suffixes", "families")
+# `units` (swipe's count suffixes: en K/M/B, pt-BR mil/mi/bi) is named by the
+# language too; tests/test_swipe_counts.py reads every count through it.
+LANGUAGE_NAMED = ("suffixes", "families", "units")
 
 
 def shape(node, key=None):

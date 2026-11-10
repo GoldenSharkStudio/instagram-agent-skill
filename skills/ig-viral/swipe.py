@@ -189,32 +189,109 @@ def read_text(path):
         sys.exit(2)
 
 
-def read_rows(path):
+# The cells swipe reads as numbers. Each goes through parse_count, and only it.
+COUNT_COLUMNS = ("views", "followers", "median")
+
+
+class CountError(Exception):
+    """A count cell that does not read as a count: (line, column, cell)."""
+
+
+_UNITS = {}                                       # code -> {suffix: multiplier}
+
+
+def load_units(lang="en"):
+    """The count suffixes of lang/<lang>.json, section "swipe.units", as the
+    screen shows them ("412K", "1,2 mi"): {suffix: multiplier}, read without
+    case. One table per language, no borrowing. Missing or broken raises
+    MessagesError."""
+    if lang in _UNITS:
+        return _UNITS[lang]
+    path = os.path.join(HERE, "lang", lang + ".json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            raw = json.load(fh)["swipe"]["units"]
+        if not (isinstance(raw, dict) and raw
+                and all(isinstance(k, str) and re.fullmatch(r"[^\W\d_]+", k) for k in raw)
+                and all(type(v) is int and v > 1 for v in raw.values())):
+            raise TypeError(raw)
+        units = {k.lower(): v for k, v in raw.items()}
+    except (OSError, ValueError, KeyError, TypeError) as err:
+        raise MessagesError(f"{path}: {type(err).__name__}: {err}") from None
+    _UNITS[lang] = units
+    return units
+
+
+def parse_count(cell, units):
+    """A count as a person copies it, or ValueError. With a suffix the last
+    "." or "," is the decimal point ("1.2M", "1,2 mi"); without one a count is
+    whole, so "." and "," only group thousands ("48,000", "1.234.567") and
+    "1,5" or "1e5" are not counts. A number nobody can be sure of is refused,
+    never guessed: it would go to swipe.md as if it were measured."""
+    m = re.fullmatch(r"(\d[\d.,]*)[ \t\u00a0\u202f]*([^\W\d_]*)", cell.strip())
+    if not m:
+        raise ValueError(cell)
+    number, suffix = m.groups()
+    if not suffix:
+        if not re.fullmatch(r"\d+|\d{1,3}([.,])\d{3}(?:\1\d{3})*", number):
+            raise ValueError(cell)
+        return int(re.sub(r"[.,]", "", number))
+    if suffix.lower() not in units:
+        raise ValueError(cell)
+    whole = re.fullmatch(r"(\d+|\d{1,3}(?:([.,])\d{3})+)(?:[.,](\d+))?", number)
+    if not whole or (whole.group(2) and number[len(whole.group(1)):][:1] == whole.group(2)):
+        raise ValueError(cell)
+    digits = re.sub(r"[.,]", "", whole.group(1)) + "." + (whole.group(3) or "0")
+    return round(float(digits) * units[suffix.lower()])
+
+
+def read_cells(path):
+    """(line number, row) for each row with a views cell and a hook, cells as
+    written. The counts are read by count_rows, once the language is known."""
     raw = unicodedata.normalize("NFC", read_text(path))
-    lines = [l for l in raw.splitlines() if l.strip() and not l.lstrip().startswith("#")]
+    lines = [(n, l) for n, l in enumerate(raw.splitlines(), 1)
+             if l.strip() and not l.lstrip().startswith("#")]
     if not lines:
         return []
-    head = [c.strip().lower() for c in lines[0].split("\t")]
+    head = [c.strip().lower() for c in lines[0][1].split("\t")]
     if "views" in head and "hook" in head:
         cols, body = head, lines[1:]
     else:
         cols, body = ["account", "followers", "views", "hook"], lines
     rows = []
-    for line in body:
+    for n, line in body:
         cells = line.split("\t")
         if len(cells) < len(cols):
             cells += [""] * (len(cols) - len(cells))
         r = dict(zip(cols, [c.strip() for c in cells]))
-        try:
-            r["views"] = int(re.sub(r"[^\d]", "", r.get("views", "")) or 0)
-        except ValueError:
-            continue
-        for k in ("followers", "median"):
-            digits = re.sub(r"[^\d]", "", r.get(k, "") or "")
-            r[k] = int(digits) if digits else None
-        if r["views"] and r.get("hook"):
-            rows.append(r)
+        if r.get("views") and r.get("hook"):
+            rows.append((n, r))
     return rows
+
+
+def count_rows(cells, units):
+    """Rows from read_cells with every count read. An empty followers or
+    median is no number; a cell that is not a count raises CountError, and
+    nothing is ranked."""
+    out = []
+    for line, r in cells:
+        for k in COUNT_COLUMNS:
+            cell = r.get(k) or ""
+            if not cell:
+                r[k] = None
+                continue
+            try:
+                r[k] = parse_count(cell, units)
+            except ValueError:
+                raise CountError(line, k, cell) from None
+        if r["views"]:
+            out.append(r)
+    return out
+
+
+def read_rows(path, lang="en"):
+    """The rows of a captured TSV, counts read in `lang`."""
+    return count_rows(read_cells(path), load_units(lang))
 
 
 def analyse(rows, formulas, lang="en"):
@@ -325,17 +402,25 @@ def main():
                     help="language the hooks are scored in; auto picks by stopwords")
     args = ap.parse_args()
 
-    rows = read_rows(args.input)
+    cells = read_cells(args.input)
     lang = args.lang
-    if lang == "auto" and not rows:
+    if lang == "auto" and not cells:
         lang = "en"                      # nothing to pick from: auto is en
     elif lang == "auto":
-        lang = pick_swipe_lang(rows)
+        lang = pick_swipe_lang([r for _, r in cells])
     try:
         M = load_messages(lang)
         load_cta(lang)
+        units = load_units(lang)
     except MessagesError as err:
         print(f"swipe.py: cannot load the messages, {err}", file=sys.stderr)
+        sys.exit(2)
+    try:
+        rows = count_rows(cells, units)
+    except CountError as err:
+        line, column, cell = err.args
+        print(say(M, "bad_count", path="stdin" if args.input == "-" else args.input,
+                  line=line, column=column, cell=cell), file=sys.stderr)
         sys.exit(2)
     if not rows:
         print(say(M, "no_rows"), file=sys.stderr)
